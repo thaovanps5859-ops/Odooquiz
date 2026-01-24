@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Odoo Quiz Practice Exams</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --primary-color: #714b67; /* Odoo Purple vibe */
+        --accent-color: #017e84; /* Odoo Teal vibe */
+        --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        --card-bg: #ffffff;
+        --text-main: #2d3748;
+        --text-sub: #718096;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #e0eafc; /* fallback */
+        background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-main);
+      }
+
+      .container {
+        width: 90%;
+        max-width: 900px;
+        margin: 40px auto;
+        text-align: center;
+        animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      /* Header Styling */
+      h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        margin-bottom: 40px;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        display: inline-block;
+      }
+
+      h1::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 4px;
+        background: var(--accent-color);
+        margin: 10px auto 0;
+        border-radius: 2px;
+      }
+
+      /* Grid Layout */
+      .quiz-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 25px;
+        list-style: none;
+        padding: 0;
+      }
+
+      /* Card Styling */
+      .quiz-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .quiz-card a {
+        text-decoration: none;
+        color: inherit;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        justify-content: space-between;
+      }
+
+      /* Hover Effects */
+      .quiz-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(113, 75, 103, 0.15);
+        border-color: var(--primary-color);
+      }
+
+      .quiz-card:hover .icon-box {
+        background-color: var(--primary-color);
+        color: white;
+        transform: scale(1.1) rotate(-5deg);
+      }
+
+      /* Card Content */
+      .card-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .icon-box {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(113, 75, 103, 0.1);
+        color: var(--primary-color);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2em;
+        margin-right: 15px;
+        transition: all 0.3s ease;
+      }
+
+      .quiz-number {
+        font-size: 0.85em;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      .quiz-title {
+        font-size: 1.1em;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--text-main);
+      }
+
+      .quiz-tags {
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        font-size: 0.75em;
+        background-color: #f7fafc;
+        color: var(--text-sub);
+        padding: 4px 10px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+      }
+
+      /* Animation */
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        .container {
+          width: 95%;
+        }
+        h1 {
+          font-size: 1.8em;
+        }
+        .quiz-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1><i class="fa-brands fa-odoo"></i> Practice Exams</h1>
+
+      <ul class="quiz-grid">
+        <li class="quiz-card">
+          <a href="001.html">
+            <div class="card-header">
+              <div class="icon-box"><i class="fa-solid fa-rocket"></i></div>
+              <div>
+                <span class="quiz-number">Quiz 001</span>
+                <div class="quiz-title">Intro, Sales & Survey</div>
+              </div>
+            </div>
+            <div class="quiz-tags">
+              <span class="tag">Introduction</span>
+              <span class="tag">Sales</span>
+              <span class="tag">Survey</span>
+            </div>
+          </a>
+        </li>
+
+        <li class="quiz-card">
+          <a href="002.html">
+            <div class="card-header">
+              <div class="icon-box"><i class="fa-solid fa-bullhorn"></i></div>
+              <div>
+                <span class="quiz-number">Quiz 002</span>
+                <div class="quiz-title">CRM, Marketing & Web</div>
+              </div>
+            </div>
+            <div class="quiz-tags">
+              <span class="tag">CRM</span>
+              <span class="tag">AI</span>
+              <span class="tag">eCommerce</span>
+            </div>
+          </a>
+        </li>
+
+        <li class="quiz-card">
+          <a href="003.html">
+            <div class="card-header">
+              <div class="icon-box"><i class="fa-solid fa-list-check"></i></div>
+              <div>
+                <span class="quiz-number">Quiz 003</span>
+                <div class="quiz-title">Project & Knowledge</div>
+              </div>
+            </div>
+            <div class="quiz-tags">
+              <span class="tag">Project</span>
+              <span class="tag">Timesheets</span>
+              <span class="tag">Knowledge</span>
+            </div>
+          </a>
+        </li>
+
+        <li class="quiz-card">
+          <a href="004.html">
+            <div class="card-header">
+              <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
+              <div>
+                <span class="quiz-number">Quiz 004</span>
+                <div class="quiz-title">Accounting & Finance</div>
+              </div>
+            </div>
+            <div class="quiz-tags">
+              <span class="tag">Accounting</span>
+              <span class="tag">Spreadsheet</span>
+            </div>
+          </a>
+        </li>
+
+        <li class="quiz-card">
+          <a href="005.html">
+            <div class="card-header">
+              <div class="icon-box"><i class="fa-solid fa-users"></i></div>
+              <div>
+                <span class="quiz-number">Quiz 005</span>
+                <div class="quiz-title">HR, POS & Purchase</div>
+              </div>
+            </div>
+            <div class="quiz-tags">
+              <span class="tag">Employees</span>
+              <span class="tag">POS</span>
+              <span class="tag">Purchase</span>
+            </div>
+          </a>
+        </li>
+
+        <li class="quiz-card">
+          <a href="006.html">
+            <div class="card-header">
+              <div class="icon-box"><i class="fa-solid fa-warehouse"></i></div>
+              <div>
+                <span class="quiz-number">Quiz 006</span>
+                <div class="quiz-title">Supply Chain & Studio</div>
+              </div>
+            </div>
+            <div class="quiz-tags">
+              <span class="tag">Inventory</span>
+              <span class="tag">MRP</span>
+              <span class="tag">Studio</span>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,2173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz</title>
+    <style>
+      * {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          'Open Sans',
+          'Helvetica Neue',
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+
+      main {
+        padding-top: 48px;
+      }
+
+      :root {
+        --large-device-width: 850px;
+        --primary-color: #0f172a;
+        --secondary-color: #020617;
+        --primary-text-color: #c7d1dd;
+        --secondary-text-color: #061602;
+        --success-background: hsl(159, 82%, 24%);
+        --success-foreground: hsl(164, 86%, 16%);
+        --success: hsl(160, 84%, 39%);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info-background: hsl(218, 81%, 8%);
+        --info-foreground: hsl(217, 91%, 85%);
+        --border-color: #d1d7dc;
+        --check-box-size: 20px;
+        /* control the size */
+        --check-box-color: var(--info-foreground);
+        /* the active color */
+      }
+
+      body {
+        position: relative;
+        background-color: #020617;
+        color: var(--primary-text-color);
+      }
+
+      #score-stats-container {
+        position: fixed;
+        z-index: 10;
+        top: 0;
+        height: 40px;
+        width: 100%;
+        background-color: var(--info-background);
+
+        padding: 0px 16px;
+        color: var(--info-foreground);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #quiz-container {
+        border-radius: 8px;
+        display: flex;
+        gap: 16px;
+        flex-direction: column;
+      }
+
+      /* === Base Styles for both Radio and Checkbox === */
+      input[type='radio'],
+      input[type='checkbox'] {
+        height: var(--check-box-size);
+        aspect-ratio: 1;
+        border: calc(var(--check-box-size) / 8) solid #939393;
+        padding: calc(var(--check-box-size) / 8);
+        background: radial-gradient(
+            farthest-side,
+            var(--check-box-color) 94%,
+            #0000
+          )
+          50%/0 0 no-repeat content-box;
+        outline-offset: calc(var(--check-box-size) / 10);
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        font-size: inherit;
+        transition: 0.3s;
+      }
+
+      input[type='radio']:checked,
+      input[type='checkbox']:checked {
+        border-color: var(--check-box-color);
+        background-size: 100% 100%;
+      }
+
+      input[type='radio']:disabled,
+      input[type='checkbox']:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* === Specific Styles === */
+      input[type='radio'] {
+        border-radius: 50%;
+        /* Makes it a circle */
+      }
+
+      input[type='checkbox'] {
+        border-radius: 4px;
+        /* Makes it a square */
+      }
+
+      label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 767px) {
+        input[type='radio'],
+        input[type='checkbox'],
+        label {
+          cursor: default;
+        }
+
+        #quiz-container {
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+      }
+
+      /* PC (Desktop devices) */
+      @media (min-width: 768px) {
+        body {
+          display: flex;
+          justify-content: center;
+        }
+
+        main {
+          max-width: var(--large-device-width);
+        }
+
+        #score-stats-container {
+          max-width: var(--large-device-width);
+        }
+
+        dialog {
+          max-width: var(--large-device-width);
+        }
+      }
+
+      @media print {
+        input[type='radio'],
+        input[type='checkbox'] {
+          background: none !important;
+          border-color: #939393 !important;
+        }
+
+        input[type='radio']:checked,
+        input[type='checkbox']:checked {
+          border-color: #939393 !important;
+        }
+      }
+
+      .question-lable {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        outline: none;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .button {
+        background-color: var(--success-background);
+        border: none;
+        color: #f4f5f7;
+        opacity: 0.8;
+        font-size: 18px;
+        flex-grow: 1;
+        padding: 8px 16px;
+        border-radius: 8px;
+      }
+
+      .button:hover {
+        opacity: 1;
+      }
+
+      .button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .explanation-btn {
+        border: none;
+        color: var(--success);
+        background-color: transparent;
+      }
+
+      .single-question-container {
+        background-color: var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      #modal-content {
+        padding: 16px;
+        line-height: 24px;
+      }
+
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      dialog {
+        position: fixed;
+        border: 1px solid var(--border-color);
+        background-color: var(--primary-color);
+        color: rgb(240, 241, 248);
+        padding: 16px;
+        border-radius: 8px;
+        width: 80vw;
+        max-height: 80vh;
+        overflow: auto;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+
+      #close-modal-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        padding: 2px 8px;
+        border-radius: 2px;
+        border: none;
+        background-color: var(--danger);
+      }
+
+      .correct-answer > label {
+        border: 2px solid var(--success);
+        width: 100%;
+      }
+
+      .incorrect-answer > label {
+        border: 2px solid var(--danger);
+        width: 100%;
+      }
+
+      .options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      #quiz-meta-container {
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        margin-bottom: 12px;
+        padding: 8px;
+      }
+
+      #quiz-title {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      #quiz-description {
+        line-height: 1.5;
+        padding: 2px 6px;
+      }
+    </style>
+  </head>
+
+  <body onload="main()">
+    <main>
+      <div
+        id="print-actions"
+        style="
+          margin-bottom: 20px;
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+        "
+      >
+        <button
+          type="button"
+          class="button"
+          style="background-color: #3b82f6"
+          onclick="printQuiz(false)"
+        >
+          🖨️ In đề bài
+        </button>
+        <button
+          type="button"
+          class="button"
+          style="background-color: #ef4444"
+          onclick="printQuiz(true)"
+        >
+          🖨️ In đáp án
+        </button>
+        <button
+          type="button"
+          class="button"
+          style="background-color: #f59e0b"
+          onclick="resetProgress()"
+        >
+          🔄 Làm lại từ đầu
+        </button>
+      </div>
+      <section id="quiz-meta-container">
+        <h1 id="quiz-title"></h1>
+        <p id="quiz-description"></p>
+      </section>
+      <section id="score-stats-container">
+        <div id="score-card">
+          Score: <span id="current-score">999</span>
+          <!-- <span id="pass-percent">999%</span> -->
+        </div>
+        <div>Correct: <span id="correct-answers">999</span></div>
+        <div>Incorrect: <span id="wrong-answers">999</span></div>
+      </section>
+
+      <section id="quiz-container"></section>
+
+      <dialog id="modal" class="modal-container">
+        <div id="modal-content">
+          <button type="button" class="modal-close-btn" aria-label="Close">
+            ✕
+          </button>
+
+          <p id="modal-text"></p>
+        </div>
+      </dialog>
+    </main>
+
+    <script>
+      const quizData = {
+        pass_percent: null,
+        questions: [
+          {
+            _class: 'assessment',
+            id: 141300567,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which types of content can be inserted into the <strong>HTML body</strong> field of a Knowledge article in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>The </em><strong><em>HTML body</em></strong><em> of a Knowledge article supports the </em><strong><em>full Odoo HTML editor</em></strong><em>, meaning you can insert:</em></p><ul><li><p><strong><em>Rich text</em></strong></p></li><li><p><strong><em>Images</em></strong></p></li><li><p><strong><em>External links</em></strong></p></li><li><p><strong><em>Records</em></strong><em> (via </em><code><em>/record</em></code><em> insertions)</em></p></li><li><p><strong><em>Preconfigured templates</em></strong><em> (editor snippets, content blocks, highlights, banners, powerbox items)</em></p></li><li><p><em>Media, attachments, embeds, and more</em></p></li></ul><p><em>The HTML editor is designed for rich, structured content\u2014not plain text.</em></p>',
+                '<ol><li><p><em>The HTML editor supports much more than images and PDFs.</em></p></li><li><p><em>PDF embedding is possible only via file attachments, not the only supported content type.</em></p></li><li><p><em>External links, records, templates, highlights, banners, and more are allowed.</em></p></li></ol>',
+                '<ul><li><p><em>The editor allows far beyond basic formatting.</em></p></li><li><p><em>Odoo Knowledge is </em><strong><em>not</em></strong><em> a plain text environment; it offers advanced HTML and block-based editing.</em></p></li></ul>'
+              ],
+              answers: [
+                '<p><strong>Text, images, external links, records, and pre-configured templates</strong> </p>',
+                '<p><strong>Only plain text, images, and embedded PDF documents</strong></p>',
+                '<p><strong>Only text and basic formatting</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Knowledge',
+            question_plain:
+              'Which types of content can be inserted into the HTML body field of a Knowledge article in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300569,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>After pressing <strong>CTRL+K</strong> in Odoo Knowledge, which symbol must you type to search for <strong>hidden articles</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><strong><em>?</em></strong><em> to search for visible articles</em></p></li></ul>',
+                '<p><em>In Odoo Knowledge, the </em><strong><em>Power Search</em></strong><em> (CTRL+K) supports advanced symbols to refine results:</em></p><ul><li><p><em>Typing </em><strong><em>$</em></strong><em> switches the search to </em><strong><em>hidden articles</em></strong><em>, letting you find articles that are not normally visible in the workspace tree.</em></p></li></ul><p><em>This is an internal filter that admins, authors, or editors can use to locate content not shown in the standard tree view.</em></p>',
+                '<p><em>Incorrect</em></p>'
+              ],
+              answers: [
+                '<p><strong>The question mark (?)</strong></p>',
+                '<p><strong>The dollar sign ($)</strong> </p>',
+                '<p><strong>The exclamation mark (!)</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Knowledge',
+            question_plain:
+              'After pressing CTRL+K in Odoo Knowledge, which symbol must you type to search for hidden articles?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300571,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which articles appear inside the <strong>\u201cShared\u201d</strong> category in Odoo Knowledge?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Articles shared to </em><strong><em>all internal users</em></strong><em> are simply standard workspace articles with default company access.</em></p></li><li><p><em>These do </em><strong><em>not</em></strong><em> appear in the Shared category.</em></p></li></ol>',
+                '<p><em>The </em><strong><em>Shared</em></strong><em> category in Odoo Knowledge does </em><strong><em>not</em></strong><em> list general workspace content or articles shared with the whole company.</em></p><p><em>It specifically lists:</em></p><p><em>\u27a1\ufe0f </em><strong><em>Articles that the author has explicitly shared with one or more individual users</em></strong><em><br>\u27a1\ufe0f </em><strong><em>These users would NOT normally have access to the article or workspace</em></strong></p><p><em>This happens when the author uses:</em></p><p><strong><em>Share \u2192 Grant access to specific users</em></strong></p><p><em>Those shared articles then appear in the </em><strong><em>Shared</em></strong><em> category for both:</em></p><ul><li><p><em>The author</em></p></li><li><p><em>The targeted users receiving special access</em></p></li></ul><p><em>This category is designed to highlight one-to-one sharing outside of the workspace\u2019s default permissions.</em></p>',
+                '<ol><li><p><em>Articles accessible only to the author remain in the </em><strong><em>Private</em></strong><em> area, not Shared.</em></p></li><li><p><em>Shared category only appears when someone else has been granted access.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Articles shared to all internal users.</strong></p>',
+                '<p><strong>Articles shared with specific users who do not have default access.</strong> </p>',
+                '<p><strong>Articles accessible to the author only.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Knowledge',
+            question_plain:
+              'Which articles appear inside the \u201cShared\u201d category in Odoo Knowledge?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300573,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens when you <strong>lock</strong> an article in an Odoo Knowledge Workspace?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>A locked article is </em><strong><em>not hidden</em></strong><em> or blocked.</em></p></li><li><p><em>It remains accessible for reading.</em></p></li></ol>',
+                '<p><em>Locking an article in Odoo Knowledge places it in </em><strong><em>read-only mode</em></strong><em> for everyone in the workspace.</em></p><p><em>When an article is locked:</em></p><ul><li><p><em>Anyone can </em><strong><em>open and read</em></strong><em> the article</em></p></li><li><p><strong><em>No one</em></strong><em> can edit it</em></p></li><li><p><em>Only users with appropriate rights (often editors or workspace managers) can unlock it again</em></p></li><li><p><em>The lock prevents accidental edits, ensuring content stability</em></p></li></ul><p><em>This feature is typically used for finalized SOPs, validated documents, or compliance-related content.</em></p>',
+                '<ol><li><p><em>Locking does </em><strong><em>not</em></strong><em> allow anyone to edit, it does the opposite.</em></p></li><li><p><em>Even the author cannot modify it unless it is unlocked.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>You cannot access the article.</strong></p>',
+                '<p><strong>You can only read the article.</strong></p>',
+                "<p><strong>You can still edit it, even if you're not the author.</strong></p>"
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Knowledge',
+            question_plain:
+              'What happens when you lock an article in an Odoo Knowledge Workspace?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300575,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which type of user is allowed to <strong>add properties</strong> to a Knowledge article in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Access alone is not enough.</em></p></li><li><p><em>Users with \u201cCan Read\u201d access can </em><strong><em>view</em></strong><em> but cannot </em><strong><em>alter</em></strong><em> properties.</em></p></li></ol>',
+                '<ol><li><p><em>Portal users cannot add or modify properties.</em></p></li><li><p><em>Portal access is extremely limited and read-only.</em></p></li></ol>',
+                '<p><em>In Odoo Knowledge:</em></p><ul><li><p><strong><em>Properties</em></strong><em> (like tags, custom metadata, structured fields, etc.)</em></p></li><li><p><em>Are part of the article\u2019s editable configuration</em></p></li><li><p><em>And can only be created or modified by users who have:</em></p></li></ul><p><em>\u27a1\ufe0f </em><strong><em>\u201cCan Edit\u201d access</em></strong><em> to the workspace or article</em></p><p><em>This ensures that only permitted contributors can alter structured data associated with Knowledge content.</em></p><p><em>Users with </em><strong><em>Can Edit</em></strong><em> may:</em></p><ul><li><p><em>Add new properties</em></p></li><li><p><em>Modify existing ones</em></p></li><li><p><em>Create structured metadata for filtering and searching</em></p></li></ul>'
+              ],
+              answers: [
+                '<p><strong>Any user accessing an article</strong></p>',
+                '<p><strong>Portal users only</strong></p>',
+                '<p><strong>Users with \u201cCan edit\u201d access rights</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Knowledge',
+            question_plain:
+              'Which type of user is allowed to add properties to a Knowledge article in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300655,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When adding a <strong>cover image via URL</strong> in Odoo (e.g., in Website or Knowledge), which type of link is supported?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>When you add an image by URL in Odoo, the URL must point </em><strong><em>directly to the image file</em></strong><em> itself.</em></p><p><em>This means:</em></p><ul><li><p><em>A URL ending with </em><strong><em>.jpg</em></strong><em>, </em><strong><em>.png</em></strong><em>, </em><strong><em>.svg</em></strong><em>, </em><strong><em>.webp</em></strong><em>, etc.</em></p></li><li><p><em>A URL that returns the raw image content when opened in a browser</em></p></li></ul><p><em>Examples of valid image addresses:</em></p><ul><li><p><code><em>https://example.com/images/banner.jpg</em></code></p></li><li><p><code><em>https://mycdn.com/assets/product.png</em></code></p></li></ul><p><em>What is not supported:</em></p><ul><li><p><strong><em>Link address</em></strong><em> (a webpage containing the image)</em></p></li><li><p><strong><em>Server address</em></strong><em> (a base URL like </em><code><em>https://myserver.com/</em></code><em>)</em></p></li></ul><p><em>If the URL does not directly reference an image file, Odoo cannot retrieve and display the image.</em></p>',
+                "<p><em>Incorrect because:</em></p><ul><li><p><em>It's often an HTML page, not the image file itself</em></p></li><li><p><em>Odoo cannot extract the image from the page automatically</em></p></li></ul>",
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>It does not specify an image path</em></p></li><li><p><em>Odoo cannot guess which file to load</em></p></li></ul>'
+              ],
+              answers: [
+                '<p><strong>The image address</strong> </p>',
+                '<p>The link address</p>',
+                '<p>The server address</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Knowledge',
+            question_plain:
+              'When adding a cover image via URL in Odoo (e.g., in Website or Knowledge), which type of link is supported?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300659,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo\u2019s editor (Website / Knowledge / Emails), which command lets you <strong>collapse and expand</strong> a block of content so it can be hidden or shown on demand?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect because the Index command is used to generate a </em><strong><em>table of contents</em></strong><em> based on headings.</em></p><p><em>It helps with navigation, not content visibility.</em></p>',
+                '<p><em>The </em><strong><em>Toggle list</em></strong><em> command creates a collapsible section of content. It allows users to:</em></p><p><em>\u2714 Hide content behind a clickable title<br>\u2714 Expand or collapse the content on demand<br>\u2714 Keep pages clean while still providing detailed information</em></p><p><em>This is commonly used for FAQs, step-by-step explanations, or optional details.</em></p><p><em>Once inserted, users can click the toggle header to show or hide everything inside that block.</em></p>',
+                '<p><em>Incorrect because a Separator only adds a </em><strong><em>visual divider</em></strong><em> between sections.</em></p><p><em>It does not allow hiding or showing content.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Index</strong></p>',
+                '<p><strong>Toggle list</strong></p>',
+                '<p><strong>Separator</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Knowledge',
+            question_plain:
+              'In Odoo\u2019s editor (Website / Knowledge / Emails), which command lets you collapse and expand a block of content so it can be hidden or shown on demand?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300577,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Who is allowed to edit an article within a <strong>Workspace</strong> in Odoo Knowledge?</p>',
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Knowledge](https://www.odoo.com/documentation/19.0/applications/productivity/knowledge.html)'
+              ],
+              feedbacks: [
+                '<ol><li><p><em>\u201cCan read\u201d access means </em><strong><em>read-only</em></strong><em>.</em></p></li><li><p><em>Contributors with read access cannot edit articles or sections.</em></p></li></ol>',
+                '<ol><li><p><em>The author does </em><strong><em>not</em></strong><em> have exclusive editing rights.</em></p></li><li><p><em>Knowledge </em><strong><em>Workspace</em> </strong><em>is collaborative by design.</em></p></li></ol>',
+                '<p><em>In Odoo Knowledge, Workspaces can be configured with one of the broadest permission settings:</em></p><p><em>\u27a1\ufe0f </em><strong><em>\u201cDefault company access\u201d</em></strong><em><br>This means:</em></p><ul><li><p><em>Anyone in the company</em></p></li><li><p><em>Not only the article author</em></p></li><li><p><em>Not only specific contributors</em></p></li><li><p><em>Can </em><strong><em>view, edit, and collaborate</em></strong><em> on articles in that workspace</em></p></li></ul><p><em>This setting is commonly used for internal documentation, SOPs, onboarding guides, and shared knowledge bases.</em></p><p><em>So if the workspace is set to default company access, </em><strong><em>all employees</em></strong><em> can edit the content.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Any contributor who has \u2018Can read\u2019 access.</strong></p>',
+                '<p><strong>The author only.</strong></p>',
+                '<p><strong>Everyone, as long as it\u2019s in the default company access.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Knowledge',
+            question_plain:
+              'Who is allowed to edit an article within a Workspace in Odoo Knowledge?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300579,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>If you accidentally delete a <strong>section</strong> of a Knowledge article in Odoo, what can you do to recover it?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Knowledge articles in Odoo support </em><strong><em>version history</em></strong><em>.<br>If you delete a </em><strong><em>section</em></strong><em> (not the entire article), you can recover it by:</em></p><p><em>\u27a1\ufe0f </em><strong><em>Opening the article \u2192 Clicking the version history \u2192 Reverting to a previous version</em></strong></p><p><em>The version system tracks content changes, including:</em></p><ul><li><p><em>Edits</em></p></li><li><p><em>Deletions</em></p></li><li><p><em>Section removals</em></p></li></ul><p><em>Restoring a previous version brings back the content exactly as it was.</em></p>',
+                '<ol><li><p><em>\u201cArchived Articles\u201d refers to entire articles that were archived, not sections.</em></p></li><li><p><em>Archiving does not capture section-level changes.</em></p></li><li><p><em>Deleting a section does not archive the article.</em></p></li></ol>',
+                '<ol><li><p><em>Only </em><strong><em>deleted articles</em></strong><em> appear in the Trash.</em></p></li><li><p><strong><em>Sections</em></strong><em> inside an article do NOT go to Trash.</em></p></li><li><p><em>You cannot restore a deleted section from Trash \u2014 only full articles.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Restore the previous version of the article.</strong></p>',
+                '<p><strong>Restore the article from the \u2018Archived\u2019 articles.</strong></p>',
+                '<p><strong>Restore the article from the \u2018Trash\u2019.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Knowledge',
+            question_plain:
+              'If you accidentally delete a section of a Knowledge article in Odoo, what can you do to recover it?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300581,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following <strong>powerbox commands</strong> are exclusive to the <strong>Knowledge</strong> app in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Odoo\u2019s </em><strong><em>Knowledge</em></strong><em> app has its own exclusive powerbox commands that create dynamic, structured content blocks, such as:</em></p><ul><li><p><strong><em>Index</em></strong><em> (auto-generated table of contents)</em></p></li><li><p><strong><em>Item Kanban</em></strong></p></li><li><p><strong><em>Item Cards</em></strong></p></li><li><p><strong><em>Item List</em></strong></p></li><li><p><strong><em>Item Calendar</em></strong></p></li></ul><p><em>These commands only exist in Knowledge because they operate on </em><strong><em>Knowledge Items</em></strong><em>, which function like database entries inside a workspace. They are not available in Website, Discuss, Email, or Notes.</em></p>',
+                '<p><strong><em>Separator, Checklist, Quote, Media, Emoji</em></strong></p><ul><li><p><em>These are </em><strong><em>universal</em></strong><em> powerbox commands available across many Odoo text editors (Website, Discuss, Email, etc.)</em></p></li><li><p><em>They are not exclusive to Knowledge.</em></p></li></ul>',
+                '<p><strong><em>Banner Info / Success / Warning / Danger</em></strong></p><ul><li><p><em>These are </em><strong><em>generic rich-text formatting</em></strong><em> blocks, available in multiple apps.</em></p></li><li><p><em>They are not specific to Knowledge.</em></p></li></ul>'
+              ],
+              answers: [
+                '<p><strong>Index, Item Kanban / Cards / List / Calendar</strong></p>',
+                '<p><strong>Separator, Checklist, Quote, Media, Emoji</strong></p>',
+                '<p><strong>Banner Info / Success / Warning / Danger</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Knowledge',
+            question_plain:
+              'Which of the following powerbox commands are exclusive to the Knowledge app in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300583,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How do you move an article into the <strong>Favorites</strong> category in Odoo Knowledge?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Drag-and-drop moves articles between </em><strong><em>folders</em></strong><em>, not to Favorites.</em></p></li><li><p><em>Favorites is not a folder \u2014 it\u2019s a filtered view.</em></p></li></ol>',
+                '<p><em>In Odoo Knowledge, the </em><strong><em>Favorites</em></strong><em> category is not a folder you drag articles into \u2014 it is a system-managed view based on items you have favorited.</em></p><p><em>To favorite an article:</em></p><p><em>\u27a1\ufe0f </em><strong><em>Click the star icon (\u2605) next to the article title.</em></strong></p><p><em>Once starred, the article automatically appears in the </em><strong><em>Favorites</em></strong><em> section.<br>No drag-and-drop or "Move To" action is required.</em></p>',
+                '<ol><li><p><em>\u201cMove To\u201d moves an article to another </em><strong><em>workspace or folder</em></strong><em>, not to Favorites.</em></p></li><li><p><em>Favorites is not a selectable destination.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>With a simple drag and drop.</strong></p>',
+                '<p><strong>By clicking the \u201cstar\u201d icon.</strong></p>',
+                '<p><strong>Via the \u201cMove To\u201d option.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Knowledge',
+            question_plain:
+              'How do you move an article into the Favorites category in Odoo Knowledge?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300585,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following statements about <strong>sub-tasks</strong> in Odoo is <strong>false</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Any task can be converted into or assigned as a sub-task of another task.</em></p></li><li><p><em>This is just a matter of setting the \u201cParent Task\u201d field.</em></p></li></ol>',
+                '<p><em>In Odoo 19:</em></p><ul><li><p><strong><em>Sub-tasks are enabled by default.</em></strong></p></li><li><p><em>You do </em><strong><em>not</em></strong><em> need to activate a setting in the Project app to use them.</em></p></li><li><p><em>You can immediately create sub-tasks on any task form via the </em><strong><em>Sub-tasks</em></strong><em> smart button or panel.</em></p></li></ul><p><em>Thus, claiming that you \u201cmust enable\u201d a setting first is incorrect.</em></p>',
+                '<ol><li><p><em>Parent and sub-tasks </em><strong><em>can belong to different projects.</em></strong></p></li><li><p><em>Odoo does not restrict sub-tasks to the same project as the parent.</em></p></li><li><p><em>This is useful for cross-project coordination.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Any task can become a sub-task.</strong></p>',
+                '<p><strong>You must enable the sub-tasks setting before you can use them.</strong> </p>',
+                '<p><strong>A task and its sub-task can be part of different projects.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'Which of the following statements about sub-tasks in Odoo is false?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300587,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When Odoo automatically reschedules dependent tasks from the <strong>Gantt view</strong>, which of the following pieces of <strong>assignee-related information is <em>not</em> taken into account</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>When Odoo automatically reschedules dependent tasks in the </em><strong><em>Gantt view</em></strong><em>, it considers:</em></p><p><em>\u2705 </em><strong><em>Time Off</em></strong></p><ul><li><p><em>If the assigned user is on leave (e.g., via Time Off app), Odoo avoids scheduling tasks during those days.</em></p></li></ul><p><em>\u2705 </em><strong><em>Working Hours</em></strong></p><ul><li><p><em>Odoo respects the user\u2019s weekly working schedule defined in their </em><strong><em>Working Hours</em></strong><em> (e.g., 9\u20135, Mon\u2013Fri).</em></p></li></ul>',
+                '<p><em>When Odoo automatically reschedules dependent tasks in the </em><strong><em>Gantt view</em></strong><em>, it considers:</em></p><p><em>\u2705 </em><strong><em>Time Off</em></strong></p><ul><li><p><em>If the assigned user is on leave (e.g., via Time Off app), Odoo avoids scheduling tasks during those days.</em></p></li></ul><p><em>\u2705 </em><strong><em>Working Hours</em></strong></p><ul><li><p><em>Odoo respects the user\u2019s weekly working schedule defined in their </em><strong><em>Working Hours</em></strong><em> (e.g., 9\u20135, Mon\u2013Fri).</em></p></li></ul>',
+                '<p><em>\u274c </em><strong><em>It does NOT take into account the user\u2019s \u201cCalendar\u201d</em></strong></p><ul><li><p><em>User calendars in Odoo may include meetings, appointments, or planned events.</em></p></li><li><p><em>These </em><strong><em>do not</em></strong><em> influence scheduling or dependency shifts in the Gantt view.</em></p></li><li><p><em>Odoo treats calendar events as informational, not as scheduling constraints.</em></p></li></ul><p><em>Therefore, </em><strong><em>Calendar</em></strong><em> is the assignee-related information not factored into automatic rescheduling.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Time off</strong></p>',
+                '<p><strong>Working hours</strong></p>',
+                '<p><strong>Calendar</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Project',
+            question_plain:
+              'When Odoo automatically reschedules dependent tasks from the Gantt view, which of the following pieces of assignee-related information is not taken into account?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300589,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo\u2019s burndown chart, what does it represent at a specific point in time?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>The </em><strong><em>Burndown Chart</em></strong><em> in Odoo Project is used for Agile/Scrum tracking and displays:</em></p><p><em>\u27a1\ufe0f </em><strong><em>How many tasks remain in each stage (or in total) at a given point in time</em></strong></p><p><em>It helps visualize:</em></p><ul><li><p><em>Progress of the sprint</em></p></li><li><p><em>How many tasks are left</em></p></li><li><p><em>Whether the team is on track</em></p></li><li><p><em>How work \u201cburns down\u201d over time</em></p></li></ul><p><em>It does not track feedback, customer ratings, or cancellations.</em></p>',
+                '<ol><li><p><em>Customer ratings belong to Support/Helpdesk, not Project.</em></p></li><li><p><em>The burndown chart never displays ratings.</em></p></li></ol>',
+                '<ol><li><p><em>Canceled tasks are not the purpose of the burndown chart.</em></p></li><li><p><em>The goal is sprint progress, not evaluating cancellations.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>The number of tasks in each stage</strong></p>',
+                '<p><strong>The number of negative customer ratings</strong></p>',
+                '<p><strong>The number of canceled tasks</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'In Odoo\u2019s burndown chart, what does it represent at a specific point in time?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300661,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When a <strong>recurrence</strong> is configured on a task in Odoo Project, which action does <strong>NOT</strong> trigger the creation of the next recurring task?</p>',
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Recurring Tasks](https://www.odoo.com/slides/slide/recurring-tasks-6958)'
+              ],
+              feedbacks: [
+                '<p><em>In Odoo, recurring tasks are designed to continue either when the task is marked as done or canceled.</em></p>',
+                '',
+                ''
+              ],
+              answers: [
+                '<p>Moving the task to the <strong>last Kanban stage</strong></p>',
+                '<p><strong>Marking the task as canceled</strong> </p>',
+                '<p>Marking the task as <strong>done</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'When a recurrence is configured on a task in Odoo Project, which action does NOT trigger the creation of the next recurring task?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300663,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>After creating a task in Odoo Project, how can you <strong>schedule</strong> it by assigning planned dates?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: ['', '', ''],
+              explanation:
+                '<p>By setting the <strong>Planned Date</strong> on the task\u2019s <strong>form view</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-15_22-44-26-c43e77c49843f865c89f10b6113a0398.png"><p>The field initially appears as a deadline, but by clicking the calendar icon with the \u201c+\u201d sign, you can add a planned date, which will then be visible in the Gantt view.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-15_22-44-26-a804e2d798eca46e434ece89bc3c770f.png">',
+              answers: [
+                '<p>By selecting a time range directly in the <strong>Gantt view</strong></p>',
+                '<p>By setting the <strong>Planned Date</strong> on the task\u2019s <strong>form view</strong></p>',
+                '<p>By using either the Gantt view or the Planned Date field on the task form</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'After creating a task in Odoo Project, how can you schedule it by assigning planned dates?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300591,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>When creating a task directly from a project's <strong>Kanban view</strong>, what happens if you add <strong>\u201c24h\u201d</strong> to the task title?</p>",
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Task Creation](https://www.odoo.com/documentation/19.0/applications/services/project/tasks/task_creation.html)'
+              ],
+              feedbacks: [
+                '<p><em>Incorrect, it can also be edited directly from the Kanban view without opening the individual task</em></p>',
+                '<p><em>You can use the following keyboard shortcuts in the task title to configure new tasks (modify the values in the examples below according to your needs):</em></p><ul><li><p><strong><em>30h</em></strong><em>: to allocate 30 hours to the task.</em></p></li><li><p><strong><em>#tags</em></strong><em>: to add tags to the task.</em></p></li><li><p><strong><em>@user</em></strong><em>: to assign the task to a user.</em></p></li><li><p><strong><em>!</em></strong><em>: to star the task as high priority.</em></p></li></ul>',
+                '<p><em>Incorrect.</em></p>'
+              ],
+              answers: [
+                '<p><strong>It simply adds the text \u201c24h\u201d to the task\u2019s title.</strong> </p>',
+                '<p><strong>It allocates 24 hours to the task.</strong></p>',
+                '<p><strong>It sets the task\u2019s deadline to 24 hours from now.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              "When creating a task directly from a project's Kanban view, what happens if you add \u201c24h\u201d to the task title?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300593,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How many <strong>task priority levels</strong> are available in Odoo Project?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><em>Odoo clearly supports multiple priority levels; not just one.</em></p></li></ul>',
+                '<p><em>Odoo Project uses a </em><strong><em>3-level priority system</em></strong><em> for tasks, represented by stars \u2b50:</em></p><ul><li><p><strong><em>1 stars</em></strong><em> \u2192 </em><strong><em>Medium priority</em></strong></p></li><li><p><strong><em>2 star</em></strong><em> \u2192 </em><strong><em>High priority</em></strong></p></li><li><p><strong><em>3 stars</em></strong><em> \u2192 </em><strong><em>Urgent priority</em></strong></p></li></ul><p><em>This priority selector is visible:</em></p><ul><li><p><em>In the Kanban view</em></p></li><li><p><em>On the task form</em></p></li><li><p><em>In the list view</em></p></li></ul><p><em>Odoo does </em><strong><em>not</em></strong><em> support five levels, and it is not limited to a single priority option.</em></p>',
+                '<ul><li><p><em>There are no 5 levels \u2014 the star system only provides 1, 2, or 3 stars (three possible priorities).</em></p></li></ul>'
+              ],
+              answers: [
+                '<p><strong>One</strong></p>',
+                '<p><strong>Three</strong></p>',
+                '<p><strong>Five</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'How many task priority levels are available in Odoo Project?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300595,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>When creating a task from a project's <strong>Kanban view</strong>, what happens if you add <strong>\u201c#priority\u201d</strong> to the task title?</p>",
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Task Creation](https://www.odoo.com/documentation/19.0/applications/services/project/tasks/task_creation.html)'
+              ],
+              feedbacks: [
+                '<p><em>You can use the following keyboard shortcuts in the task title to configure new tasks (modify the values in the examples below according to your needs):</em></p><ul><li><p><strong><em>30h</em></strong><em>: to allocate 30 hours to the task.</em></p></li><li><p><strong><em>#tags</em></strong><em>: to add tags to the task.</em></p></li><li><p><strong><em>@user</em></strong><em>: to assign the task to a user.</em></p></li><li><p><strong><em>!</em></strong><em>: to star the task as high priority.</em></p></li></ul>',
+                '<p><em>Incorrect</em></p>',
+                '<p><em>Incorrect</em></p>'
+              ],
+              answers: [
+                '<p><strong>A \u201cpriority\u201d tag is added to the task.</strong></p>',
+                '<p><strong>The task\u2019s priority is set to high.</strong></p>',
+                '<p><strong>The text \u201c#priority\u201d is added to the task\u2019s title.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              "When creating a task from a project's Kanban view, what happens if you add \u201c#priority\u201d to the task title?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300597,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which type of record cannot be added to the top bar?</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2025-11-23_21-03-30-4800e6fdcb24031e64fbfff610a9de78.png">',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because products, as a specific type of record, are not typically included in the top bar for quick access since the top bar is reserved for more dynamic or commonly-used records like sales or analytics.</em></p>',
+                '<p><em>This is incorrect because sales orders can be added to the top bar as they are commonly accessed and managed in many workflows.</em></p>',
+                '<p><em>This is incorrect because analytic items are dynamic records that can often be added to the top bar to support quick analysis and decision-making.</em></p>'
+              ],
+              explanation:
+                '<p>The top bar is designed for quick access to frequently used or dynamic records that require immediate attention. Static records, like products, are usually not added because they are less likely to need quick navigation compared to operational records like sales orders or analytic items. This approach ensures the top bar remains relevant and efficient for active tasks.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-03-30-468b242855cc03655a62203aafdbaa11.png">',
+              answers: [
+                '<p>Products</p>',
+                '<p>Sales orders</p>',
+                '<p>Analytic items</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'Which type of record cannot be added to the top bar?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300599,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How many analytic accounts can be assigned to a project?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because a project in Odoo can typically be associated with only one analytic account to streamline cost tracking and reporting.</em></p>',
+                '<p><em>This is incorrect because Odoo does not allow multiple analytic accounts per project even if different plans are involved.</em></p>',
+                '<p><em>This is incorrect because there is a restriction of one analytic account per project to maintain consistency in financial tracking.</em></p>',
+                '<p><em>This is incorrect because analytic accounts are a fundamental feature used to track costs and revenues at the project level in Odoo</em></p>'
+              ],
+              explanation:
+                '<p>Odoo limits projects to a single analytic account to ensure clarity in tracking associated costs and revenues. This approach simplifies financial reporting and avoids confusion that could arise from multiple accounts being linked to the same project. Analytic accounts play a critical role in managing project budgets and profitability.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-18-40-8b399d8713f336a84dea100adf41e053.png">',
+              answers: [
+                '<p>One.</p>',
+                '<p>One for each analytic plan.</p>',
+                '<p>An unlimited number of accounts can be assigned to a project regardless of the number of analytic plans.</p>',
+                '<p>Analytic accounts cannot be assigned to projects.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'How many analytic accounts can be assigned to a project?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300601,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Who is allowed to view a <strong>private project</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>It excludes portal users and project administrators.</em></p></li><li><p><em>Both can access private projects if invited (portal) or by role (Project Admin).</em></p></li></ol>',
+                "<p><em>A </em><strong><em>private project</em></strong><em> in Odoo restricts visibility based on explicit access rights.</em></p><p><em>The following users can access a private project:</em></p><p><em>\u2705 </em><strong><em>1. Invited internal users</em></strong></p><ul><li><p><em>You must explicitly add them to the project team.</em></p></li></ul><p><em>\u2705 </em><strong><em>2. Invited portal users</em></strong></p><ul><li><p><em>Portal users can be granted access per project (e.g., clients, subcontractors).</em></p></li><li><p><em>They will only see tasks and documents related to the specific project they were invited to.</em></p></li></ul><p><em>\u2705 </em><strong><em>3. Users with \u201cProject Administrator\u201d access rights</em></strong></p><ul><li><p><em>Project Admins can see all projects, including private ones.</em></p></li><li><p><em>This role bypasses project-level visibility restrictions.</em></p></li></ul><p><em>This matches Odoo's official access control behavior for private projects.</em></p>",
+                '<p><em>It incorrectly excludes portal users, which Odoo does allow when specifically invited.</em></p>'
+              ],
+              explanation:
+                '<p><strong>Only invited internal users, invited portal users, and users with the \u201cProject Administrator\u201d access right</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-36-03-acbc833eaba952d31a580a4a09881a65.png">',
+              answers: [
+                '<p><strong>Only invited internal users</strong></p>',
+                '<p><strong>Only invited internal users, invited portal users, and users with the \u201cProject Administrator\u201d access right</strong></p>',
+                '<p><strong>Only invited internal users and users with the \u201cProject Administrator\u201d access right</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain: 'Who is allowed to view a private project in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300603,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which users are allowed to view a <strong>private task</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Being the creator does </em><strong><em>not</em></strong><em> give exclusive access.</em></p></li><li><p><em>Other users (followers, assigned users) can see the task as well.</em></p></li><li><p><em>Project Administrators do </em><strong><em>not automatically</em></strong><em> access private tasks unless added as followers or assigned.</em></p></li></ol>',
+                '<p><em>A </em><strong><em>private task</em></strong><em> in Odoo bypasses normal project visibility and is only visible to:</em></p><p><em>\u2705 </em><strong><em>Assigned users (responsible users)</em></strong></p><ul><li><p><em>The person the task is assigned to always has visibility.</em></p></li></ul><p><em>\u2705 </em><strong><em>Followers of the task</em></strong></p><ul><li><p><em>Any user (internal or portal) added as a follower gains access to the task.</em></p></li><li><p><em>Followers can be added manually or automatically (e.g., based on settings or mentions).</em></p></li></ul><p><em>These two groups represent the full visibility scope for private tasks.</em></p>',
+                '<p><em>It is not considering that automatically the assignees have access and therefore it is incomplete.</em></p>'
+              ],
+              explanation:
+                '<p><strong>All users added as followers of the task and users with the \u201cProject Administrator\u201d access right</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-42-48-cb7ee213e1ef3df0756abf9dd4a3d782.png">',
+              answers: [
+                '<p><strong>Only the user who created the task and users with the \u201cProject Administrator\u201d access right</strong></p>',
+                '<p><strong>All users assigned to the task and all users added as followers of the task</strong></p>',
+                '<p><strong>All users added as followers of the task and users with the \u201cProject Administrator\u201d access right</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'Which users are allowed to view a private task in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300605,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What conditions must be met for the milestones of your project to be invoiced in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because for a milestone to be invoiced, it needs to have a sales order item assigned to it, and it must be marked as reached to indicate completion. Both conditions are essential for invoicing in Odoo.</em></p>',
+                '<p><em>This is partially correct because having a sales order item assigned is necessary, but it is not sufficient by itself. The milestone also needs to be marked as reached.</em></p>',
+                '<p><em>This is partially correct because marking the milestone as reached indicates completion, but it cannot be invoiced unless a sales order item is associated with it.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, invoicing project milestones requires two conditions to be fulfilled: a sales order item must be linked to the milestone to associate it with the billing process, and the milestone must be marked as reached to confirm its completion. These requirements ensure that invoicing is aligned with project progress and accurately reflects the work delivered. </p>',
+              answers: [
+                '<p>All of the answers are correct.</p>',
+                '<p>A sales order item must be set on the milestone.</p>',
+                '<p>The milestone must be marked as reached.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'What conditions must be met for the milestones of your project to be invoiced in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300607,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What does it indicate when a milestone is displayed in green in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because in Odoo, a green milestone indicates that its associated tasks are complete and the milestone is ready to be marked as reached. This serves as a visual cue for progress tracking.</em></p>',
+                '<p><em>This is incorrect because a green milestone does not signify the deadline date but rather indicates that its associated tasks are complete.</em></p>',
+                '<p><em>This is incorrect because a green milestone does not signify sequence or order but readiness for marking as completed.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, milestones serve as key checkpoints in project management. A milestone displayed in green is a visual indicator that all its tasks have been completed, signaling that it can now be marked as reached. This helps project managers quickly identify milestones that are ready for final review and confirmation. Other colors may signify different statuses, but green specifically relates to task completion.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-52-32-2f36ee8dcd0c3cfe3edd9a1057a6c224.png"><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-46-33-8dca4f3aa7e0ef9c2d20fbf8cec6cbd0.png"></p>',
+              answers: [
+                '<p>The milestone is ready to be marked as reached, as all of its tasks have been completed (done or canceled)</p>',
+                "<p>The milestone's deadline falls on today's date.</p>",
+                '<p>This milestone is the next one that must be reached.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'What does it indicate when a milestone is displayed in green in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300609,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When does a project <strong>milestone</strong> appear <strong>in red</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Canceled tasks do </em><strong><em>not</em></strong><em> cause a milestone to turn red.</em></p></li><li><p><em>Canceled tasks are treated as \u201cnot blocking\u201d the milestone.</em></p></li></ol>',
+                '<ol><li><p><em>A milestone is </em><strong><em>not</em></strong><em> shown in red when its deadline is today.</em></p></li><li><p><em>It only turns red </em><strong><em>after</em></strong><em> the deadline has passed.</em></p></li></ol>',
+                '<p><em>A milestone in Odoo is intended to track major deliverables. Its color indicates its current status:</em></p><p><em>\ud83d\udd34 A milestone appears </em><strong><em>red</em></strong><em> when:</em></p><ul><li><p><em>Its </em><strong><em>deadline has passed</em></strong><em>, </em><strong><em>AND</em></strong></p></li><li><p><em>One or more of its linked tasks is still </em><strong><em>open</em></strong><em>, </em><strong><em>in progress</em></strong><em>, or </em><strong><em>not completed</em></strong></p></li><li><p><em>A canceled task does count as completed (for milestone evaluation)</em></p></li></ul><p><em>This visual alert shows that the project is </em><strong><em>late</em></strong><em> on reaching that milestone.</em></p>'
+              ],
+              answers: [
+                '<p><strong>When one or more of its tasks is marked as canceled</strong></p>',
+                '<p><strong>When the milestone\u2019s deadline is today</strong></p>',
+                '<p><strong>When the milestone\u2019s deadline has passed and at least one of its tasks is not marked as done or canceled</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Project',
+            question_plain:
+              'When does a project milestone appear in red in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300611,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What does the blue color in the bar at the top of a Kanban stage represent?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because the blue color indicates that the tasks are dependent on or waiting for the completion of other tasks.</em></p>',
+                '<p><em>This is incorrect because the blue color typically does not indicate tasks that are canceled.</em></p>',
+                '<p><em>This is incorrect as the blue color does not signify approval in this context.</em></p>'
+              ],
+              explanation:
+                '<p>The blue color in the Kanban view serves as a visual cue to highlight tasks that are blocked by dependencies. This allows users to quickly identify tasks that cannot progress until the blocking conditions are resolved. It helps improve workflow visibility and ensures that teams can focus on unblocking tasks to maintain efficiency.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_21-56-28-b55b693e96b453d64a6dd51e1500e11c.png">',
+              answers: [
+                '<p>Tasks shown in blue are blocked by other tasks.</p>',
+                '<p>Tasks shown in blue are canceled.</p>',
+                '<p>Tasks shown in blue are approved.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'What does the blue color in the bar at the top of a Kanban stage represent?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300613,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When is Odoo able to automatically send a <strong>task rating request</strong> to a customer?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect</em></p>',
+                '<p><em>Incorrect</em></p>',
+                '<p><em>Correct!</em></p>'
+              ],
+              explanation:
+                '<p><em>In Odoo Project, automatic rating requests can be triggered in </em><strong><em>two ways</em></strong><em>:</em></p><p><strong><em>1. Stage-based triggers</em></strong></p><p><em>You can configure a specific task stage (e.g., \u201cDone\u201d or \u201cCompleted\u201d) to automatically send a rating survey when a task moves into that stage.</em></p><p><em>This is configured in:<br>\u27a1\ufe0f Project \u2192 Configuration \u2192 Stages \u2192 Rating Email Template</em></p><p><strong><em>2. Periodic rating requests</em></strong></p><p><em>For ongoing work (e.g., long-running support or service projects), you can set up </em><strong><em>recurring rating emails</em></strong><em>, such as weekly or monthly.</em></p><p><em>This is configured through:<br>\u27a1\ufe0f Project \u2192 Configuration \u2192 Projects \u2192 Enable Periodic Ratings</em></p>',
+              answers: [
+                '<p><strong>Only when a task reaches a specific stage</strong></p>',
+                '<p><strong>Only on a periodic basis (e.g., monthly)</strong></p>',
+                '<p><strong>Both when a task reaches a specific stage or on a periodic basis</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Project',
+            question_plain:
+              'When is Odoo able to automatically send a task rating request to a customer?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300615,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following <strong>project visibility options</strong> does <strong>NOT</strong> exist in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is a real visibility configuration available on a project form.</em></p>',
+                '<p><em>This is a real visibility configuration available on a project form.</em></p>',
+                '<p><strong><em>No \u201cPublic\u201d visibility exists</em></strong></p><p><em>This option simply does not exist in Odoo Project.</em></p>'
+              ],
+              explanation:
+                '<p><strong>Public</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_22-04-29-2a45abaa6bea069a18498e399f3cc400.png">',
+              answers: [
+                '<p><strong>Invited internal users</strong></p>',
+                '<p><strong>All internal users</strong></p>',
+                '<p><strong>Public</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Project',
+            question_plain:
+              'Which of the following project visibility options does NOT exist in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300617,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you share a <strong>task</strong> publicly in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Odoo allows you to share </em><strong><em>specific tasks</em></strong><em> with external users via:</em></p><p><em>\u27a1\ufe0f </em><strong><em>A public share link</em></strong><em>, generated from the task\u2019s \u201cShare\u201d option.</em></p><p><em>This link can be opened by:</em></p><ul><li><p><em>Clients</em></p></li><li><p><em>Vendors</em></p></li><li><p><em>External collaborators</em></p></li><li><p><em>Anyone with the URL</em></p></li></ul><p><em>And it does </em><strong><em>NOT</em></strong><em> require them to be Odoo users.</em></p><p><em>This is the </em><strong><em>only</em></strong><em> way to \u201cpublicly\u201d share a task.</em></p>',
+                '<ul><li><p><em>Tasks do </em><strong><em>not</em></strong><em> have a \u201cvisibility\u201d setting that can be set to public.</em></p></li><li><p><em>Visibility applies to </em><strong><em>projects</em></strong><em>, not individual tasks.</em></p></li></ul>',
+                '<ul><li><p><em>Odoo Project does </em><strong><em>not</em></strong><em> allow a project to be made \u201cpublic.\u201d</em></p></li><li><p><em>The visibility options are:</em></p><ul><li><p><strong><em>Invited internal users</em></strong></p></li><li><p><strong><em>All internal users</em></strong></p></li></ul></li></ul><p><em>There is no \u201cpublic project\u201d option.</em></p>'
+              ],
+              answers: [
+                '<p><strong>By sharing a public link to the task or project</strong></p>',
+                '<p><strong>By setting the task visibility to public</strong></p>',
+                '<p><strong>By setting the project visibility to public</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain: 'How can you share a task publicly in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300619,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How are <strong>tags</strong> shared between tasks in Odoo Project?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Tags are </em><strong><em>not</em></strong><em> defined per project.</em></p></li><li><p><em>Tasks in different projects can freely use the same tags.</em></p></li></ol>',
+                '<p><em>In Odoo, </em><strong><em>task tags belong to the global task model</em></strong><em>, not to a single project.</em></p><p><em>This means:</em></p><ul><li><p><em>The same tag list is available across </em><strong><em>every</em></strong><em> project</em></p></li><li><p><em>Tags like \u201cUrgent,\u201d \u201cClient Review,\u201d \u201cBlocked\u201d can be used anywhere</em></p></li><li><p><em>Tags are not restricted by project boundaries</em></p></li><li><p><em>They help with global search, reporting, and cross-project categorization</em></p></li></ul><p><em>Because tags are model-level (on </em><code><em>project.task</em></code><em>), they are system-wide.</em></p>',
+                '<ol><li><p><em>Odoo has a built-in tagging system.</em></p></li><li><p><em>Tags absolutely are shared and used for categorization and filtering.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Tags are shared between all tasks inside a single project.</strong></p>',
+                '<p><strong>Tags are shared between tasks across all projects.</strong></p>',
+                '<p><strong>Tags are not shared between tasks.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'How are tags shared between tasks in Odoo Project?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300621,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you mark the milestones of your project as reached in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because in Odoo, milestones are not automatically updated. Users need to manually mark milestones as reached to confirm their completion and enable further actions such as invoicing.</em></p>',
+                '<p><em>This is incorrect because Odoo does not automatically mark milestones as reached based on task completion. Even if all tasks are done, manual confirmation is required to mark the milestone as reached.</em></p>',
+                '<p><em>This is incorrect because Odoo does not automatically mark milestones as reached based on task completion. Even if all tasks are done, manual confirmation is required to mark the milestone as reached.</em></p>'
+              ],
+              explanation:
+                "<p>In Odoo, milestone management is a manual process to ensure precise control and validation. Users must manually mark milestones as reached, allowing them to review the project's progress and confirm the milestone's completion before proceeding to invoicing or further actions. Automation of milestone status is not enabled by default, as milestones often represent significant checkpoints that require deliberate approval.</p>",
+              answers: [
+                '<p>Milestones have to be manually marked as reached.</p>',
+                '<p>Milestones are automatically marked as reached when all of their tasks are done.</p>',
+                '<p>Milestones are automatically marked as reached when all the their tasks have been moved to the last Kanban stage</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Project',
+            question_plain:
+              'How can you mark the milestones of your project as reached in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300623,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens to an existing project when you <strong>convert it into a template</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>The original project does </em><strong><em>not</em></strong><em> remain active.</em></p></li><li><p><em>It is automatically archived as part of the conversion process.</em></p></li></ol>',
+                '<p><em>When converting a project into a </em><strong><em>template</em></strong><em>, Odoo does the following:</em></p><ul><li><p><em>Creates a </em><strong><em>project template</em></strong><em> based on the structure (tasks, stages, etc.) of the existing project</em></p></li><li><p><strong><em>Archives the original project</em></strong><em> so it no longer appears in active projects</em></p></li><li><p><em>Keeps all task data, stages, milestones, and documents in an inactive state</em></p></li><li><p><em>Allows the template to be used later to generate new standardized projects</em></p></li></ul><p><em>Why?</em></p><p><em>This ensures that a template is not confused with an active project and prevents accidental use of the template as if it were a live project.</em></p>',
+                '<ol><li><p><em>Odoo never deletes the project.</em></p></li><li><p><em>It keeps the archived version in case you need to reactivate or audit it.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Nothing, the project remains unchanged in your database.</strong></p>',
+                '<p><strong>The project is archived.</strong> </p>',
+                '<p><strong>The project is deleted.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'What happens to an existing project when you convert it into a template in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300625,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When a <strong>recurring task</strong> is generated in Odoo, which element is <strong>not</strong> copied from the original task?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p>Incorrect</p>',
+                '<p>Correct!</p>',
+                '<p>Incorrect</p>'
+              ],
+              explanation:
+                '<p><em>When Odoo creates a new recurring task, it clones several fields from the original task, including:</em></p><p><em>\u2705 </em><strong><em>Carried over:</em></strong></p><ul><li><p><strong><em>Tags</em></strong><em> \u2192 The new task keeps all tags from the original</em></p></li><li><p><strong><em>Assignees</em></strong><em> \u2192 All assigned users remain assigned on the recurring task</em></p></li></ul><p><em>These help maintain the same classification and responsible team members.</em></p><p><em>\u274c </em><strong><em>NOT carried over: Activities</em></strong></p><ul><li><p><em>Scheduled activities (calls, reminders, to-dos, meetings)</em></p></li><li><p><em>Are </em><strong><em>never duplicated</em></strong><em> for recurring tasks</em></p></li><li><p><em>Each new recurring task starts with </em><strong><em>no activities</em></strong><em>, preventing outdated or irrelevant reminders from carrying forward</em></p></li></ul><p><em>This ensures each recurrence starts clean and avoids duplicating past or completed follow-ups.</em></p>',
+              answers: [
+                '<p><strong>Tags</strong></p>',
+                '<p><strong>Activities</strong></p>',
+                '<p><strong>Assignees</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'When a recurring task is generated in Odoo, which element is not copied from the original task?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300627,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following pieces of information is <strong>not</strong> shown on a project\u2019s <strong>dashboard</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Milestones are displayed on the project dashboard as cards or status indicators.</em></p>',
+                '<p><em>On the </em><strong><em>Project Dashboard</em></strong><em>, Odoo displays project-level insights such as:</em></p><ul><li><p><strong><em>Profitability</em></strong><em> (if Timesheets &amp; Sales are used)</em></p></li><li><p><strong><em>Milestones</em></strong></p></li><li><p><strong><em>Planned vs. Effective hours</em></strong></p></li><li><p><strong><em>Tasks overview</em></strong></p></li><li><p><strong><em>Status indicators</em></strong></p></li></ul><p><em>However:</em></p><p><em>\u274c </em><strong><em>Customer ratings</em></strong><em> are not shown on the project dashboard.</em></p><p><em>Customer ratings only appear when:</em></p><ul><li><p><em>Rating is enabled on specific </em><strong><em>stages</em></strong></p></li><li><p><em>Ratings are visible inside </em><strong><em>tasks</em></strong><em> or in the </em><strong><em>Ratings</em></strong><em> reporting menu</em></p></li></ul><p><em>They are </em><strong><em>not</em></strong><em> summarized on the project dashboard overview.</em></p>',
+                '<p><em>Profitability is displayed \u2014 especially when:</em></p><ul><li><p><em>Timesheets are used</em></p></li><li><p><em>Invoicing is linked</em></p></li><li><p><em>Analytic accounts are active</em></p></li></ul><p><em>It appears as part of the financial KPI block.</em></p>'
+              ],
+              answers: [
+                '<p><strong>The project\u2019s milestones</strong></p>',
+                '<p><strong>The project\u2019s customer ratings</strong></p>',
+                '<p><strong>The project\u2019s profitability</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain:
+              'Which of the following pieces of information is not shown on a project\u2019s dashboard in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300629,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question: '<p>Which statement about the top bar is incorrect</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the top bar actually allows quick access to related records without switching modules, making it convenient for seamless navigation.</em></p>',
+                '<p><em>This is correct because the top bar does not provide automation features for moving tasks between stages; such functionality is typically configured through workflows or automation rules elsewhere in the system.</em></p>',
+                '<p><em>This is incorrect because the top bar supports the addition and sharing of custom views to personalize and optimize the workspace.</em></p>'
+              ],
+              explanation:
+                '<p>The top bar in Odoo is designed for quick navigation and improved usability, offering features such as accessing related records and customizing views. However, it does not support automating task transitions between stages, which requires workflow configuration or automation rules outside of the top bar functionality. This distinction ensures that each feature of Odoo is used for its intended purpose.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_22-53-06-8c9a707fb643244580bc0b26f6f9c9cc.png">\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_22-53-06-ccce705d689c0ab7aae536d6bf136954.png">',
+              answers: [
+                '<p>It allows you to access records related to your projects without leaving Odoo Project.</p>',
+                '<p>It allows you to automate task moves between stages.</p>',
+                '<p>It allows you to add and share custom views.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Project',
+            question_plain: 'Which statement about the top bar is incorrect',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300631,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can rankings be displayed on the timesheet leaderboard?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because billing rate and hours invoiced are generally used for financial tracking rather than leaderboard rankings.</em></p>',
+                '<p><em>This is not applicable since leaderboards typically focus on performance indicators rather than a combination of time and invoices.</em></p>',
+                '<p><em>This is correct as it reflects a common method of evaluating and ranking performance, combining the value of time logged with the billing rate.</em></p>'
+              ],
+              explanation:
+                '<p>Timesheet leaderboards in Odoo are designed to reflect productivity or contribution based on measurable metrics. The combination of billing rate and total logged time provides a balanced evaluation of both efficiency and monetary value, making it the most appropriate choice for displaying rankings. The other options either mix unrelated metrics or do not align with common leaderboard configurations.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-27-16-a1702d26eff48ce0f5247fc5c6b5adf4.png">',
+              answers: [
+                '<p>Based on the billing rate and the number of hours invoiced.</p>',
+                '<p>Based on the total time logged and the hours invoiced.</p>',
+                '<p>Based on the billing rate and total time logged.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Timesheets',
+            question_plain:
+              'How can rankings be displayed on the timesheet leaderboard?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300633,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Where can you configure the billing time target for an employee?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because billing time targets are individualized and configured within the HR settings for each employee.</em></p>',
+                '<p><em>This is incorrect because Timesheets settings apply globally, not for specific employee billing targets.</em></p>',
+                '<p><em>This is incorrect because the Billing Rate Leaderboard is meant for performance tracking, not configuration of targets.</em></p>'
+              ],
+              explanation:
+                '<p>Billing time targets are configured at the individual level within the HR (employee) settings of each employee to allow personalized tracking and management of their work expectations. </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-28-38-eb2e9729d14fb067db853c5d4de1d174.png">',
+              answers: [
+                '<p>Through the HR settings of the specific employee.</p>',
+                '<p>Under the general Timesheets settings for all employees.</p>',
+                '<p>Within the Billing Rate Leaderboard section.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Timesheets',
+            question_plain:
+              'Where can you configure the billing time target for an employee?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300635,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Does a Time Off entry automatically generate a corresponding timesheet in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Time Off entries do not always create timesheets automatically unless a specific configuration is enabled.</em></p>',
+                '<p><em>This is incorrect because timesheets can be created from Time Off entries when the appropriate settings are configured.</em></p>',
+                '<p><em>This is correct because a timesheet is generated automatically only when the "Time Off" option is activated in the configuration settings, linking the Time Off module with timesheet functionality.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo allows the integration of Time Off with the Timesheet module, but this functionality needs to be explicitly enabled in the settings by checking the "Time Off" option. When this configuration is activated, Time Off entries are automatically converted into timesheets, streamlining tracking for payroll or project management. Without this configuration, no automatic timesheet creation occurs, regardless of employee roles.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-31-07-faeb04d3c025ce8805f4a602e15e5240.png">',
+              answers: [
+                '<p>Always.</p>',
+                '<p>Never.</p>',
+                '<p>Only if the "Time Off" checkbox is enabled in the settings.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Timesheets',
+            question_plain:
+              'Does a Time Off entry automatically generate a corresponding timesheet in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300637,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the purpose of the letters displayed on the left side of a timesheet?</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2025-11-24_19-33-24-0dbe107ce8d93e39fdebbedcdc9b9a90.png">',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the letters are not used to indicate the sequence or order of the timesheet entries.</em></p>',
+                '<p><em>This is incorrect because the letters are not clickable links to tasks associated with the timesheet.</em></p>',
+                '<p><em>This is incorrect because the letters are not used as navigation tools for projects linked to the timesheet.</em></p>',
+                '<p><em>This is correct because the letters serve as keyboard shortcuts, allowing users to quickly start the timer for a specific task by pressing the corresponding key.</em></p>'
+              ],
+              explanation:
+                '<p>The letters on the left side of the timesheet in Odoo are designed as keyboard shortcuts. They provide a quick and efficient way to launch the timer for tasks directly, enhancing user convenience and saving time during timesheet management. They are not intended for navigation or sequence representation, which distinguishes their functionality from other visual elements in the timesheet interface.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-33-25-aafc957cd48fa25755578dad4ae6b720.png">',
+              answers: [
+                '<p>They represent the "sequence" of the timesheet.</p>',
+                '<p>I can click on them to navigate to the task linked to the timesheet.</p>',
+                '<p>I can click on them to navigate to the project linked to the timesheet.</p>',
+                '<p>I can press that key on my keyboard to launch the timer for the task.</p>'
+              ]
+            },
+            correct_response: ['d'],
+            section: 'Timesheets',
+            question_plain:
+              'What is the purpose of the letters displayed on the left side of a timesheet?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300639,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In the <strong>All Timesheets</strong> view, what does it indicate when a timesheet <strong>duration is displayed in orange</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo Timesheets:</em></p><ul><li><p><em>A duration shown </em><strong><em>in orange</em></strong><em> indicates that the employee has logged </em><strong><em>more hours than planned</em></strong><em> for that day.</em></p></li><li><p><em>This visual cue is used to highlight </em><strong><em>overtime</em></strong><em>, allowing managers to quickly identify days where the timesheeted hours exceeded the expected working schedule.</em></p></li></ul><p><em>This is based on the employee\u2019s configured working hours (resource calendar).</em></p>',
+                '<ol><li><p><em>Time off is handled through the </em><strong><em>Time Off</em></strong><em> app and does </em><strong><em>not</em></strong><em> cause durations to appear orange.</em></p></li><li><p><em>Timesheets on time-off days typically appear separately or as zero.</em></p></li></ol>',
+                '<ol><li><p><em>Odoo does not color-code undertime as orange.</em></p></li><li><p><em>Undertime (less hours than expected) is highlighted with the red color.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>It means the employee worked overtime on that day.</strong> </p>',
+                '<p><strong>It means the employee took time off on that day.</strong></p>',
+                '<p><strong>It means the employee worked undertime on that day.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Timesheets',
+            question_plain:
+              'In the All Timesheets view, what does it indicate when a timesheet duration is displayed in orange?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300641,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What do the timesheet lines displayed in italics indicate?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because invoiced timesheets are typically not displayed in italics; they are shown as confirmed and finalized.</em></p>',
+                '<p><em>This is incorrect as pending validation is usually indicated differently and not by using italics.</em></p>',
+                '<p><em>This is correct because italics are used to represent placeholders or entries for tasks where no time has yet been reported in the current period.</em></p>'
+              ],
+              explanation:
+                '<p>In timesheets, italicized lines often act as placeholders for tasks or projects that are planned but for which no time has yet been logged. This helps users quickly identify tasks that need attention without confusing them with tasks that are invoiced or awaiting managerial validation. </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-37-39-0c76550b6af295a8e7ab58bb2fbc4451.png">',
+              answers: [
+                '<p>Timesheets that have already been invoiced.</p>',
+                '<p>Timesheets awaiting validation by the manager.</p>',
+                '<p>Projects or tasks that the user has not yet logged time for during this period.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Timesheets',
+            question_plain:
+              'What do the timesheet lines displayed in italics indicate?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300643,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens to the timesheet entry when the timer is stopped after 4 minutes under default Timesheets settings?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the default Timesheets settings typically apply rounding rules, and 4 minutes would not be directly recorded.</em></p>',
+                '<p><em>This is incorrect because the default rounding interval in Timesheets is usually set to 15 minutes, not 10 minutes.</em></p>',
+                '<p><em>This is correct because the default Timesheets settings round the duration up to the nearest 15-minute interval if the timer stops within that range.</em></p>'
+              ],
+              explanation:
+                '<p>By default, Timesheets apply a rounding policy to simplify time tracking. When the timer is stopped within a time frame less than 15 minutes, the duration is rounded up to the nearest 15-minute interval. This feature is designed to standardize time entries and improve consistency in timesheet reporting.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-42-00-1355249bc6501384a24936a6b4b8e7e1.png">',
+              answers: [
+                '<p>The timesheet entry will record a duration of 4 minutes.</p>',
+                '<p>The timesheet entry will be rounded up to 10 minutes.</p>',
+                '<p>The timesheet entry will be rounded up to 15 minutes.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Timesheets',
+            question_plain:
+              'What happens to the timesheet entry when the timer is stopped after 4 minutes under default Timesheets settings?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300645,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following statements about the relationship between <strong>Time Off</strong> and <strong>Timesheets</strong> in Odoo is true?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>When an employee requests and receives </em><strong><em>approved Time Off</em></strong><em> in Odoo:</em></p><ul><li><p><em>The system </em><strong><em>automatically creates a corresponding timesheet entry</em></strong><em> for that day or time range.</em></p></li><li><p><em>This ensures that timesheets are accurate without requiring employees to manually log vacation, sick leave, or other absences.</em></p></li><li><p><em>The timesheet entry reflects the approved time off and is locked from editing.</em></p></li></ul><p><em>This automation helps payroll, project accounting, and attendance tracking stay aligned.</em></p>',
+                '<ol><li><p><em>Time Off </em><strong><em>and</em></strong><em> Timesheets </em><strong><em>are linked</em></strong><em>.</em></p></li><li><p><em>Approved leave always appears on the timesheet.</em></p></li></ol>',
+                '<ol><li><p><em>You </em><strong><em>do not</em></strong><em> manually add time off into timesheets.</em></p></li><li><p><em>Odoo handles this automatically based on approved leave.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Time off entries automatically generate timesheet entries.</strong></p>',
+                '<p><strong>Time off and timesheet entries are never linked.</strong></p>',
+                '<p><strong>You have to add time off entries manually in timesheets.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Timesheets',
+            question_plain:
+              'Which of the following statements about the relationship between Time Off and Timesheets in Odoo is true?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300647,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens when the "Timesheet Validation" option is enabled in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the "Timesheet Validation" option typically involves validation by supervisors, not necessarily project managers, and it relates to payroll or invoicing rather than just submission.</em></p>',
+                '<p><em>This is incorrect because employees can record time regardless of validation status. Validation is required for processing timesheets for payroll or invoicing, not for the initial recording of time.</em></p>',
+                '<p><em>This is correct because enabling "Timesheet Validation" ensures that a supervisor must approve timesheets to confirm their accuracy before they are used for payroll calculations or invoicing clients.</em></p>'
+              ],
+              explanation:
+                '<p>The "Timesheet Validation" option in Odoo adds a layer of control by requiring supervisor approval of timesheets. This ensures that only verified and accurate timesheets are used in critical processes like payroll and invoicing. It does not restrict the recording of time or require project manager approval unless specified by company workflows. This validation step ensures compliance and reduces errors in financial processes.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-45-04-8fb81e5d015ada8d9ec48391b1c3e453.png">',
+              answers: [
+                '<p>Timesheets must be approved by a project manager before they can be submitted.</p>',
+                '<p>Employees can only record time after their timesheets are validated by HR.</p>',
+                '<p>Timesheets require validation by a supervisor before being used in payroll or invoicing.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Timesheets',
+            question_plain:
+              'What happens when the "Timesheet Validation" option is enabled in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300649,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How is the cost of timesheets determined when they are entered?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is correct because timesheet costs are derived from the hourly rate set in the employee's profile. This rate reflects the actual cost of the employee's work per hour.</em></p>",
+                "<p><em>This is incorrect because the product record does not directly relate to timesheet cost generation. Products typically reflect goods or services sold, not the employee's work cost.</em></p>",
+                "<p><em>This is incorrect because while tasks may track hours worked, they do not define the cost per hour. The cost originates from the employee's profile, not the task settings.</em></p>"
+              ],
+              explanation:
+                '<p>Timesheet costs are calculated based on the hourly cost defined on the employee\'s profile. This ensures consistency and accuracy in attributing costs to specific employees for the hours logged. Costs defined on product or task records are unrelated to timesheet cost calculations and serve other purposes, such as sales or project tracking.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_19-47-27-d5c9ef0f46818b6391031796f75b80cd.png">',
+              answers: [
+                "<p>By specifying an hourly cost on the employee's profile.</p>",
+                '<p>By setting a cost value on the product record.</p>',
+                '<p>By defining a cost on the task record.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Timesheets',
+            question_plain:
+              'How is the cost of timesheets determined when they are entered?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300657,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which feature in the Grid view assists in identifying missing hours in timesheets?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the Grid view does not specifically include a filter dedicated to missing hours.</em></p>',
+                '<p><em>This is correct because the Grid view uses a color-coding system to visually highlight missing or incomplete hours, making it easier to identify discrepancies.</em></p>',
+                '<p><em>This is incorrect because "spot missing hours" is a general action rather than a specific feature or tool in the Grid view.</em></p>'
+              ],
+              explanation:
+                '<p>The Grid view incorporates a color-coded system to visually distinguish missing or incomplete timesheet entries. This feature is designed to simplify the process of identifying discrepancies, ensuring users can quickly address and fill in missing hours. While other actions or filters may assist in managing timesheets, the color-coded system is the specific tool provided for this purpose.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-04_01-02-30-7d63c65262ef568bc147cb4b08116692.png">',
+              answers: [
+                '<p>Filter by missing hours.</p>',
+                '<p>Color-coded system.</p>',
+                '<p>Spot missing hours.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Timesheets',
+            question_plain:
+              'Which feature in the Grid view assists in identifying missing hours in timesheets?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300651,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following statements about <strong>timesheet editing restrictions</strong> in Odoo is true?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo, once a manager </em><strong><em>validates</em></strong><em> a timesheet period (typically weekly or monthly):</em></p><ul><li><p><em>That entire period becomes </em><strong><em>locked</em></strong><em> for the employee.</em></p></li><li><p><strong><em>No earlier timesheets</em></strong><em> can be edited anymore.</em></p></li><li><p><em>Any timesheet dated </em><strong><em>before</em></strong><em> the latest validated period also becomes </em><strong><em>locked</em></strong><em>.</em></p></li></ul><p><em>This ensures accounting accuracy and prevents retroactive changes that would affect payroll, invoicing, or project costs.</em></p>',
+                '<ol><li><p><em>Odoo does </em><strong><em>not</em></strong><em> prevent employees from editing newer timesheets just because an older period is unvalidated.</em></p></li><li><p><em>Only </em><strong><em>validated</em></strong><em> periods trigger editing restrictions.</em></p></li></ol>',
+                '<ol><li><p><em>Employees </em><strong><em>can</em></strong><em> log or edit timesheets for any duration regardless of their working hours schedule.</em></p></li><li><p><em>Working hours affect expected hours, not editing permissions.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Employees cannot edit a timesheet that predates their most recent validated timesheet.</strong> </p>',
+                '<p><strong>Employees cannot edit a timesheet when a timesheet from an earlier period has not yet been validated.</strong></p>',
+                '<p><strong>Employees cannot edit a timesheet outside their working hours.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Timesheets',
+            question_plain:
+              'Which of the following statements about timesheet editing restrictions in Odoo is true?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 141300653,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How are hours billed when the invoicing policy is fixed price?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the invoicing policy for fixed price does not depend on timesheeted hours but on the agreed price in the sales order.</em></p>',
+                "<p><em>This is correct because fixed-price invoicing involves billing based on the agreement rather than actual hours logged. The 'prepaid' policy aligns with this approach.</em></p>",
+                '<p><em>This is incorrect because this scenario suggests unbillable hours, which are unrelated to a fixed-price policy.</em></p>'
+              ],
+              explanation:
+                "<p>In a fixed-price billing setup, the amount invoiced is determined by the agreement in the sales order and is not directly tied to the actual hours logged. When the invoicing policy is set to 'prepaid,' the hours worked are accounted for as part of the predefined contract, not as variable or billable based on timesheets.</p>",
+              answers: [
+                '<p>Hours sold through a sales order that require timesheets to be logged before invoicing.</p>',
+                "<p>Timesheeted hours linked to a sales order where the invoicing policy is set to 'prepaid.'</p>",
+                '<p>Timesheeted hours that cannot be invoiced through the sales order.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Timesheets',
+            question_plain:
+              'How are hours billed when the invoicing policy is fixed price?',
+            related_lectures: []
+          }
+        ]
+      }
+
+      let correct = new Set()
+      let incorrect = new Set()
+      let totalNumberOfQuestions = 0
+
+      // Lấy thông tin từ quizData (xử lý trường hợp thiếu field)
+      const quizTitle =
+        (typeof quizData !== 'undefined' && quizData.quiz_title) || 'Odoo Quiz'
+      const quizDescription =
+        (typeof quizData !== 'undefined' && quizData.quiz_description) ||
+        'Test your knowledge.'
+      const rawQuestions =
+        typeof quizData !== 'undefined' && quizData.questions
+          ? quizData.questions
+          : []
+      const passPercent =
+        (typeof quizData !== 'undefined' && quizData.pass_percent) || 0
+
+      const modalTextElement = document.getElementById('modal-text')
+      const quizContainerElement = document.getElementById('quiz-container')
+      const dialog = document.querySelector('dialog')
+      const closeButton = document.getElementById('close-modal-btn')
+      const quizTitleElement = document.getElementById('quiz-title')
+      const quizDescriptionElement = document.getElementById('quiz-description')
+      const STORAGE_KEY = 'odoo_quiz_progress_v1' // Key lưu vào trình duyệt
+
+      // Map để lưu giải thích phục vụ Modal
+      const questionMap = new Map()
+
+      // === HÀM CHÍNH ===
+      function main() {
+        // 1. Cập nhật Meta
+        document.title = quizTitle
+        if (quizTitleElement) quizTitleElement.innerHTML = quizTitle
+        if (quizDescriptionElement)
+          quizDescriptionElement.innerHTML = quizDescription
+
+        const passPercentElement = document.getElementById('pass-percent')
+        if (passPercentElement)
+          passPercentElement.innerHTML = passPercent ? `${passPercent}%` : 'N/A'
+
+        totalNumberOfQuestions = rawQuestions.length
+
+        if (closeButton) {
+          closeButton.addEventListener('click', () => dialog.close())
+        }
+
+        // 2. Xử lý dữ liệu câu hỏi (TẮT SHUFFLE ĐỂ ĐỒNG BỘ VỊ TRÍ NẾU CẦN)
+        // Nếu bạn muốn random mỗi lần F5 thì mở lại đoạn này, nhưng lưu ý thứ tự hiển thị sẽ khác nhau.
+        // Dữ liệu lưu trong localStorage dựa trên ID câu hỏi nên vẫn đúng dù có random.
+        /*
+      for (let i = rawQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rawQuestions[i], rawQuestions[j]] = [rawQuestions[j], rawQuestions[i]];
+      }
+      */
+
+        // 3. Chuẩn bị Map dữ liệu giải thích
+        rawQuestions.forEach((q) => {
+          questionMap.set(q.id.toString(), {
+            explanation: q.prompt?.explanation || '',
+            feedbacks: q.prompt?.feedbacks || []
+          })
+        })
+
+        // 4. Render câu hỏi ra màn hình
+        const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
+        formattedQuestions.forEach((question, idx) => {
+          renderSingleQuestion(question, idx + 1)
+        })
+
+        // 5. KHÔI PHỤC KẾT QUẢ TỪ LOCAL STORAGE
+        restoreSession()
+
+        // 6. Cập nhật điểm số ban đầu
+        updateScore()
+      }
+
+      // === CÁC HÀM XỬ LÝ DATA & RENDER ===
+
+      function formatSingleQuestionData(singleQuizData) {
+        const { prompt, correct_response, id, assessment_type } = singleQuizData
+        const answers = prompt.answers || []
+
+        const formattedAnswers = answers.map((answerText, index) => {
+          const letter = String.fromCharCode(97 + index) // a, b, c...
+          const isCorrect = correct_response.includes(letter)
+          return {
+            text: answerText,
+            value: letter, // QUAN TRỌNG: Lưu giá trị a,b,c để đối chiếu
+            isCorrect: isCorrect
+          }
+        })
+
+        return {
+          id: id,
+          assessment_type: assessment_type,
+          question: prompt.question,
+          answers: formattedAnswers,
+          explanation: prompt?.explanation || '',
+          feedbacks: prompt.feedbacks
+        }
+      }
+
+      const renderSingleQuestion = (singleQuestionData, rootIndex) => {
+        const { id, answers, question, assessment_type } = singleQuestionData
+        const inputType =
+          assessment_type === 'multi-select' ? 'checkbox' : 'radio'
+        const inputName = `answer_${id}`
+
+        const optionsHTML = answers
+          .map((option, index) => {
+            const optionId = `${id}_${index}`
+            return `
+          <div class="question-lable">
+            <input type="${inputType}"
+                   id="${optionId}"
+                   name="${inputName}"
+                   value="${option.value}" 
+                   data-is-correct="${option.isCorrect}" />
+            <label for="${optionId}">${option.text}</label>
+          </div>
+        `
+          })
+          .join('')
+
+        const container = document.createElement('div')
+        container.innerHTML = `
+        <form data-question-id="${id}"
+              id="form_${id}"
+              class="single-question-container"
+              onsubmit="submitButtonListener(event)">
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <p style="font-weight:600">Question ${rootIndex}:</p>
+            <button type="button"
+                    class="explanation-btn"
+                    data-question-id="${id}"
+                    onclick="renderExplanation(event)">
+              View Explanation
+            </button>
+          </div>
+
+          <div style="margin-bottom:8px;line-height:1.5">${question}</div>
+
+          <div class="options-container">
+            ${optionsHTML}
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="submit" class="button submit-btn">Submit</button>
+          </div>
+        </form>
+      `
+        quizContainerElement.appendChild(container)
+      }
+
+      // === XỬ LÝ SỰ KIỆN SUBMIT & TÍNH ĐIỂM ===
+
+      const submitButtonListener = (e) => {
+        e.preventDefault()
+        const form = e.target
+        const questionId = form.dataset.questionId
+
+        // Gọi hàm xử lý logic kiểm tra
+        const result = processSubmission(form, questionId)
+
+        if (result.hasSelection) {
+          // Lưu vào localStorage nếu người dùng đã chọn
+          saveProgress(questionId, Array.from(result.userSelectedValues))
+        } else {
+          alert('Vui lòng chọn ít nhất một đáp án!')
+        }
+      }
+
+      // Hàm tách biệt logic kiểm tra để dùng chung cho cả lúc Submit và lúc Load lại trang
+      function processSubmission(form, questionId) {
+        const inputs = form.querySelectorAll(
+          'input[type="radio"], input[type="checkbox"]'
+        )
+        const userSelectedValues = new Set()
+        const actualCorrectValues = new Set()
+        let hasSelection = false
+
+        inputs.forEach((input) => {
+          if (input.checked) {
+            userSelectedValues.add(input.value)
+            hasSelection = true
+          }
+          if (input.dataset.isCorrect === 'true') {
+            actualCorrectValues.add(input.value)
+          }
+        })
+
+        if (!hasSelection) return { hasSelection: false }
+
+        // So sánh 2 tập hợp đáp án
+        const isFullyCorrect = setsAreEqual(
+          userSelectedValues,
+          actualCorrectValues
+        )
+
+        // Cập nhật biến toàn cục
+        if (isFullyCorrect) {
+          correct.add(questionId)
+          incorrect.delete(questionId)
+        } else {
+          incorrect.add(questionId)
+          correct.delete(questionId)
+        }
+
+        updateScore()
+
+        // Hiển thị UI (Xanh/Đỏ)
+        form.querySelectorAll('.question-lable').forEach((labelContainer) => {
+          const input = labelContainer.querySelector('input')
+          labelContainer.classList.remove('correct-answer', 'incorrect-answer')
+
+          // Disable input sau khi nộp để tránh sửa
+          // input.disabled = true;
+          // form.querySelector('.submit-btn').disabled = true;
+
+          if (input.dataset.isCorrect === 'true') {
+            labelContainer.classList.add('correct-answer')
+          } else if (input.checked && input.dataset.isCorrect === 'false') {
+            labelContainer.classList.add('incorrect-answer')
+          }
+        })
+
+        return { hasSelection: true, userSelectedValues }
+      }
+
+      // === CÁC HÀM TIỆN ÍCH (HELPER) ===
+
+      function updateScore() {
+        const currentPercentageElement =
+          document.getElementById('current-score')
+        const correctAnswerElement = document.getElementById('correct-answers')
+        const wrongAnswerElement = document.getElementById('wrong-answers')
+
+        if (correctAnswerElement) correctAnswerElement.innerHTML = correct.size
+        if (wrongAnswerElement) wrongAnswerElement.innerHTML = incorrect.size
+
+        if (totalNumberOfQuestions > 0 && currentPercentageElement) {
+          const score = Number(
+            (correct.size / totalNumberOfQuestions) * 100
+          ).toFixed(0)
+          currentPercentageElement.innerHTML = score + '%'
+        }
+      }
+
+      function setsAreEqual(setA, setB) {
+        if (setA.size !== setB.size) return false
+        for (const item of setA) {
+          if (!setB.has(item)) return false
+        }
+        return true
+      }
+
+      function renderExplanation(ev) {
+        const questionId = ev.target.dataset.questionId
+        const data = questionMap.get(questionId)
+        modalTextElement.innerHTML = ''
+        if (!data) {
+          modalTextElement.innerHTML = '<p>Không có giải thích.</p>'
+        } else {
+          if (data.explanation) modalTextElement.innerHTML += data.explanation
+          if (data.feedbacks)
+            data.feedbacks.forEach((fb) => (modalTextElement.innerHTML += fb))
+        }
+        dialog.showModal()
+      }
+
+      // === LOCAL STORAGE LOGIC ===
+
+      function saveProgress(questionId, selectedValues) {
+        // Lấy dữ liệu cũ
+        let progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+        // Cập nhật câu hỏi hiện tại
+        progress[questionId] = selectedValues
+        // Lưu lại
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+      }
+
+      function restoreSession() {
+        const progress = JSON.parse(localStorage.getItem(STORAGE_KEY))
+        if (!progress) return
+
+        // Duyệt qua từng câu hỏi đã lưu
+        for (const [qId, values] of Object.entries(progress)) {
+          const form = document.getElementById(`form_${qId}`)
+          if (form) {
+            // Tích lại các ô input
+            const inputs = form.querySelectorAll('input')
+            let hasChecked = false
+            inputs.forEach((input) => {
+              if (values.includes(input.value)) {
+                input.checked = true
+                hasChecked = true
+              }
+            })
+
+            // Nếu có tích, chạy lại logic kiểm tra để hiện màu xanh/đỏ và tính điểm
+            if (hasChecked) {
+              processSubmission(form, qId)
+            }
+          }
+        }
+      }
+
+      function resetProgress() {
+        if (
+          confirm('Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu?')
+        ) {
+          localStorage.removeItem(STORAGE_KEY)
+          location.reload()
+        }
+      }
+
+      // === CHỨC NĂNG IN ẤN ===
+      function printQuiz(showAnswers) {
+        if (showAnswers) {
+          // CHẾ ĐỘ 1: IN ĐÁP ÁN (KEY)
+          // Thêm class để CSS kích hoạt hiển thị đáp án đúng
+          document.body.classList.add('show-correct-answers')
+          window.print()
+
+          // Sau khi in xong thì tắt chế độ hiện đáp án
+          setTimeout(() => {
+            document.body.classList.remove('show-correct-answers')
+          }, 500)
+        } else {
+          // CHẾ ĐỘ 2: IN ĐỀ BÀI (BLANK)
+          // Bước A: Lưu trạng thái hiện tại (thực ra đã lưu trong localStorage rồi)
+
+          // Bước B: Xóa sạch giao diện tạm thời để in ra giấy trắng tinh
+          const inputs = document.querySelectorAll('input')
+          const labels = document.querySelectorAll('.question-lable')
+
+          // Bỏ tích toàn bộ input
+          inputs.forEach((input) => (input.checked = false))
+
+          // Xóa màu xanh/đỏ
+          labels.forEach((label) => {
+            label.classList.remove('correct-answer', 'incorrect-answer')
+          })
+
+          // Bước C: Gọi lệnh in
+          window.print()
+
+          // Bước D: Khôi phục lại bài làm sau khi in xong
+          setTimeout(() => {
+            // Gọi lại hàm restoreSession để lấy lại dữ liệu từ LocalStorage
+            // và tô lại màu như cũ cho người dùng tiếp tục làm
+            restoreSession()
+          }, 500)
+        }
+      }
+
+      // Sự kiện đóng modal khi click ra ngoài
+      if (dialog) {
+        dialog.addEventListener('click', (e) => {
+          const rect = dialog.getBoundingClientRect()
+          if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          ) {
+            dialog.close()
+          }
+        })
+      }
+
+      // Nạp thêm style in ấn động để đảm bảo nút in hoạt động tốt
+      const styleSheet = document.createElement('style')
+      styleSheet.innerText = `
+      @media print {
+        body.show-correct-answers input[data-is-correct="true"] + label {
+          border: 2px solid #000 !important;
+          font-weight: bold !important;
+          background-color: #e5e7eb !important;
+        }
+        body.show-correct-answers input[data-is-correct="true"] + label::after {
+          content: "✔";
+          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        }
+      }
+    `
+      document.head.appendChild(styleSheet)
+
+      // CHẠY CHƯƠNG TRÌNH
+      window.onload = main
+    </script>
+  </body>
+
+  <style>
+    .modal-container {
+      padding: 0;
+      border: none;
+      max-width: 700px;
+    }
+
+    #modal-content {
+      position: relative;
+      padding: 20px;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    @media print {
+      /* 1. Reset giao diện về trắng đen cơ bản */
+      body,
+      main,
+      #quiz-container,
+      .single-question-container,
+      #quiz-meta-container {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+
+      /* 2. Ẩn các thành phần không cần thiết khi in */
+      #score-stats-container, 
+      #print-actions, /* Ẩn chính các nút in này đi */
+      .submit-btn, 
+      .explanation-btn, 
+      dialog,
+      .modal-container {
+        display: none !important;
+      }
+
+      /* 3. Định dạng câu hỏi để không bị ngắt trang xấu */
+      .single-question-container {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #ccc !important;
+        margin-bottom: 15px !important;
+        padding-bottom: 10px !important;
+      }
+
+      /* === LOGIC HIỂN THỊ ĐÁP ÁN === */
+
+      /* Mặc định (In đề bài): Ẩn mọi dấu hiệu đúng sai */
+      /* Không làm gì cả, để mặc định như lúc chưa làm */
+
+      /* CHẾ ĐỘ CÓ ĐÁP ÁN: Chỉ kích hoạt khi body có class 'show-correct-answers' */
+      body.show-correct-answers input[data-is-correct='true'] + label {
+        border: 2px solid #000 !important; /* Đóng khung đậm */
+        font-weight: bold !important;
+        background-color: #e5e7eb !important; /* Nền xám nhẹ */
+        position: relative;
+        padding-right: 30px;
+      }
+
+      /* Thêm dấu tích (✓) vào đáp án đúng để dễ nhìn hơn */
+      body.show-correct-answers input[data-is-correct='true'] + label::after {
+        content: '✔';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        font-weight: bold;
+      }
+    }
+  </style>
+</html>

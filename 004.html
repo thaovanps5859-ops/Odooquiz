@@ -1,0 +1,2133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz</title>
+    <style>
+      * {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          'Open Sans',
+          'Helvetica Neue',
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+
+      main {
+        padding-top: 48px;
+      }
+
+      :root {
+        --large-device-width: 850px;
+        --primary-color: #0f172a;
+        --secondary-color: #020617;
+        --primary-text-color: #c7d1dd;
+        --secondary-text-color: #061602;
+        --success-background: hsl(159, 82%, 24%);
+        --success-foreground: hsl(164, 86%, 16%);
+        --success: hsl(160, 84%, 39%);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info-background: hsl(218, 81%, 8%);
+        --info-foreground: hsl(217, 91%, 85%);
+        --border-color: #d1d7dc;
+        --check-box-size: 20px;
+        /* control the size */
+        --check-box-color: var(--info-foreground);
+        /* the active color */
+      }
+
+      body {
+        position: relative;
+        background-color: #020617;
+        color: var(--primary-text-color);
+      }
+
+      #score-stats-container {
+        position: fixed;
+        z-index: 10;
+        top: 0;
+        height: 40px;
+        width: 100%;
+        background-color: var(--info-background);
+
+        padding: 0px 16px;
+        color: var(--info-foreground);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #quiz-container {
+        border-radius: 8px;
+        display: flex;
+        gap: 16px;
+        flex-direction: column;
+      }
+
+      /* === Base Styles for both Radio and Checkbox === */
+      input[type='radio'],
+      input[type='checkbox'] {
+        height: var(--check-box-size);
+        aspect-ratio: 1;
+        border: calc(var(--check-box-size) / 8) solid #939393;
+        padding: calc(var(--check-box-size) / 8);
+        background: radial-gradient(
+            farthest-side,
+            var(--check-box-color) 94%,
+            #0000
+          )
+          50%/0 0 no-repeat content-box;
+        outline-offset: calc(var(--check-box-size) / 10);
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        font-size: inherit;
+        transition: 0.3s;
+      }
+
+      input[type='radio']:checked,
+      input[type='checkbox']:checked {
+        border-color: var(--check-box-color);
+        background-size: 100% 100%;
+      }
+
+      input[type='radio']:disabled,
+      input[type='checkbox']:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* === Specific Styles === */
+      input[type='radio'] {
+        border-radius: 50%;
+        /* Makes it a circle */
+      }
+
+      input[type='checkbox'] {
+        border-radius: 4px;
+        /* Makes it a square */
+      }
+
+      label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 767px) {
+        input[type='radio'],
+        input[type='checkbox'],
+        label {
+          cursor: default;
+        }
+
+        #quiz-container {
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+      }
+
+      /* PC (Desktop devices) */
+      @media (min-width: 768px) {
+        body {
+          display: flex;
+          justify-content: center;
+        }
+
+        main {
+          max-width: var(--large-device-width);
+        }
+
+        #score-stats-container {
+          max-width: var(--large-device-width);
+        }
+
+        dialog {
+          max-width: var(--large-device-width);
+        }
+      }
+
+      @media print {
+        input[type='radio'],
+        input[type='checkbox'] {
+          background: none !important;
+          border-color: #939393 !important;
+        }
+
+        input[type='radio']:checked,
+        input[type='checkbox']:checked {
+          border-color: #939393 !important;
+        }
+      }
+
+      .question-lable {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        outline: none;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .button {
+        background-color: var(--success-background);
+        border: none;
+        color: #f4f5f7;
+        opacity: 0.8;
+        font-size: 18px;
+        flex-grow: 1;
+        padding: 8px 16px;
+        border-radius: 8px;
+      }
+
+      .button:hover {
+        opacity: 1;
+      }
+
+      .button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .explanation-btn {
+        border: none;
+        color: var(--success);
+        background-color: transparent;
+      }
+
+      .single-question-container {
+        background-color: var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      #modal-content {
+        padding: 16px;
+        line-height: 24px;
+      }
+
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      dialog {
+        position: fixed;
+        border: 1px solid var(--border-color);
+        background-color: var(--primary-color);
+        color: rgb(240, 241, 248);
+        padding: 16px;
+        border-radius: 8px;
+        width: 80vw;
+        max-height: 80vh;
+        overflow: auto;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+
+      #close-modal-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        padding: 2px 8px;
+        border-radius: 2px;
+        border: none;
+        background-color: var(--danger);
+      }
+
+      .correct-answer > label {
+        border: 2px solid var(--success);
+        width: 100%;
+      }
+
+      .incorrect-answer > label {
+        border: 2px solid var(--danger);
+        width: 100%;
+      }
+
+      .options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      #quiz-meta-container {
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        margin-bottom: 12px;
+        padding: 8px;
+      }
+
+      #quiz-title {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      #quiz-description {
+        line-height: 1.5;
+        padding: 2px 6px;
+      }
+    </style>
+  </head>
+
+  <body onload="main()">
+    <main>
+      <div
+        id="print-actions"
+        style="
+          margin-bottom: 20px;
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+        "
+      >
+        <button
+          type="button"
+          class="button"
+          style="background-color: #3b82f6"
+          onclick="printQuiz(false)"
+        >
+          🖨️ In đề bài
+        </button>
+        <button
+          type="button"
+          class="button"
+          style="background-color: #ef4444"
+          onclick="printQuiz(true)"
+        >
+          🖨️ In đáp án
+        </button>
+        <button
+          type="button"
+          class="button"
+          style="background-color: #f59e0b"
+          onclick="resetProgress()"
+        >
+          🔄 Làm lại từ đầu
+        </button>
+      </div>
+      <section id="quiz-meta-container">
+        <h1 id="quiz-title"></h1>
+        <p id="quiz-description"></p>
+      </section>
+      <section id="score-stats-container">
+        <div id="score-card">
+          Score: <span id="current-score">999</span>
+          <!-- <span id="pass-percent">999%</span> -->
+        </div>
+        <div>Correct: <span id="correct-answers">999</span></div>
+        <div>Incorrect: <span id="wrong-answers">999</span></div>
+      </section>
+
+      <section id="quiz-container"></section>
+
+      <dialog id="modal" class="modal-container">
+        <div id="modal-content">
+          <button type="button" class="modal-close-btn" aria-label="Close">
+            ✕
+          </button>
+
+          <p id="modal-text"></p>
+        </div>
+      </dialog>
+    </main>
+
+    <script>
+      const quizData = {
+        pass_percent: null,
+        questions: [
+          {
+            _class: 'assessment',
+            id: 138975275,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which depreciation methods can be applied to an asset in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>The method \u201cStraight line then Declining\u201d </em><strong><em>does not exist</em></strong><em> in Odoo.</em></p></li><li><p><em>Odoo only switches from Declining \u2192 Straight Line, not the reverse.</em></p></li></ol>',
+                '<p><em>Odoo provides </em><strong><em>three</em></strong><em> official depreciation methods for managing assets:</em></p><p><strong><em>1. Straight Line</em></strong></p><ul><li><p><em>Spreads depreciation evenly across the asset\u2019s useful life.</em></p></li><li><p><em>Same amount each period.</em></p></li></ul><p><strong><em>2. Declining (also known as Declining Balance / Reducing Balance)</em></strong></p><ul><li><p><em>Depreciation amount decreases each period.</em></p></li><li><p><em>A fixed percentage is applied to the asset\u2019s remaining value.</em></p></li></ul><p><strong><em>3. Declining then Straight Line</em></strong></p><ul><li><p><em>Starts with the Declining method.</em></p></li><li><p><em>Switches to Straight Line when it becomes more favorable or reaches a threshold.</em></p></li><li><p><em>Useful for assets that lose more value early in their lifetime.</em></p></li></ul><p><em>\ud83d\udcd8 These three methods match the options available in </em><strong><em>Odoo Accounting \u2192 Assets</em></strong><em>.</em></p>',
+                '<ol><li><p><em>\u201cProgressive\u201d depreciation is </em><strong><em>not</em></strong><em> an available method in Odoo.</em></p></li><li><p><em>Odoo has exactly three methods, not four.</em></p></li></ol>'
+              ],
+              explanation:
+                '<p><strong>Declining, Declining then Straight line, and Straight line.</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_20-06-47-2547eaf72d165e6a464ea39ab228a330.png">',
+              answers: [
+                '<p><strong>Declining, Straight line then Declining, and Straight line.</strong></p>',
+                '<p><strong>Declining, Declining then Straight line, and Straight line.</strong></p>',
+                '<p><strong>Declining, Declining then Straight line, Straight line, and Progressive.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'Which depreciation methods can be applied to an asset in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975277,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In which areas of Odoo can the Catalog view be accessed?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the Catalog view is not exclusively limited to customer invoices; it is accessible in other contexts as well.</em></p>',
+                '<p><em>This is incorrect because the Catalog view is not exclusively limited to vendor bills; it is accessible in other contexts as well.</em></p>',
+                '<p><em>This is correct because the Catalog view is available for managing products in both customer invoices and vendor bills, providing a unified interface for handling product details across different transaction types.</em></p>'
+              ],
+              explanation:
+                '<p>The Catalog view in Odoo serves as a helpful tool for managing and selecting products efficiently. It is accessible on both customer invoices and vendor bills, offering a consistent interface for users to work with product details in various transactional contexts. This accessibility enhances usability and simplifies the process of handling products in financial documents.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_20-08-13-28a03aeac04534e0d1ea807b8622b544.png">',
+              answers: [
+                '<p>On customer invoices</p>',
+                '<p>On vendor bills</p>',
+                '<p>On both customer invoices and vendor bills</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'In which areas of Odoo can the Catalog view be accessed?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975353,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When validating a customer invoice containing two lines with identical accounts and taxes, how many entries will be created in the journal?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: ['', '', ''],
+              explanation:
+                '<p>Four journal entries are created because each invoice line generates two entries: one for the debit and one for the credit. Since the account and tax are identical, the journal consolidates the amounts accordingly.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-04_01-06-54-5be851a925b25388e815a59fc636e738.png">',
+              answers: [
+                '<p>Two journal entries</p>',
+                '<p>Three journal entries</p>',
+                '<p>Four journal entries</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'When validating a customer invoice containing two lines with identical accounts and taxes, how many entries will be created in the journal?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975355,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which file formats are supported when importing <strong>bank statements</strong> into Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Odoo supports importing bank statements using </em><strong><em>three major formats</em></strong><em>, depending on your bank and region:</em></p><p><em>\u2714\ufe0f </em><strong><em>CSV</em></strong></p><ul><li><p><em>Generic spreadsheet-like file</em></p></li><li><p><em>Supported by almost all banks</em></p></li><li><p><em>Most commonly used for manual imports</em></p></li></ul><p><em>\u2714\ufe0f </em><strong><em>CODA</em></strong></p><ul><li><p><em>Belgian banking format</em></p></li><li><p><em>Fully supported in Odoo for companies using Belgian bank platforms</em></p></li></ul><p><em>\u2714\ufe0f </em><strong><em>CAMT (ISO 20022)</em></strong></p><ul><li><p><em>Modern international XML standard</em></p></li><li><p><em>Used by European and many global banks</em></p></li><li><p><em>Directly supported in Odoo</em></p></li></ul><p><em>Because Odoo supports </em><strong><em>all three</em></strong><em>, the correct answer includes </em><strong><em>CODA, CSV, and CAMT</em></strong><em>.</em></p>',
+                '<p><em>Missing </em><strong><em>CODA</em></strong><em>, a fully supported format.</em></p>',
+                '<p><em>Missing </em><strong><em>CAMT</em></strong><em>, one of the most widely supported standards globally.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo supports several formats for importing bank statements, including CODA, CSV, and CAMT, to accommodate various banking systems and regional requirements. However, XBRL is not one of the supported formats, as it is designed for financial reporting purposes rather than transactional imports like bank statements. </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-04_01-10-11-81861eca7c8c0c328ac954dbe90a2a69.png">',
+              answers: [
+                '<p><strong>CODA, CSV, and CAMT</strong> </p>',
+                '<p>CAMT and CSV</p>',
+                '<p>CSV and CODA</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'Which file formats are supported when importing bank statements into Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975279,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Can a single account be linked to multiple companies in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because consolidating accounts does not mean that a single account is shared between companies; it merely combines data for reporting purposes.</em></p>',
+                '<p><em>This is incorrect because Odoo allows a single account to be linked to multiple companies under certain configurations, provided the companies are in the same database and interlinked.</em></p>',
+                '<p><em>This is correct because Odoo enables accounts to be shared across multiple companies if the accounts are set up with multi-company access and proper configuration for intercompany operations.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, accounts can be configured to operate across multiple companies within the same database using multi-company settings. This allows for streamlined operations and consolidated reporting while maintaining compliance with accounting rules for each entity. Proper configuration, such as defining account codes for each company, ensures clarity and accuracy in transactions. This setup is highly beneficial for organizations with interconnected companies or subsidiaries.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_20-10-27-d6320fe45788210ee5cd933bf4a5a799.png">',
+              answers: [
+                '<p>Yes, by consolidating accounts from different companies.</p>',
+                '<p>No, each account is restricted to a single company.</p>',
+                '<p>Yes, by assigning multiple companies to an account or merging accounts, with each company having a code.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'Can a single account be linked to multiple companies in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975361,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>What happens when a customer's account is managed in a currency different from the company's currency?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is incorrect because while the invoice is recorded in the account's currency, the journal entries are always recorded in the company's currency to maintain consistency in accounting records.</em></p>",
+                "<p><em>This is incorrect because the invoice is recorded in the account's currency if it differs from the company's currency. However, journal entries reflect the company's currency.</em></p>",
+                "<p><em>This is correct because Odoo supports multi-currency management, ensuring invoices use the account's currency while journal entries are converted into the company's currency for accurate accounting and reporting.</em></p>"
+              ],
+              explanation:
+                "<p>Odoo's multi-currency functionality ensures that companies can manage accounts in various currencies. Invoices are recorded using the account's currency to reflect the customer's or supplier's financial details accurately. However, for internal consistency and reporting, journal entries are always converted and recorded in the company's currency. This approach ensures compliance with accounting standards while supporting international transactions.</p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-15_22-47-43-0432a4491ba3f947613770926a4df9b4.png\">",
+              answers: [
+                "<p>The invoice and journal entries are recorded in the account's currency.</p>",
+                "<p>The invoice is recorded in the company's currency even if the account is managed in a different currency.</p>",
+                "<p>The invoice is recorded in the account's currency, but the journal entries are recorded in the company's currency.</p>"
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              "What happens when a customer's account is managed in a currency different from the company's currency?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975363,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When reconciling bank transactions in Odoo Accounting, is it possible to reconcile a <strong>bank entry</strong> with an <strong>invoice that is still in Draft state</strong>?</p>',
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Bank reconciliation](https://www.odoo.com/documentation/19.0/applications/finance/accounting/bank/reconciliation.html)'
+              ],
+              feedbacks: ['', '', '<p>Correct!</p>'],
+              explanation:
+                '<p>Existing items of draft entries can be matched. Eventual automatic moves (like currency exchange or cash basis moves) are created in draft simultaneously with the reconciliation. Posting the original entry also posts the automatic move.</p>',
+              answers: [
+                '<p>No, draft invoices cannot be reconciled because they are not posted yet. </p>',
+                '<p>Yes, draft invoices can be reconciled, but only if the related payment uses an outstanding account.</p>',
+                '<p>Yes, draft invoices can always be matched directly with bank entries.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'When reconciling bank transactions in Odoo Accounting, is it possible to reconcile a bank entry with an invoice that is still in Draft state?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975365,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In a <strong>multi-company</strong> setup, how can you configure Odoo so that <strong>vendor bills are automatically created in Company A</strong>when <strong>invoices are issued in Company B</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>There is no such option as Synchronize invoices/bills in inter-company settings</em></p></li><li><p><em>Odoo uses specific actions like Create Sales Orders, Create Purchase Orders, or Create Vendor Bills</em></p></li></ul>',
+                '<p><em>Odoo\u2019s </em><strong><em>inter-company transactions</em></strong><em> feature allows documents created in one company to automatically generate corresponding documents in another company.</em></p><p><em>In this scenario:</em></p><ul><li><p><strong><em>Company B</em></strong><em> issues a customer invoice</em></p></li><li><p><strong><em>Company A</em></strong><em> should receive a </em><strong><em>vendor bill</em></strong><em> automatically</em></p></li></ul><p><em>To achieve this:</em></p><ol><li><p><em>Inter-company transactions must be enabled in </em><strong><em>General Settings</em></strong></p></li><li><p><em>The option </em><strong><em>\u201cCreate Vendor Bills\u201d</em></strong><em> must be activated in </em><strong><em>Company A</em></strong></p></li><li><p><em>This tells Odoo that Company A will automatically generate bills when another linked company invoices it</em></p></li></ol><p><em>This configuration ensures:</em></p><p><em>\u2714 Automatic document creation<br>\u2714 Correct accounting flow between companies<br>\u2714 No manual duplication of invoices or bills</em></p>',
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>The setting must be enabled in the </em><strong><em>company that will receive the bill</em></strong><em>, not the one issuing the invoice</em></p></li><li><p><em>Company B creates invoices, not vendor bills for itself</em></p></li></ul>'
+              ],
+              explanation:
+                '<p>Enable inter-company transactions in the general settings, then activate \u201cCreate Vendor Bills\u201d in Company A.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-15_23-08-06-edf8f2c114f22307740148ef9ff45ca3.png">',
+              answers: [
+                '<p>Enable inter-company transactions in the general settings, then activate <strong>\u201cSynchronize invoices/bills\u201d</strong> in Company A.</p>',
+                '<p>Enable inter-company transactions in the general settings, then activate \u201cCreate Vendor Bills\u201d in Company A.</p>',
+                '<p>Enable inter-company transactions in the general settings, then activate <strong>\u201cCreate Vendor Bills\u201d</strong> in Company B.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'In a multi-company setup, how can you configure Odoo so that vendor bills are automatically created in Company Awhen invoices are issued in Company B?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975281,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What steps should you take to register the full payment amount for an invoice that uses a payment method with installment options?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo does not automatically set the payment amount to the full invoice total when an installment plan is in place. Manual adjustment is required to override the installment settings.</em></p>',
+                '<p><em>This is correct because Odoo allows you to override installment plans by manually specifying the full amount to be paid or by selecting the "Full Amount" option in the payment wizard.</em></p>',
+                '<p><em>This is incorrect because Odoo provides the flexibility to pay the full invoice amount in one transaction, even if an installment plan exists.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo supports flexible payment options, including paying the full amount of an invoice that has an installment plan. This can be achieved by manually entering the total amount or selecting the "Full Amount" option in the payment wizard. This feature ensures that users can handle exceptional cases where full payment is desired, even when an installment structure has been set up for the invoice.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_20-11-54-61d236c80691fe2963eaca681017ecbd.png">',
+              answers: [
+                '<p>The system automatically sets the payment amount to the full invoice total when registering a payment.</p>',
+                '<p>Manually enter the full amount in the payment wizard or click the "Full Amount" option.</p>',
+                '<p>Payments for invoices with installment plans must always be registered in multiple payments to respect the installment structure.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'What steps should you take to register the full payment amount for an invoice that uses a payment method with installment options?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975357,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When viewing an asset\u2019s <strong>Depreciation Board</strong> in Odoo, which fields determine the values shown in the <strong>Depreciation</strong>column?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><em>Original Value and Duration are relevant, but </em><strong><em>Asset Group does not affect depreciation amounts</em></strong><em> directly.</em></p></li><li><p><em>This combo is incomplete and inaccurate.</em></p></li></ul>',
+                '<ol><li><p><strong><em>Fixed Asset Account</em></strong><em> is purely accounting structure (not calculation).</em></p></li><li><p><strong><em>Salvage Value</em></strong><em> matters, but combined with \u201cComputation,\u201d this option is still incomplete and misleading.</em></p></li><li><p><em>This grouping does not reflect the real drivers of the depreciation amounts.</em></p></li></ol>',
+                '<p><em>The </em><strong><em>Depreciation column</em></strong><em> on an asset\u2019s Depreciation Board shows the </em><strong><em>amount depreciated in each period</em></strong><em>.<br>Several configuration fields directly influence these calculated amounts:</em></p><p><em>\u2714\ufe0f </em><strong><em>Method</em></strong></p><ul><li><p><em>Determines how depreciation is calculated:</em></p><ul><li><p><strong><em>Linear</em></strong></p></li><li><p><strong><em>Declining Balance</em></strong></p></li><li><p><strong><em>Accelerated</em></strong></p></li><li><p><strong><em>Manual</em></strong></p></li></ul></li><li><p><em>Affects how the depreciable base is spread across time.</em></p></li></ul><p><em>\u2714\ufe0f </em><strong><em>Not Depreciable Value</em></strong></p><ul><li><p><em>Value that will </em><strong><em>not</em></strong><em> be depreciated (e.g., salvage value or residual value).</em></p></li><li><p><em>Subtracts from the </em><strong><em>depreciable base</em></strong><em>.</em></p></li></ul><p><em>\u2714\ufe0f </em><strong><em>Prorata Date</em></strong></p><ul><li><p><em>Defines the </em><strong><em>start point</em></strong><em> for prorated depreciation.</em></p></li><li><p><em>Impacts first-period depreciation if the asset is not depreciated for a full period.</em></p></li></ul><p><em>These fields </em><strong><em>directly change</em></strong><em> the depreciation expense for each period on the board.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Original Value, Duration, Asset Group</strong></p>',
+                '<p><strong>Fixed Asset Account, Salvage Value, Computation</strong></p>',
+                '<p><strong>Method, Not Depreciable Value, Prorata Date</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'When viewing an asset\u2019s Depreciation Board in Odoo, which fields determine the values shown in the Depreciationcolumn?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975283,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you display the invoice total in words on an invoice report in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because Odoo allows the display of the invoice total in words by enabling the "Total amount in letters" feature in the Accounting settings.</em></p>',
+                '<p><em>This is incorrect because changing the field widget in the invoice form view does not affect the report layout or add the total in words on the printed report.</em></p>',
+                '<p><em>This is incorrect because Studio does not include a direct option to configure the invoice report to display the total in letters; it must be enabled in Accounting settings.</em></p>',
+                '<p><em>This is incorrect because Odoo does support this feature through the Accounting settings.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo provides an option in the Accounting settings to include the invoice total in words on invoice reports. This feature can be enabled by selecting the "Total amount in letters" option, which ensures that the total is automatically displayed in words on the printed or generated invoice reports. This functionality is especially useful in regions or scenarios where displaying amounts in words is a legal or standard requirement.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_20-14-25-1af0d3a7e590b123315fe86f1e790a95.png">',
+              answers: [
+                '<p>Enable the "Total amount in letters" option in the Accounting settings.</p>',
+                '<p>In the invoice form view using Studio, select the Total field and configure it as "Amount in letters".</p>',
+                '<p>In the invoice report using Studio, select the Total field and configure it as "Amount in letters".</p>',
+                '<p>Displaying the total in words is not supported in Odoo.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'How can you display the invoice total in words on an invoice report in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975285,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When reviewing a <strong>tax return</strong> in Odoo before submitting it, which checks does Odoo automatically perform?</p>',
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Tax return (VAT report)](https://www.odoo.com/documentation/19.0/applications/finance/accounting/reporting/tax_returns.html)'
+              ],
+              feedbacks: [
+                '<p><em>Although these elements (reconciliation, aged balances, assets, loans) are part of general accounting review,</em></p><p><br></p><p><em>\u27a1\ufe0f </em><strong><em>Odoo does NOT automatically check them during tax return submission.</em></strong></p><p><br></p><p><em>They require manual review.</em></p>',
+                '<p><em>Before you submit a tax return in </em><strong><em>Odoo Accounting</em></strong><em>, Odoo runs an automatic pre-submission validation check.</em></p><p><em>These automated checks include:</em></p><p><strong><em>\u2713 Taxes and Countries Matching</em></strong></p><ul><li><p><em>Verifies that the company\u2019s tax configuration matches the country\u2019s fiscal localization rules.</em></p></li></ul><p><strong><em>\u2713 Draft Entries</em></strong></p><ul><li><p><em>Ensures there are </em><strong><em>no unposted journal entries</em></strong><em> that could affect the taxable amounts.</em></p></li></ul><p><strong><em>\u2713 Bill Attachments</em></strong></p><ul><li><p><em>Detects vendor bills without attachments (important for jurisdictions requiring digital proof).</em></p></li></ul><p><strong><em>\u2713 Bank Matching</em></strong></p><ul><li><p><em>Checks if bank statements and journal entries are properly matched.</em></p></li></ul><p><strong><em>\u2713 Company Data</em></strong></p><ul><li><p><em>Ensures required legal information is completed (VAT, legal name, address, etc.).</em></p></li></ul><p><em>These validations ensure data quality and fiscal compliance before generating and submitting the tax report.</em></p>',
+                '<p><em>\u201cReview, submit, and pay\u201d describes procedural steps,</em></p><p><br></p><p><em>\u27a1\ufe0f </em><strong><em>not the automated checks Odoo performs.</em></strong></p>'
+              ],
+              answers: [
+                '<p><strong>Bank reconciliation, aged payables and receivables, loans, fixed assets, draft entries, and overdue payables and receivables.</strong></p>',
+                '<p><strong>Taxes and countries matching, draft entries, bill attachments, bank matching, and company data.</strong></p>',
+                '<p><strong>Review, submit, and pay.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'When reviewing a tax return in Odoo before submitting it, which checks does Odoo automatically perform?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975287,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you configure a lock date specifically for vendor bills in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo allows you to set specific lock dates for vendor bills through the Lock Purchases configuration.</em></p>',
+                '<p><em>This is incorrect because the Journal Entries Lock Date applies to all journal entries, not specifically to vendor bills. This would restrict more transactions than necessary.</em></p>',
+                '<p><em>This is incorrect because there is no such configuration as "Lock Bills" in Odoo. The feature specifically uses the term "Lock Purchases" for vendor bills.</em></p>',
+                '<p><em>This is correct because the Lock Purchases date in Odoo is designed to restrict modifications to vendor bills up to a specific date, ensuring data consistency and compliance with accounting periods.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo provides flexibility in managing lock dates for different types of transactions. To restrict editing or posting vendor bills, the Lock Purchases date can be configured. This ensures that only authorized changes are made within the allowed period while maintaining accuracy in financial records. Other lock date configurations, such as Journal Entries Lock Date, apply more broadly and are not specific to vendor bills.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_20-23-00-546e4f52dad61937561a3c8da85b2c77.png">',
+              answers: [
+                '<p>This is not possible.</p>',
+                '<p>Configure the Journal Entries Lock Date.</p>',
+                '<p>Set the Lock Bills date.</p>',
+                '<p>Set the Lock Purchases date.</p>'
+              ]
+            },
+            correct_response: ['d'],
+            section: 'Accounting',
+            question_plain:
+              'How can you configure a lock date specifically for vendor bills in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975289,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How do you replace a <strong>15% sales tax</strong> with a <strong>0% sales tax</strong> for customers assigned to the <strong>Tax Exempt</strong> fiscal position?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>In older versions, fiscal positions used manual tax mapping tables.</em></p></li><li><p><em>In Odoo 19, fiscal positions for tax replacement use </em><strong><em>tax-level configuration</em></strong><em>, not the Tax Mapping tab.</em></p></li><li><p><em>The Tax Mapping tab may not appear depending on the localization package.</em></p></li></ol>',
+                '<ol><li><p><em>Replacement is always configured on the </em><strong><em>new tax</em></strong><em> (the one being applied), not the old tax being replaced.</em></p></li><li><p><em>Putting fiscal position mapping on the 15% tax is not how Odoo handles replacements.</em></p></li></ol>',
+                '<p><em>In </em><strong><em>Odoo 19</em></strong><em>:</em></p><p><em>For tax replacement:</em></p><ol><li><p><em>Open the </em><strong><em>0% tax</em></strong><em>.</em></p></li><li><p><em>On the </em><strong><em>Advanced Options</em></strong><em> tab:</em></p><ul><li><p><em>Set </em><strong><em>Fiscal Position = Tax Exempt</em></strong><em>.</em></p></li><li><p><em>In the </em><strong><em>Replaces</em></strong><em> field, add </em><strong><em>the 15% tax</em></strong><em>.</em></p></li></ul></li></ol><p><em>\u27a1\ufe0f This tells Odoo:<br></em><strong><em>Whenever the Tax Exempt fiscal position is applied, replace the 15% tax with this 0% tax.</em></strong></p><p><em>This matches Odoo 19\u2019s updated localization behavior.</em></p>'
+              ],
+              explanation:
+                '<p><strong>On the 0% tax record, set the Fiscal Position to Tax Exempt and add the 15% tax to the Replaces field.</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_21-23-28-dd581b39e567c660778b6b37ba748711.png">',
+              answers: [
+                '<p><strong>In the Tax Mapping tab of the Tax Exempt fiscal position, set the 15% tax as the \u201cTax on Product\u201d and the 0% tax as the \u201cTax to Apply.\u201d</strong></p>',
+                '<p><strong>On the 15% tax record, set the Fiscal Position to Tax Exempt and add the 0% tax to the Replaces field.</strong></p>',
+                '<p><strong>On the 0% tax record, set the Fiscal Position to Tax Exempt and add the 15% tax to the Replaces field.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'How do you replace a 15% sales tax with a 0% sales tax for customers assigned to the Tax Exempt fiscal position?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975291,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which statement correctly explains the <strong>periodic</strong> or <strong>perpetual</strong> accounting practices in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>From the Odoo official documentation (your screenshot):</em></p><p><em>\ud83d\udccc </em><strong><em>Periodic Accounting (European practice)</em></strong></p><ul><li><p><em>Vendor bills are </em><strong><em>posted as expenses</em></strong><em>, NOT as stock assets.</em></p></li><li><p><em>Inventory valuation is NOT updated in real time.</em></p></li><li><p><em>At period-end, a </em><strong><em>closing entry adjusts stock valuation</em></strong><em> using the Stock Variation account.</em></p></li><li><p><em>This is the standard European \u201cperiodic inventory\u201d method.</em></p></li></ul><p><em>This matches </em><strong><em>exactly</em></strong><em> what option 1 says.</em></p>',
+                '<p><em>The description corresponds to </em><strong><em>Perpetual</em></strong><em> (Anglo-Saxon) accounting, not Periodic.</em></p><p><em>Perpetual accounting:</em></p><ul><li><p><em>Vendor bills are </em><strong><em>posted as assets</em></strong><em> (inventory)</em></p></li><li><p><em>Expense (COGS) is recognized </em><strong><em>when goods are sold</em></strong></p></li></ul><p><em>So option 2 incorrectly describes periodic accounting.</em></p>',
+                '<p><em>Perpetual accounting does not record bills as expenses nor adjust stock only at closing.</em></p><p><em>Perpetual accounting:</em></p><ul><li><p><em>Bills = </em><strong><em>Stock (asset)</em></strong></p></li><li><p><em>Movements automatically adjust inventory value</em></p></li><li><p><em>COGS is posted at delivery</em></p></li><li><p><em>No period-end valuation entry is needed</em></p></li></ul><p><em>So option 3 incorrectly swaps perpetual with periodic logic.</em></p>'
+              ],
+              explanation:
+                '<p><strong>In the periodic method, vendor bills are recorded as expenses, and the inventory (stock valuation) is adjusted in the closing entry.</strong> </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_21-57-45-899b66fdadf8563c9d99ee43286ba777.png">',
+              answers: [
+                '<p><strong>In the periodic method, vendor bills are recorded as expenses, and the inventory (stock valuation) is adjusted in the closing entry.</strong> </p>',
+                '<p><strong>In the periodic method, vendor bills are recorded as assets (stock valuation) and are expensed when goods are sold.</strong></p>',
+                '<p><strong>In perpetual accounting, vendor bills are recorded as expenses, and the inventory (stock valuation) is adjusted in the closing entry.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'Which statement correctly explains the periodic or perpetual accounting practices in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975293,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following is the depreciation board for this asset?</p><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2024-12-07_17-54-48-2864a227b2aef4d3a7619b0933c17315.png"></p><p>Option A</p><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2024-12-07_17-54-48-21f14af2eb5818bf5386a1ba98dc89dd.png"></p><p>Option B</p><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2024-12-07_17-54-48-247cc0a7972e8867c8e771cc626962c9.png"></p><p>Option C</p><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2024-12-07_17-54-48-28555172576e9be73b577a941f3c9c52.png"></p><p>Option D</p><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2024-12-07_17-54-48-63a457e998ab56417ddaf2d477f86b95.png"></p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is correct because the depreciation board aligns with the asset's details. Using the straight-line method over five years with a prorata date of January 1, 2024, and excluding the non-depreciable value of $200, the depreciation amount is $160 annually. The schedule in Option A reflects this calculation correctly.</em></p>",
+                '<p><em>This is incorrect</em></p>',
+                '<p><em>This is incorrect</em></p>',
+                '<p><em>This is incorrect</em></p>'
+              ],
+              explanation:
+                '<p>The asset follows the straight-line depreciation method over a duration of five years, starting with a prorata date of January 1, 2024. The non-depreciable value of $200 is subtracted from the original value of $1,000, leaving $800 to be depreciated evenly over five years. This results in an annual depreciation amount of $160. Option A correctly reflects this calculation, making it the correct choice.</p>',
+              answers: [
+                '<p>Option A</p>',
+                '<p>Option B</p>',
+                '<p>Option C</p>',
+                '<p>Option D</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'Which of the following is the depreciation board for this asset?Option AOption BOption COption D',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975295,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you configure Odoo so that <strong>invoice taxes are rounded per invoice line</strong> rather than per tax?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><em>Invoices do </em><strong><em>not</em></strong><em> have a setting that controls per-line vs per-tax rounding.</em></p></li><li><p><em>The \u201cTax Rounding\u201d field on invoices is informational, not a configuration override.</em></p></li><li><p><em>Odoo does not allow per-invoice rounding configuration.</em></p></li></ul>',
+                '<ol><li><p><em>Tax rounding is </em><strong><em>not</em></strong><em> automatic or forced by localization.</em></p></li><li><p><em>Administrators can freely set </em><strong><em>Round per Line</em></strong><em> or </em><strong><em>Round Globally (per tax)</em></strong><em> on each tax record.</em></p></li></ol>',
+                "<p><em>In </em><strong><em>Odoo 19</em></strong><em>, the rounding behavior of taxes is managed at the </em><strong><em>tax configuration level</em></strong><em>, not per invoice.</em></p><p><em>To round taxes </em><strong><em>per invoice line</em></strong><em>:</em></p><ol><li><p><em>Go to </em><strong><em>Accounting</em></strong></p></li><li><p><strong><em>Configuration \u2192 Taxes</em></strong></p></li><li><p><em>Open the tax you want to modify</em></p></li><li><p><em>Set </em><strong><em>Rounding Method = Round per Line</em></strong></p></li></ol><p><em>This ensures that each invoice line's tax is rounded individually before summing totals.</em></p><p><em>This setting is especially relevant for countries requiring precise rounding at the line level.</em></p>"
+              ],
+              explanation:
+                '<p><strong>Go to Accounting \u2192 Configuration \u2192 Taxes, and set the Rounding Method to \u201cRound per Line.\u201d</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-03-22-21933c9cc7fbf9882b55876d5fa1693c.png">',
+              answers: [
+                '<p><strong>On the invoice itself, in the Accounting section of the Other Info tab, set the Tax Rounding field to \u201cPer Invoice Line.\u201d</strong></p>',
+                '<p><strong>Tax rounding is determined automatically by country regulations and cannot be changed.</strong></p>',
+                '<p><strong>Go to Accounting \u2192 Configuration \u2192 Taxes, and set the Rounding Method to \u201cRound per Line.\u201d</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'How can you configure Odoo so that invoice taxes are rounded per invoice line rather than per tax?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975297,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can fiscal positions be configured to apply automatically to customers based on their country?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is correct because to configure fiscal positions to apply automatically, the country must be selected and the 'Detect Automatically' option must be enabled for the fiscal position. This ensures the system can identify the appropriate fiscal position based on the customer's country.</em></p>",
+                "<p><em>This is incorrect because Odoo allows fiscal positions to be assigned automatically based on the customer's country when properly configured.</em></p>",
+                '<p><em>This is incorrect because the configuration is not done directly on the customer. Instead, it is set in the fiscal position settings with the country specified and the detection enabled.</em></p>',
+                '<p><em>This is incorrect because fiscal position settings are applied automatically during customer creation or transaction setup, not manually on the invoice.</em></p>'
+              ],
+              explanation:
+                '<p>Fiscal positions in Odoo help adapt taxes or accounts for customers based on specific criteria, such as their country. By selecting the country and enabling the \'Detect Automatically\' option in the fiscal position, the system can automatically apply the appropriate fiscal position when dealing with customers from that country. This simplifies tax handling and ensures accuracy in transactions.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-05-56-360bcc8844afc01cb51dbeb53a799005.png">',
+              answers: [
+                "<p>Select the country and enable the 'Detect Automatically' option on the fiscal position.</p>",
+                "<p>It's not possible to assign a fiscal position to a customer based on their country.</p>",
+                "<p>Assign the fiscal position to the customer and set it to 'Detect Automatically.'</p>",
+                "<p>Assign the fiscal position to the invoice and set it to 'Detect Automatically.'</p>"
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'How can fiscal positions be configured to apply automatically to customers based on their country?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975299,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens if no currency is defined for an accounting account?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is correct because when no specific currency is set on an account, the account is considered multi-currency and can handle transactions in any currency. Odoo will record the transaction amounts and convert them into the company's currency for reporting purposes.</em></p>",
+                "<p><em>This is incorrect because accounts without a defined currency are not limited to the company's default currency. They can handle transactions in various currencies.</em></p>",
+                '<p><em>This is incorrect because Odoo allows accounts to function without a specific currency, enabling multi-currency use cases.</em></p>',
+                '<p><em>This is incorrect because currency settings can be applied at both the account and journal levels in Odoo, and accounts without a currency specified are inherently multi-currency.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, when no currency is assigned to an accounting account, it operates as a multi-currency account. This flexibility allows transactions in any currency to be recorded, with Odoo handling conversions into the company\'s currency for reporting and consistency. This is a useful feature for global operations or accounts that deal with multiple currencies.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-08-04-ab97e271b90c62f474f1cfe26cf98e91.png">',
+              answers: [
+                '<p>The account can be used for transactions in any currency.</p>',
+                "<p>The account can only be used for transactions in the company's default currency.</p>",
+                '<p>It is not possible; every account must have a defined currency.</p>',
+                '<p>Currency management is not available at the account level, only at the journal level.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'What happens if no currency is defined for an accounting account?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975301,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What triggers follow-up actions for overdue invoices in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because follow-up actions are triggered by the due date, not the creation date. The creation date has no bearing on the overdue calculation.</em></p>',
+                '<p><em>This is correct because follow-up actions in Odoo are designed to activate based on the number of days an invoice remains unpaid after its due date.</em></p>',
+                '<p><em>This is incorrect because the issue date is not used to determine overdue days for follow-up actions. The due date is the relevant factor.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo\'s follow-up actions are automated processes triggered when an invoice remains unpaid for a specified number of days past its due date. The system does not consider the invoice\'s creation, issue, or delivery dates for this purpose. This ensures that follow-up reminders are directly tied to the agreed-upon payment timeline, enhancing efficiency in managing accounts receivable.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-11-44-219ce481ee718796e91dd62714db764e.png">',
+              answers: [
+                "<p>Based on the number of overdue days calculated from the invoice's creation date.</p>",
+                "<p>Based on the number of overdue days calculated from the invoice's due date.</p>",
+                "<p>Based on the number of overdue days calculated from the invoice's issue date.</p>"
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'What triggers follow-up actions for overdue invoices in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975303,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question: '<p>How can you manage financial budgets in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect </em></p>',
+                '<p><em>This is correct because Odoo provides a budget management feature that allows users to define budgets at the Profit and Loss account level, enabling comparisons between actuals and planned figures.</em></p>',
+                '<p><em>This is incorrect</em></p>',
+                '<p><em>This is incorrect </em></p>'
+              ],
+              explanation:
+                '<p>Odoo\u2019s budgeting tools enable users to define financial budgets at the Profit and Loss level, providing a framework for tracking and comparing actual performance with planned figures. This feature is critical for effective financial planning and oversight. While analytic budgets are another tool in Odoo, they serve a different purpose and focus on cost allocation rather than overall financial budget management.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-14-08-50b9606cc9db1eed8e25a347392d67ad.png">',
+              answers: [
+                '<p>Set up analytic plans and accounts, then create a budget.</p>',
+                '<p>Create a budget directly on the Profit and Loss statement to compare actual and planned figures.</p>',
+                '<p>Financial budgets can be accessed and managed through the Executive Summary.</p>',
+                '<p>Financial budgets cannot be managed in Odoo; only analytic budgets are supported.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain: 'How can you manage financial budgets in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975305,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can payments be configured to automatically generate journal entries in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because payments require specific configurations to ensure journal entries are created automatically. It does not happen by default without proper settings.</em></p>',
+                '<p><em>This is incorrect because Odoo allows payments to generate journal entries when appropriate accounts are linked to the payment method.</em></p>',
+                '<p><em>This is incorrect because there is no such "Auto check on post" option directly affecting the creation of journal entries for payments.</em></p>',
+                '<p><em>This is correct because linking an outstanding payments/receipts account to the payment method ensures that journal entries are automatically created to record the payment transactions.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, journal entries for payments are generated automatically only when the payment method is properly configured with an outstanding payments/receipts account in the associated journal. This ensures that the financial transaction is recorded in the appropriate accounts, maintaining accurate and complete financial records. This setup provides flexibility and control over how payments are managed and reported.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-16-57-2c429a640d8e57ad9359218214fa62cf.png">',
+              answers: [
+                '<p>Payments automatically generate journal entries by default.</p>',
+                '<p>Payments cannot be configured to create journal entries; only invoices and bills generate journal entries.</p>',
+                '<p>Enable the "Auto check on post" option in the journal used for the payment.</p>',
+                '<p>Add an outstanding payments/receipts account to the payment method in the journal used for the payment.</p>'
+              ]
+            },
+            correct_response: ['d'],
+            section: 'Accounting',
+            question_plain:
+              'How can payments be configured to automatically generate journal entries in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975307,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you automatically cancel all journal entries dated before a specific date in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because the "Invoicing Switch Threshold" field allows users to set a date beyond which journal entries cannot be modified or cancelled, ensuring proper financial management.</em></p>',
+                '<p><em>This is incorrect because cancelling journal entries in bulk is not a standard action available directly from the list view. Each entry must be handled individually unless a threshold is configured.</em></p>',
+                '<p><em>This is incorrect because reversing entries is different from cancelling them, as reversing creates offset entries while leaving the original ones intact.</em></p>'
+              ],
+              explanation:
+                '<p>To automatically restrict or manage journal entries based on a specific date, Odoo provides the "Invoicing Switch Threshold" option in the Accounting settings. This configuration ensures compliance with accounting policies by preventing modifications to entries dated before the specified threshold. While other methods, such as manual reversal or enabling cancellation settings, can be used, they do not provide an automated solution for all entries before a particular date.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-44-00-05cc08514295447299d5b28e311f2021.png">',
+              answers: [
+                '<p>Define the specific date in the "Invoicing Switch Threshold" field within the Accounting settings.</p>',
+                '<p>Select all journal entries before the specified date in the list view and choose "Action &gt; Cancel."</p>',
+                '<p>Select all journal entries before the specified date in the list view and choose "Action &gt; Reverse."</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'How can you automatically cancel all journal entries dated before a specific date in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975309,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens when you <strong>manually close a loan</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>When manually closing a loan in </em><strong><em>Odoo 19 Accounting \u2192 Loans</em></strong><em>, Odoo provides a cleanup mechanism so the loan stops generating planned future entries.</em></p><p><em>When closing the loan:</em></p><p><em>\u27a1\ufe0f You select an </em><strong><em>End Date</em></strong><em><br>\u27a1\ufe0f </em><strong><em>All draft (unposted) loan entries dated after that closure date are deleted</em></strong><em><br>\u27a1\ufe0f Already-posted entries remain untouched<br>\u27a1\ufe0f Odoo will no longer generate future amortization entries</em></p><p><em>This is the correct and official behavior in Odoo\u2019s loan management system.</em></p>',
+                '<ul><li><p><em>Odoo does </em><strong><em>not</em></strong><em> delete all draft entries automatically.</em></p></li><li><p><em>It only removes draft entries </em><strong><em>after the chosen closure date</em></strong><em>, not all of them.</em></p></li></ul>',
+                '<ol><li><p><em>Odoo does </em><strong><em>not</em></strong><em> cancel posted entries.</em></p></li><li><p><em>Posted entries are immutable (for audit compliance).</em></p></li><li><p><em>Loan closure never reverses already posted amortizations.</em></p></li></ol>'
+              ],
+              explanation:
+                '<p><strong>You can select a date after which all related draft loan entries will be deleted.</strong> </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-46-02-e75b76ebf9e87abb793d0a564688f02c.png">',
+              answers: [
+                '<p><strong>You can select a date after which all related draft loan entries will be deleted.</strong> </p>',
+                '<p><strong>All related draft loan entries are automatically deleted.</strong></p>',
+                '<p><strong>You can select a date before which all posted entries will be cancelled.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'What happens when you manually close a loan in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975311,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Under a <strong>perpetual accounting</strong> method in Odoo, when purchasing goods intended for resale, which actions generate <strong>journal entries</strong>?</p>',
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Valuation cheat sheet](https://www.odoo.com/documentation/19.0/applications/inventory_and_mrp/inventory/inventory_valuation/cheat_sheet.html#changes-in-19)'
+              ],
+              feedbacks: [
+                '<p><em>Correct!</em></p>',
+                '<p><em>Incorrect</em></p>',
+                '<p><em>Incorrect</em></p>'
+              ],
+              explanation:
+                '<p><em>In </em><strong><em>perpetual inventory valuation</em></strong><em>, Odoo </em><strong><em>does not</em></strong><em> create accounting journal entries when goods move physically.</em></p><p><em>That means:</em></p><ul><li><p><em>Validating a </em><strong><em>receipt</em></strong><em> \u2192 \u274c No accounting entry</em></p></li><li><p><em>Validating a </em><strong><em>delivery order</em></strong><em> \u2192 \u274c No accounting entry</em></p></li></ul><p><em>Instead, Odoo posts accounting entries when </em><strong><em>value-related events</em></strong><em> occur:</em></p><p><strong><em>1\ufe0f\u20e3 Vendor Bill \u2192 YES (generates accounting entries)</em></strong></p><ul><li><p><em>Recognizes the purchased inventory as an </em><strong><em>asset</em></strong></p></li><li><p><em>Posts into </em><strong><em>Stock Valuation Account</em></strong></p></li></ul><p><strong><em>2\ufe0f\u20e3 Customer Invoice \u2192 YES (generates accounting entries)</em></strong></p><ul><li><p><em>Recognizes </em><strong><em>revenue</em></strong></p></li><li><p><em>Automatically posts </em><strong><em>COGS</em></strong><em> (Cost of Goods Sold) when the invoice is confirmed in perpetual mode</em></p></li></ul><p><strong><em>3\ufe0f\u20e3 Deliveries do NOT generate COGS directly</em></strong></p><p><em>COGS is posted at </em><strong><em>invoicing</em></strong><em>, not at delivery.</em></p><p><strong><em>4\ufe0f\u20e3 End-of-period adjustments</em></strong></p><p><em>Inventory valuation corrections (if needed) are generated from the </em><strong><em>Inventory Valuation Report</em></strong><em>, not from stock moves.</em></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_22-59-19-35a87c7127cf55b047772c455c942ef1.png">',
+              answers: [
+                '<p><strong>Confirming the vendor bill and confirming the customer invoice.</strong> </p>',
+                '<p><strong>Confirming the vendor bill, validating the delivery order, and confirming the customer invoice.</strong></p>',
+                '<p><strong>Validating the receipt, confirming the vendor bill, validating the delivery order, and confirming the customer invoice.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'Under a perpetual accounting method in Odoo, when purchasing goods intended for resale, which actions generate journal entries?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975313,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you send a payment reminder to a customer for <strong>all overdue invoices except one</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>You cannot trigger follow-ups from the invoice list in Odoo 19.</em></p></li><li><p><em>The \u201cInvoice Follow-ups\u201d action does </em><strong><em>not</em></strong><em> exist there.</em></p></li><li><p><em>Follow-ups are customer-level, not invoice-level.</em></p></li></ol>',
+                '<p><em>In </em><strong><em>Odoo 19</em></strong><em>, Follow-ups are managed through the </em><strong><em>Customer Follow-up Report</em></strong><em>, not from the invoice list.</em></p><p><em>When you open a customer\u2019s Follow-up Report:</em></p><ul><li><p><em>Odoo displays </em><strong><em>all open and overdue invoices</em></strong><em> for that customer.</em></p></li><li><p><em>Beside each invoice is a </em><strong><em>\u201cNo Follow-up\u201d</em></strong><em> toggle.</em></p></li><li><p><em>Turning </em><strong><em>ON</em></strong><em> this toggle for a specific invoice </em><strong><em>excludes it</em></strong><em> from the reminder.</em></p></li></ul><p><em>Then, when you click </em><strong><em>Send Reminder</em></strong><em>, Odoo sends a follow-up email </em><strong><em>for all eligible overdue invoices EXCEPT the excluded one</em></strong><em>.</em></p><p><em>This is the official method to selectively omit an invoice from a reminder.</em></p>',
+                '<ol><li><p><em>The customer form\u2019s Accounting tab does not allow selecting invoices.</em></p></li><li><p><em>The "Send" button sends the follow-up </em><strong><em>for all overdue invoices</em></strong><em>, with no filtering.</em></p></li><li><p><em>You cannot exclude a specific invoice from there.</em></p></li></ol>'
+              ],
+              explanation:
+                '<p><strong>In the customer\u2019s Follow-up Report, enable the toggle in the <em>No Follow-up</em> column for the invoice you want to exclude.</strong> </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_23-03-49-37cb81cf3a055d9c49919c5e7416b3e2.png">',
+              answers: [
+                '<p><strong>In the Invoices list view, filter for overdue invoices, select the ones you want, and choose Invoice Follow-ups from the Actions menu.</strong></p>',
+                '<p><strong>In the customer\u2019s Follow-up Report, enable the toggle in the <em>No Follow-up</em> column for the invoice you want to exclude.</strong> </p>',
+                '<p><strong>On the customer form, under the Accounting tab, click Send in the Invoice Follow-ups section and select the invoice that needs a reminder.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'How can you send a payment reminder to a customer for all overdue invoices except one?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975315,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Can modifications still be made after the "Lock Everything" date is set?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the system allows authorized users to set temporary exceptions, even after the "Lock </em>Everything<em>" date has been set. Complete prohibition of changes is not the case.</em></p>',
+                '<p><em>This is correct because the system provides authorized users with the ability to create temporary exceptions, allowing specific changes within a defined timeframe, even after the lock is active.</em></p>',
+                '<p><em>This is incorrect because the locking mechanism is not bypassed entirely by the absence of a hard lock. Exceptions must still be explicitly set by authorized users.</em></p>'
+              ],
+              explanation:
+                '<p>The "Lock Everything" date is a mechanism to ensure data integrity by restricting changes beyond a specific point. However, to accommodate necessary adjustments, authorized users have the flexibility to set temporary exceptions for specific cases, specifying the duration and scope of these changes. This ensures a balance between security and operational flexibility.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_23-09-26-95619ff3fa592d4842dba3dc2f5f53cf.png">',
+              answers: [
+                '<p>Changes are not permitted once the "Lock Everything" date is set.</p>',
+                "<p>Authorized users can apply a temporary exception for themselves or others and specify the exception's duration.</p>",
+                '<p>Any changes are allowed as long as a hard lock is not applied.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'Can modifications still be made after the "Lock Everything" date is set?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975317,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What occurs when a bank transaction is reconciled using the bank reconciliation tool in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo does not create new journal entries by default during reconciliation. It typically works with existing journal entries to ensure accuracy and consistency in bank statements.</em></p>',
+                '<p><em>This is incorrect because reconciliation involves matching a bank transaction with one or more existing entries, not reconciling two existing journal entries with each other.</em></p>',
+                '<p><em>This is incorrect because Odoo goes beyond merely linking a journal entry. It updates the entries with any necessary adjustments and ensures full reconciliation between the transaction and the records.</em></p>',
+                "<p><em>This is correct because Odoo's bank reconciliation tool ensures that the bank transaction is matched and reconciled with existing journal entries, making adjustments as needed to maintain accurate financial records.</em></p>"
+              ],
+              answers: [
+                '<p>Odoo always creates a new journal entry.</p>',
+                '<p>Odoo reconciles two existing journal entries.</p>',
+                '<p>Odoo links an existing journal entry to the bank transaction.</p>',
+                '<p>Odoo updates the existing journal entry with the necessary lines and reconciles it with the selected entries.</p>'
+              ]
+            },
+            correct_response: ['d'],
+            section: 'Accounting',
+            question_plain:
+              'What occurs when a bank transaction is reconciled using the bank reconciliation tool in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975319,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you automatically update <strong>exchange rates</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>To auto-update exchange rates in </em><strong><em>Odoo 19</em></strong><em>, you must explicitly enable:</em></p><p><em>\u27a1\ufe0f </em><strong><em>Accounting \u2192 Configuration \u2192 Settings \u2192 Currencies \u2192 Automatic Currency Rates</em></strong></p><p><em>When enabled, Odoo:</em></p><ul><li><p><em>Connects to a selected </em><strong><em>currency provider</em></strong><em> (European Central Bank, Yahoo, etc. depending on localization)</em></p></li><li><p><em>Updates exchange rates </em><strong><em>automatically</em></strong><em>, usually daily</em></p></li><li><p><em>Allows you to choose the update frequency depending on your localization package</em></p></li></ul><p><em>This is the only official method for automated currency rate updates.</em></p>',
+                '<ol><li><p><em>Creating a foreign currency journal entry </em><strong><em>does not</em></strong><em> trigger rate updates.</em></p></li><li><p><em>Odoo uses the existing rate stored in the currency table.</em></p></li><li><p><em>No automatic refresh happens during posting.</em></p></li></ol>',
+                '<ol><li><p><em>Odoo </em><strong><em>does not update rates automatically by default</em></strong><em> \u2014 the feature must be enabled.</em></p></li><li><p><em>Developer mode is </em><strong><em>not</em></strong><em> required to trigger updates.</em></p></li><li><p><em>Manual refresh is done through </em><strong><em>Accounting \u2192 Configuration \u2192 Currencies</em></strong><em>, not dev mode.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>By enabling the Automatic Currency Rates option in the Accounting configuration.</strong></p>',
+                '<p><strong>Exchange rates are automatically updated when a journal entry with a different currency is created.</strong></p>',
+                '<p><strong>By default, currency rates are updated daily and can be manually triggered using developer mode.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'How can you automatically update exchange rates in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975321,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you modify the <strong>number</strong> of a <strong>posted journal entry</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In </em><strong><em>Odoo 19 Accounting</em></strong><em>, posted journal entries are </em><strong><em>locked</em></strong><em>, meaning:</em></p><ul><li><p><em>You </em><strong><em>cannot</em></strong><em> change the entry number unless you </em><strong><em>first reset the entry to draft</em></strong><em>.</em></p></li><li><p><em>Once in draft, the </em><strong><em>Number</em></strong><em> field becomes editable.</em></p></li></ul><p><em>For modifying multiple entries:</em></p><p><strong><em>Bulk Editing (Developer Mode Only)</em></strong></p><ol><li><p><em>Enable </em><strong><em>Developer Mode</em></strong></p></li><li><p><em>Go to </em><strong><em>Accounting \u2192 Journal Entries</em></strong></p></li><li><p><em>Select multiple entries</em></p></li><li><p><em>Click </em><strong><em>Action \u2192 Resequence</em></strong></p></li><li><p><em>Odoo automatically corrects numbering sequentially</em></p></li></ol><p><em>This is the official and correct method to modify journal entry numbers.</em></p>',
+                '<ol><li><p><em>Bookkeeper rights are </em><strong><em>not the condition</em></strong><em> for changing entry numbers.</em></p></li><li><p><em>The restriction comes from the </em><strong><em>posted state</em></strong><em>, not from the access group.</em></p></li><li><p><em>Any user with rights to reset a journal entry to draft can change the number.</em></p></li></ol>',
+                '<ol><li><p><em>You </em><strong><em>cannot</em></strong><em> manually alter the number of a posted entry even in developer mode without resetting it to draft.</em></p></li><li><p><em>This option claims you can, which is false.</em></p></li><li><p><em>Bulk resequencing does </em><strong><em>not</em></strong><em> require resetting all entries to draft \u2014 the resequence tool handles posted entries automatically.</em></p></li></ol>'
+              ],
+              explanation:
+                '<p><strong>You can modify a single posted journal entry by resetting it to draft and manually changing the number, or you can change many at once by enabling developer mode, selecting the entries, and choosing \u201cResequence\u201d from the Action menu.</strong> </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-24_23-38-45-8ca9bfb072a5b97ee06c9a76ac291a32.png">',
+              answers: [
+                '<p><strong>You can modify a single posted journal entry by resetting it to draft and manually changing the number, or you can change many at once by enabling developer mode, selecting the entries, and choosing \u201cResequence\u201d from the Action menu.</strong> </p>',
+                '<p><strong>Only users with Bookkeeper access rights can modify posted journal entry numbers; all other users will receive an error.</strong></p>',
+                '<p><strong>You can manually change a posted journal entry\u2019s number in developer mode without resetting it to draft, or change multiple entries by selecting them, resetting them to draft, and using the Resequence option.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'How can you modify the number of a posted journal entry in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975323,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which feature in Odoo allows you to automatically adjust the income or expense account for a product based on the customer or vendor?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because fiscal positions in Odoo enable you to map specific accounts or taxes dynamically based on the customer or vendor, allowing the system to adjust the income or expense account for a product as required.</em></p>',
+                '<p><em>This is incorrect because the chart of accounts provides a complete listing of all accounts used in the company but does not dynamically adjust accounts based on customer or vendor.</em></p>',
+                '<p><em>This is incorrect because tax localizations focus on adapting tax rules and structures for specific countries or regions, not on mapping income or expense accounts.</em></p>'
+              ],
+              explanation:
+                '<p>Fiscal positions in Odoo are designed to provide flexibility by dynamically mapping income or expense accounts or taxes for transactions. This is particularly useful when dealing with varying tax or accounting rules across customers or vendors, ensuring compliance and accurate financial reporting. Other features, such as the chart of accounts or product categories, are static and do not provide this level of dynamic adjustment.</p>',
+              answers: [
+                '<p>Fiscal Positions</p>',
+                '<p>Chart of Accounts</p>',
+                '<p>Tax Localizations</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'Which feature in Odoo allows you to automatically adjust the income or expense account for a product based on the customer or vendor?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975325,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Apart from miscellaneous, what are the different types of journals that can be configured in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because while these are valid journal types, it excludes important types like Credit Card, which is also a configurable journal in Odoo.</em></p>',
+                '<p><em>This is incorrect because it omits Credit Card journals, which are also supported in Odoo.</em></p>',
+                '<p><em>This is incorrect because Expense is not defined as a separate journal type in Odoo. Instead, expenses are typically handled within Purchase or Miscellaneous journals.</em></p>',
+                '<p><em>This is correct because these are the key journal types in Odoo that businesses can configure, apart from the miscellaneous journal type. They cover most transactional needs, including bank operations, cash management, credit card transactions, sales, and purchases.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo provides several predefined journal types to support diverse business needs. Apart from miscellaneous journals, users can configure Bank, Cash, Credit Card, Sales, and Purchase journals. These options offer flexibility for managing various financial transactions efficiently. By categorizing journals, Odoo ensures that financial data is organized and traceable.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-25_04-37-49-469fd05060b80fde0539fbbec9583617.png">',
+              answers: [
+                '<p>Cash, Bank, Sales, and Purchase</p>',
+                '<p>Bank/Cash, Sales, and Purchase</p>',
+                '<p>Cash, Bank, Sales, Purchase, and Expense</p>',
+                '<p>Bank, Cash, Credit Card, Sales, and Purchase</p>'
+              ]
+            },
+            correct_response: ['d'],
+            section: 'Accounting',
+            question_plain:
+              'Apart from miscellaneous, what are the different types of journals that can be configured in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975327,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you configure follow-up actions for overdue payments from a customer?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect </em></p>',
+                "<p><em>This is correct because Odoo's follow-up management enables you to define follow-up levels and set automated reminders directly linked to customer records. These reminders ensure timely communication regarding overdue payments.</em></p>",
+                '<p><em>This is incorrect </em></p>',
+                '<p><em>This is incorrect </em></p>'
+              ],
+              explanation:
+                '<p>To manage overdue payments effectively, Odoo allows users to define follow-up levels and set automated reminders in customer records. This ensures systematic communication with customers regarding outstanding payments and enhances the efficiency of the accounts receivable process.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-25_04-42-58-d5193fd638f2cce147308843fe7f2e4d.png">',
+              answers: [
+                '<p>Use the "Due" smart button in the customer record to access the customer follow-up page.</p>',
+                "<p>Set up follow-up levels and configure reminders in the customer's contact record.</p>",
+                '<p>Create follow-up levels and set reminders under Accounting &gt; Customers &gt; Follow-up Reports.</p>',
+                '<p>Configure follow-up actions using the Customer Statement smart button in the customer record.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'How can you configure follow-up actions for overdue payments from a customer?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975329,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens when you attempt to confirm a bill with a bill date earlier than the Lock Tax Return date?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo does not permit posting in a locked tax period, even with a warning. Additional steps are required to proceed.</em></p>',
+                '<p><em>This is correct because Odoo ensures compliance by automatically setting the accounting date to the next valid period beyond the Lock Tax Return date, allowing the bill to be confirmed while maintaining accurate records.</em></p>',
+                '<p><em>This is incorrect because Odoo does not entirely block validation but instead modifies the accounting date to ensure compliance with the locked period.</em></p>',
+                '<p><em>This is incorrect because adjusting the accounting date is the default behavior, and Administrator rights are not required in this scenario.</em></p>'
+              ],
+              explanation:
+                '<p>Odoo enforces strict compliance with locked tax periods by preventing transactions from being recorded in those periods. When attempting to confirm a bill with a date earlier than the Lock Tax Return date, Odoo automatically adjusts the accounting date to the first available date beyond the locked period. This ensures the accuracy and legality of financial records while allowing the transaction to proceed.</p>',
+              answers: [
+                '<p>Odoo allows you to post the bill but displays a warning that the tax period is locked and the bill should be reviewed.</p>',
+                '<p>Odoo automatically adjusts the accounting date to the first available date after the Lock Tax Return date.</p>',
+                '<p>Odoo prevents validation of the bill and does not allow creating a journal entry for the locked tax period.</p>',
+                '<p>Odoo restricts confirmation of the bill to users with Administrator access rights, while other users receive a validation error.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Accounting',
+            question_plain:
+              'What happens when you attempt to confirm a bill with a bill date earlier than the Lock Tax Return date?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975331,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What details can be specified in a contact record in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because a partner record in Odoo includes settings for the payment method, preferred communication methods (e.g., email, mail), and options for managing invoice follow-ups, making it easier to handle transactions and communication with the partner.</em></p>',
+                '<p><em>This is incorrect because while follow-up rules and payment terms can be set for a partner, costing methods are related to inventory and products, not partner records.</em></p>',
+                '<p><em>This is incorrect because the overdue amount is not a field defined in the partner record. Instead, it is calculated dynamically based on outstanding invoices.</em></p>',
+                '<p><em>This is incorrect because while payment terms and methods can be set, the outstanding account is not explicitly defined in the partner record. It is a result of financial transactions.</em></p>'
+              ],
+              explanation:
+                '<p>A partner record in Odoo is used to define essential details that facilitate smooth operations, such as preferred payment methods, communication channels, and follow-up rules for overdue invoices. These fields help businesses maintain consistency and streamline their interactions with customers and vendors. Additional financial details, such as overdue amounts or outstanding accounts, are typically derived from actual transactions rather than being manually entered into the partner record.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-25_05-07-46-42d5efc2120c27b7c5815a385f8b2518.png">',
+              answers: [
+                '<p>The payment method, the preferred communication method, and invoice follow-up preferences</p>',
+                '<p>The invoice follow-up rules, payment terms, and costing method</p>',
+                '<p>The payment method, payment terms, and total overdue amount</p>',
+                '<p>Payment terms, payment method, and the outstanding account</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'What details can be specified in a contact record in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975333,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What do Odoo\u2019s <strong>audit features</strong> allow you to do?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Reviewing working files and performing checks is what </em><strong><em>accountants</em></strong><em> do,</em></p></li><li><p><em>But this is </em><strong><em>not</em></strong><em> the core function of the Audit feature in Odoo.</em></p></li><li><p><em>The Audit feature focuses on </em><strong><em>documentation</em></strong><em> and </em><strong><em>report generation</em></strong><em>, not general accounting cycle review.</em></p></li></ol>',
+                '<p><em>This answer mixes concepts that are </em><strong><em>not accurate</em></strong><em>:</em></p><ul><li><p><em>Odoo does </em><strong><em>not</em></strong><em> provide a universal, automatic audit trail \u201caccessible to everyone.\u201d</em></p></li><li><p><em>Access rights restrict who can see audit-related information.</em></p></li><li><p><em>The Audit feature\u2019s purpose is </em><strong><em>not</em></strong><em> to track changes.</em></p></li><li><p><em>Instead, it\u2019s to </em><strong><em>compile an audit-ready document package</em></strong><em>.</em></p></li></ul>',
+                '<p><em>In </em><strong><em>Odoo 19 Accounting</em></strong><em>, the Audit features allow you to create a </em><strong><em>fully customizable audit report</em></strong><em> for any chosen period.<br>This includes:</em></p><p><em>\u2714\ufe0f </em><strong><em>Automatically generated Table of Contents</em></strong></p><p><em>\u2714\ufe0f </em><strong><em>Attestations and required legal statements</em></strong></p><p><em>\u2714\ufe0f </em><strong><em>Balance Sheet</em></strong></p><p><em>\u2714\ufe0f </em><strong><em>Profit and Loss Statement</em></strong></p><p><em>\u2714\ufe0f </em><strong><em>Annexes / Notes</em></strong></p><p><em>\u2714\ufe0f </em><strong><em>All supporting documents (invoices, bills, journals, attachments)</em></strong></p><p><em>\u2714\ufe0f </em><strong><em>Exportable or printable as a clean audit package</em></strong></p><p><em>The purpose is to prepare a complete, legally compliant audit file for accountants, auditors, or regulatory authorities.</em></p><p><em>This aligns precisely with the official Odoo Audit Report feature.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Review working files related to selected cycles by performing various checks and balances for a specified period.</strong></p>',
+                '<p><strong>Both review working files and generate a customizable audit report, and control and track changes with a non-restrictive audit trail that is accessible by default to everyone.</strong></p>',
+                '<p><strong>Generate a customizable audit report for that period, including a table of contents, attestations, the balance sheet, a profit and loss statement, annexes, and supporting documents.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Accounting',
+            question_plain:
+              'What do Odoo\u2019s audit features allow you to do?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975335,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you update the value of your <strong>inventory account(s)</strong> so that they reflect the <strong>current inventory on hand</strong>, regardless of whether vendor bills or customer invoices have been posted?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo 19, when you want to synchronize your </em><strong><em>inventory account balances</em></strong><em> with the </em><strong><em>real stock quantities</em></strong><em>, you must manually trigger an accounting adjustment.</em></p><p><em>Here\u2019s how:</em></p><p><strong><em>Accounting \u2192 Review \u2192 Inventory Valuation \u2192 Generate Entry</em></strong></p><p><em>When you click </em><strong><em>Generate Entry</em></strong><em>, Odoo:</em></p><ul><li><p><em>Calculates the current inventory valuation from stock quantities and product costs</em></p></li><li><p><em>Compares it to the current </em><strong><em>Inventory</em></strong><em> account balance</em></p></li><li><p><em>Creates an adjusting journal entry to bring accounting valuation in line with real stock</em></p></li></ul><p><em>This process is essential especially if:</em></p><ul><li><p><em>Bills have not yet been posted</em></p></li><li><p><em>Inventory movements occurred before invoices</em></p></li><li><p><em>You use perpetual accounting but want to force realignment</em></p></li><li><p><em>You need period-end or audit-accurate stock valuation</em></p></li></ul><p><em>It is the </em><strong><em>only</em></strong><em> correct method to update valuation based purely on stock levels.</em></p>',
+                '<ul><li><p><em>The Chart of Accounts does </em><strong><em>not</em></strong><em> offer any "Update Value" button.</em></p></li><li><p><em>You cannot manually update inventory valuation accounts directly there.</em></p></li><li><p><em>Inventory valuation must be adjusted via the </em><strong><em>Inventory Valuation tool</em></strong><em>, not by editing the account.</em></p></li></ul>',
+                '<p><em>This is true </em><strong><em>only in fully automated perpetual valuation</em></strong><em> for movements that have corresponding bills/invoices posted.</em></p><p><em>However:</em></p><ul><li><p><em>If bills or invoices are missing</em></p></li><li><p><em>If valuation layers need adjustment</em></p></li><li><p><em>If you are performing period closing</em></p></li></ul><p><em>\u27a1\ufe0f Odoo does not automatically align real stock value with accounting.</em></p><p><em>Thus, automatic syncing is </em><strong><em>not guaranteed</em></strong><em>, and the Inventory Valuation report exists precisely for this reason.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Go to Accounting \u2192 Review \u2192 Inventory Valuation and click <em>Generate Entry</em>.</strong> </p>',
+                '<p><strong>Go to Accounting \u2192 Configuration \u2192 Chart of Accounts, select the inventory account(s), and click <em>Update Value</em>.</strong></p>',
+                '<p><strong>Inventory accounts are automatically kept up to date based on current inventory, regardless of what has or hasn\u2019t been billed or invoiced.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Accounting',
+            question_plain:
+              'How can you update the value of your inventory account(s) so that they reflect the current inventory on hand, regardless of whether vendor bills or customer invoices have been posted?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975337,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When you upload an <strong>Excel</strong> or <strong>CSV</strong> file and open it with <strong>Odoo Spreadsheet</strong>, what happens to the <strong>original file</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>When a user uploads a </em><strong><em>CSV</em></strong><em> or </em><strong><em>Excel</em></strong><em> file and chooses </em><strong><em>\u201cOpen with Spreadsheet\u201d</em></strong><em> in Odoo:</em></p><ul><li><p><em>Odoo converts the file into an </em><strong><em>Odoo Spreadsheet</em></strong><em> document.</em></p></li><li><p><em>The </em><strong><em>original uploaded file is deleted by default</em></strong><em> to avoid duplication.</em></p></li><li><p><em>However, the user can choose to </em><strong><em>preserve</em></strong><em> the original file by enabling the \u201cKeep the source file\u201d option during upload.</em></p></li></ul><p><em>This behavior ensures:</em></p><ul><li><p><em>Clean data management</em></p></li><li><p><em>No redundant storage of source files</em></p></li><li><p><em>User control when original files need to be kept</em></p></li></ul>',
+                '<ol><li><p><em>Odoo does not move the source file into any \u201cUploaded Files\u201d folder.</em></p></li><li><p><em>No such folder exists in standard Odoo Documents or Spreadsheet behavior.</em></p></li></ol>',
+                '<ol><li><p><em>The default behavior is </em><strong><em>delete</em></strong><em>, not preserve.</em></p></li><li><p><em>The option is to keep the source file \u2014 not to send it to trash.</em></p></li><li><p><em>The checkbox is about preserving, not deleting.</em></p></li></ol>'
+              ],
+              explanation:
+                '<p><strong>By default, it is deleted, but you can opt to preserve the file.</strong> </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-25_05-24-14-4e5d3c04ff5a255bee23136a38fa4bb7.png">',
+              answers: [
+                '<p><strong>By default, it is deleted, but you can opt to preserve the file.</strong> </p>',
+                '<p><strong>The original file is moved to an \u201cUploaded Files\u201d folder.</strong></p>',
+                '<p><strong>By default, it is preserved unless you check \u201cSend source file to trash.\u201d</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Spreadsheet',
+            question_plain:
+              'When you upload an Excel or CSV file and open it with Odoo Spreadsheet, what happens to the original file?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975339,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When you convert an <strong>Odoo Spreadsheet</strong> into a <strong>Dashboard</strong>, where is the <strong>original spreadsheet</strong> stored afterward?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>The spreadsheet does </em><strong><em>not</em></strong><em> remain in the Documents app.</em></p></li><li><p><em>It is </em><strong><em>not</em></strong><em> set to read-only \u2014 it is removed.</em></p></li></ol>',
+                '<ol><li><p><em>Odoo does </em><strong><em>not</em></strong><em> create a special folder.</em></p></li><li><p><em>Dashboards store spreadsheets internally, not inside Documents.</em></p></li></ol>',
+                '<p><em>When a spreadsheet is </em><strong><em>converted into a Dashboard</em></strong><em>, Odoo changes how the underlying file is managed:</em></p><p><em>\u2714\ufe0f The original spreadsheet file is </em><strong><em>deleted from the Documents app</em></strong></p><p><em>It no longer appears among regular files.</em></p><p><em>\u2714\ufe0f A copy of the spreadsheet becomes embedded inside the </em><strong><em>Dashboards app</em></strong></p><p><em>The dashboard now owns the file.</em></p><p><em>\u2714\ufe0f The spreadsheet can only be accessed by opening the Dashboard itself</em></p><p><em>You cannot find or edit it from the Documents module anymore.</em></p><p><em>Why does Odoo do this?</em></p><ul><li><p><em>Dashboards use embedded spreadsheets as </em><strong><em>data sources</em></strong></p></li><li><p><em>Odoo ensures a </em><strong><em>single source of truth</em></strong></p></li><li><p><em>Prevents accidental edits or duplicate spreadsheet copies</em></p></li><li><p><em>Ensures the Dashboard is self-contained</em></p></li></ul><p><em>This behavior is </em><strong><em>documented</em></strong><em> and is consistent across dashboards created from spreadsheets.</em></p>'
+              ],
+              explanation:
+                '<p><strong>The spreadsheet is deleted from the Documents app and can only be accessed through the Dashboards app.</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-25_05-29-51-241cae14ccb0a5556a2b7f79df3e4bf2.png">',
+              answers: [
+                '<p><strong>The spreadsheet remains in the Documents app but is automatically set to read-only.</strong></p>',
+                '<p><strong>The spreadsheet is saved in a special Dashboard assets folder within the Documents app.</strong></p>',
+                '<p><strong>The spreadsheet is deleted from the Documents app and can only be accessed through the Dashboards app.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Spreadsheet',
+            question_plain:
+              'When you convert an Odoo Spreadsheet into a Dashboard, where is the original spreadsheet stored afterward?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975341,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In a multi-company environment with <strong>Company A</strong>, <strong>Company B</strong>, and <strong>Company C</strong>, how can you make sure that <strong>only users from Company A and Company B</strong> can access a dashboard you create?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In </em><strong><em>Odoo 19</em></strong><em>, dashboards created from Odoo Spreadsheets support </em><strong><em>company access restrictions</em></strong><em>.</em></p><p><em>Inside the </em><strong><em>Dashboard settings</em></strong><em>, you can specify:</em></p><ul><li><p><em>Which companies the dashboard belongs to</em></p></li><li><p><em>Which users or groups are allowed to see it</em></p></li><li><p><em>Restrict visibility based on multi-company rules</em></p></li></ul><p><em>When you set the dashboard to </em><strong><em>Company A and Company B</em></strong><em>, users assigned to Company C </em><strong><em>will not see the dashboard</em></strong><em>.</em></p><p><em>This is the official and intended way to control multi-company access to dashboards.</em></p>',
+                '<p><em>This was true in very old Odoo versions, </em><strong><em>but not in Odoo 19</em></strong><em>.</em></p><p><em>Now:</em></p><ul><li><p><em>Dashboards </em><strong><em>inherit company rules</em></strong><em>,</em></p></li><li><p><em>They can be assigned to </em><strong><em>specific companies</em></strong><em>,</em></p></li><li><p><em>And visibility is </em><strong><em>fully controllable</em></strong><em>.</em></p></li></ul>'
+              ],
+              explanation:
+                '<p><strong>In the dashboard configuration, set which companies\' users can access the dashboard.</strong> </p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-25_05-33-06-69891ab539ad38288e2e224fc235928e.png">',
+              answers: [
+                "<p><strong>In the dashboard configuration, set which companies' users can access the dashboard.</strong> </p>",
+                '<p><strong>This is not possible; any dashboard is visible to all companies present in the database.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Spreadsheet',
+            question_plain:
+              'In a multi-company environment with Company A, Company B, and Company C, how can you make sure that only users from Company A and Company B can access a dashboard you create?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975343,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following is an <strong>advantage</strong> of converting an inserted pivot table into a <strong>dynamic pivot table</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>A </em><strong><em>dynamic pivot table</em></strong><em> in Odoo Spreadsheet is directly bound to live Odoo data.<br>This provides a powerful advantage:</em></p><p><strong><em>\u2714\ufe0f Automatic Expansion</em></strong></p><p><em>If your underlying model receives new values \u2014 for example:</em></p><ul><li><p><em>A </em><strong><em>new salesperson</em></strong><em> is created</em></p></li><li><p><em>A </em><strong><em>new quarter</em></strong><em> emerges in the data</em></p></li><li><p><em>A </em><strong><em>new product</em></strong><em>, team, or analytic account is added</em></p></li><li><p><em>A time period is extended</em></p></li></ul><p><em>\u27a1\ufe0f The </em><strong><em>dynamic pivot table will automatically include these new dimensions</em></strong><em>.</em></p><p><em>This keeps dashboards and reports accurate </em><strong><em>without manual updates</em></strong><em>.</em></p>',
+                '<ol><li><p><em>Sorting a pivot table is </em><strong><em>not a feature exclusive to dynamic pivot tables</em></strong><em>.</em></p></li><li><p><em>Both static and dynamic pivot tables can be rearranged.</em></p></li><li><p><em>Double-clicking column headers does </em><strong><em>not</em></strong><em> sort pivots in Odoo.</em></p></li></ol>',
+                '<ol><li><p><em>You </em><strong><em>cannot</em></strong><em> change the model of an inserted pivot table, dynamic or not.</em></p></li><li><p><em>To change the model, you must </em><strong><em>create a new pivot table</em></strong><em>.</em></p></li><li><p><em>The source model is fixed once created.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>The pivot table can automatically expand to include new dimensions, such as a new salesperson or a new quarter.</strong></p>',
+                '<p><strong>The pivot table can be manually sorted by measure by double-clicking the relevant column header.</strong></p>',
+                '<p><strong>The Odoo model on which the pivot table is based can be changed without reinserting the pivot table.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Spreadsheet',
+            question_plain:
+              'Which of the following is an advantage of converting an inserted pivot table into a dynamic pivot table in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975359,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When you expand a <strong>time-series chart</strong> (a chart showing data over time) to <strong>full screen</strong> on a dashboard in Odoo, what extra feature becomes available?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>Data sources are edited only through the dashboard editor, not through the chart view.</em></p></li></ul>',
+                '<p><em>Odoo dashboards allow </em><strong><em>enhanced navigation</em></strong><em> when a </em><strong><em>time-series</em></strong><em> chart is expanded.<br>Specifically, time-based charts (line charts, bar-over-time, etc.) gain:</em></p><p><em>\u2714\ufe0f </em><strong><em>Zooming</em></strong></p><p><em>You can drag to zoom into:</em></p><ul><li><p><em>A specific week</em></p></li><li><p><em>A specific month</em></p></li><li><p><em>A custom slice of the timeline</em></p></li></ul><p><em>\u2714\ufe0f </em><strong><em>Scrolling</em></strong></p><p><em>After zooming, you can scroll:</em></p><ul><li><p><strong><em>Forward in time</em></strong></p></li><li><p><strong><em>Backward in time</em></strong><em><br>\u2026to visually explore historical or future periods along the time axis.</em></p></li></ul><p><em>This feature is only available </em><strong><em>in full-screen mode</em></strong><em> and only for </em><strong><em>time-series charts</em></strong><em> (not all chart types).</em></p>',
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>Odoo does </em><strong><em>not</em></strong><em> stream live data updates into dashboard charts in real time.</em></p></li><li><p><em>Charts refresh only when the dashboard is manually reloaded or refreshed.</em></p></li></ul>'
+              ],
+              explanation:
+                '<p><strong>You can zoom in on a specific time span and scroll forward or backward in time.</strong></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-04_01-30-18-1f838825d2791743e0b324430d6ce61a.png">',
+              answers: [
+                "<p>You can edit the chart's data source directly from the full-screen view.</p>",
+                '<p><strong>You can zoom in on a specific time span and scroll forward or backward in time.</strong></p>',
+                '<p>Real-time data streaming shows live updates while the chart is expanded.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Spreadsheet',
+            question_plain:
+              'When you expand a time-series chart (a chart showing data over time) to full screen on a dashboard in Odoo, what extra feature becomes available?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975345,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can an <strong>external user</strong> access a spreadsheet that contains <strong>dynamic Odoo data</strong> (i.e., formulas pulling live data from the database or links to Odoo views)?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>External users </em><strong><em>cannot</em></strong><em> open the spreadsheet at all</em></p></li><li><p><em>Not even in read-only mode</em></p></li><li><p><em>Odoo blocks access during loading when formulas reference internal models</em></p></li></ol>',
+                '<p><em>A spreadsheet that contains </em><strong><em>dynamic Odoo formulas</em></strong><em> (such as </em><code><em>ODOO.PIVOT</em></code><em>, </em><code><em>ODOO.LIST</em></code><em>, </em><code><em>ODOO.SEARCH</em></code><em>, links to Odoo views, etc.) is considered </em><strong><em>internal data</em></strong><em> and therefore is subject to Odoo\u2019s main access control rules.</em></p><p><em>\u2757 External users (Portal users or public share links)</em></p><p><strong><em>Cannot access any spreadsheet that contains dynamic Odoo formulas</em></strong><em>, because:</em></p><ul><li><p><em>They </em><strong><em>do not</em></strong><em> have permissions to access Odoo models used in dynamic formulas</em></p></li><li><p><em>Odoo refuses to load the spreadsheet for them</em></p></li><li><p><em>Even displaying the spreadsheet would expose internal business data</em></p></li></ul><p><em>Therefore, Odoo blocks the entire document for external users.</em></p><p><em>What about viewing-only?</em></p><p><em>Even </em><strong><em>read-only viewing is blocked</em></strong><em> when dynamic formulas are present.</em></p><p><em>Odoo does </em><strong><em>not</em></strong><em> allow external users to view a spreadsheet that pulls from internal models \u2014 not even partially, not even read-only.</em></p>',
+                '<ol><li><p><em>External users cannot access the document in the first place</em></p></li><li><p><em>Therefore they cannot see a \u201cRequest edit access\u201d button</em></p></li><li><p><em>Even if they requested access, the system will not grant dynamic model access to external/portal users</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>An external user can only access a spreadsheet containing dynamic Odoo data in read-only mode.</strong></p>',
+                '<p><strong>An external user cannot access a spreadsheet containing dynamic Odoo data.</strong> </p>',
+                '<p><strong>An external user who has read-only access can click the \u2018Request edit access\u2019 button.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Spreadsheet',
+            question_plain:
+              'How can an external user access a spreadsheet that contains dynamic Odoo data (i.e., formulas pulling live data from the database or links to Odoo views)?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975347,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In a spreadsheet that contains <strong>dynamic Odoo data</strong>, how can you open the <strong>underlying database record</strong>, such as a specific sales order?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>When a spreadsheet contains </em><strong><em>dynamic Odoo formulas</em></strong><em> (such as </em><code><em>ODOO.PIVOT</em></code><em>, </em><code><em>ODOO.LIST</em></code><em>, </em><code><em>ODOO.SEARCH</em></code><em>, </em><code><em>ODOO.REFERENCE</em></code><em>, etc.), each cell may link directly to an Odoo record.</em></p><p><em>To access that record:</em></p><p><em>\u27a4 </em><strong><em>Right-click the cell \u2192 select \u201cSee record\u201d</em></strong></p><p><em>This opens:</em></p><ul><li><p><em>The corresponding Odoo form view</em></p></li><li><p><em>With full details (e.g., the Sales Order, Invoice, Product, Employee, Task, etc.)</em></p></li><li><p><em>In the same tab or in a new tab depending on browser settings</em></p></li></ul><p><em>This is the </em><strong><em>official and only</em></strong><em> method to open underlying records from a dynamic spreadsheet.</em></p>',
+                '<ol><li><p><em>There is </em><strong><em>no \u201cView \u2192 Show\u201d</em></strong><em> command in the Spreadsheet menu that opens linked records.</em></p></li><li><p><em>That path does not exist in Odoo.</em></p></li></ol>',
+                '<ol><li><p><em>Double-clicking a cell only edits the cell content.</em></p></li><li><p><em>It does </em><strong><em>not</em></strong><em> open linked records.</em></p></li><li><p><em>Dynamic formulas are not activated by double-click events.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>By right-clicking the cell and selecting \u201cSee record.\u201d</strong> </p>',
+                '<p><strong>By selecting the cell, then clicking \u201cView\u201d \u2192 \u201cShow\u201d in the menu bar.</strong></p>',
+                '<p><strong>By double-clicking the cell.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Spreadsheet',
+            question_plain:
+              'In a spreadsheet that contains dynamic Odoo data, how can you open the underlying database record, such as a specific sales order?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975349,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the purpose of <strong>field matching</strong> when configuring a <strong>global filter</strong> in an Odoo spreadsheet?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Global filters do not alter formatting.</em></p></li><li><p><em>Currency/date formatting is handled by spreadsheet cell formatting, not by field matching.</em></p></li></ol>',
+                '<ol><li><p><em>Access rights are controlled by </em><strong><em>Odoo security</em></strong><em>, not through field matching.</em></p></li><li><p><em>Field matching only maps filter \u2192 field relationships.</em></p></li></ol>',
+                '<p><em>A </em><strong><em>global filter</em></strong><em> in Odoo Spreadsheet can control multiple pivot tables, list formulas, and dynamic elements at once.<br>However, each data source\u2014each pivot table or ODOO formula\u2014may use:</em></p><ul><li><p><em>A different model</em></p></li><li><p><em>Different field names</em></p></li><li><p><em>Different relationships</em></p></li><li><p><em>Different aliasing or groupings</em></p></li></ul><p><strong><em>Field matching</em></strong><em> allows you to map the </em><strong><em>global filter</em></strong><em> to the correct field in each specific data source so the filter works consistently.</em></p><p><em>Example</em></p><p><em>A global filter for </em><strong><em>Salesperson</em></strong><em> might need to match:</em></p><ul><li><p><code><em>user_id</em></code><em> in a Sales pivot</em></p></li><li><p><code><em>salesperson_id</em></code><em> in an Invoice pivot</em></p></li><li><p><code><em>create_uid</em></code><em> in a custom list</em></p></li></ul><p><em>Field matching ensures every object responds correctly when the user selects a salesperson in the global filter.</em></p><p><em>Without field matching</em></p><p><em>The global filter would not know which field to filter on for each dataset.</em></p>'
+              ],
+              answers: [
+                '<p><strong>It allows the filter to automatically format output cells based on the field type (e.g., currency, date).</strong></p>',
+                '<p><strong>It allows you to configure access rights to ensure the user is authorized to see the matched field.</strong></p>',
+                '<p><strong>It ensures the filter acts on the correct database field for each specific data source in the spreadsheet.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Spreadsheet',
+            question_plain:
+              'What is the purpose of field matching when configuring a global filter in an Odoo spreadsheet?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138975351,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What does it mean when a <strong>blue globe icon</strong> appears in the upper-right corner above an Odoo spreadsheet, indicating something about <strong>regional settings</strong> (date format, thousand/decimal separators, etc.)?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>If the settings matched, you would </em><strong><em>not</em></strong><em> see the blue globe.</em></p></li><li><p><em>The icon appears only when there is a mismatch.</em></p></li></ol>',
+                '<p><em>In Odoo Spreadsheet, the </em><strong><em>blue globe icon</em></strong><em> serves as a </em><strong><em>visual warning</em></strong><em> that:</em></p><ul><li><p><em>The spreadsheet\u2019s </em><strong><em>regional settings</em></strong><em> (locale)<br>\u2014 e.g., date format, decimal separator, thousands separator \u2014<br></em><strong><em>do NOT match</em></strong><em> the regional settings of your Odoo user profile.</em></p></li></ul><p><em>This mismatch can cause confusion such as:</em></p><ul><li><p><em>Dates appearing in unfamiliar formats (e.g., </em><code><em>DD/MM/YYYY</em></code><em> vs </em><code><em>MM/DD/YYYY</em></code><em>)</em></p></li><li><p><em>Numbers showing commas vs. dots differently (</em><code><em>1,234.56</em></code><em> vs </em><code><em>1.234,56</em></code><em>)</em></p></li><li><p><em>Incorrect interpretation of imported formulas or CSV data</em></p></li></ul><p><em>So the icon simply alerts you that </em><strong><em>the spreadsheet was created under a different locale</em></strong><em>.</em></p>',
+                '<ol><li><p><em>Clicking the globe </em><strong><em>does not allow you to change</em></strong><em> the spreadsheet\u2019s regional settings.</em></p></li><li><p><em>It only displays a warning tooltip.</em></p></li><li><p><em>Spreadsheet locale cannot be changed by the user \u2014 it\u2019s tied to the editor that created it.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>The spreadsheet\u2019s regional settings match your user profile\u2019s regional settings.</strong></p>',
+                '<p><strong>The spreadsheet\u2019s regional settings differ from your user profile\u2019s regional settings.</strong> </p>',
+                '<p><strong>You can click this icon to change the spreadsheet\u2019s regional settings if they don\u2019t match your user profile.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Spreadsheet',
+            question_plain:
+              'What does it mean when a blue globe icon appears in the upper-right corner above an Odoo spreadsheet, indicating something about regional settings (date format, thousand/decimal separators, etc.)?',
+            related_lectures: []
+          }
+        ]
+      }
+
+      let correct = new Set()
+      let incorrect = new Set()
+      let totalNumberOfQuestions = 0
+
+      // Lấy thông tin từ quizData (xử lý trường hợp thiếu field)
+      const quizTitle =
+        (typeof quizData !== 'undefined' && quizData.quiz_title) || 'Odoo Quiz'
+      const quizDescription =
+        (typeof quizData !== 'undefined' && quizData.quiz_description) ||
+        'Test your knowledge.'
+      const rawQuestions =
+        typeof quizData !== 'undefined' && quizData.questions
+          ? quizData.questions
+          : []
+      const passPercent =
+        (typeof quizData !== 'undefined' && quizData.pass_percent) || 0
+
+      const modalTextElement = document.getElementById('modal-text')
+      const quizContainerElement = document.getElementById('quiz-container')
+      const dialog = document.querySelector('dialog')
+      const closeButton = document.getElementById('close-modal-btn')
+      const quizTitleElement = document.getElementById('quiz-title')
+      const quizDescriptionElement = document.getElementById('quiz-description')
+      const STORAGE_KEY = 'odoo_quiz_progress_v1' // Key lưu vào trình duyệt
+
+      // Map để lưu giải thích phục vụ Modal
+      const questionMap = new Map()
+
+      // === HÀM CHÍNH ===
+      function main() {
+        // 1. Cập nhật Meta
+        document.title = quizTitle
+        if (quizTitleElement) quizTitleElement.innerHTML = quizTitle
+        if (quizDescriptionElement)
+          quizDescriptionElement.innerHTML = quizDescription
+
+        const passPercentElement = document.getElementById('pass-percent')
+        if (passPercentElement)
+          passPercentElement.innerHTML = passPercent ? `${passPercent}%` : 'N/A'
+
+        totalNumberOfQuestions = rawQuestions.length
+
+        if (closeButton) {
+          closeButton.addEventListener('click', () => dialog.close())
+        }
+
+        // 2. Xử lý dữ liệu câu hỏi (TẮT SHUFFLE ĐỂ ĐỒNG BỘ VỊ TRÍ NẾU CẦN)
+        // Nếu bạn muốn random mỗi lần F5 thì mở lại đoạn này, nhưng lưu ý thứ tự hiển thị sẽ khác nhau.
+        // Dữ liệu lưu trong localStorage dựa trên ID câu hỏi nên vẫn đúng dù có random.
+        /*
+      for (let i = rawQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rawQuestions[i], rawQuestions[j]] = [rawQuestions[j], rawQuestions[i]];
+      }
+      */
+
+        // 3. Chuẩn bị Map dữ liệu giải thích
+        rawQuestions.forEach((q) => {
+          questionMap.set(q.id.toString(), {
+            explanation: q.prompt?.explanation || '',
+            feedbacks: q.prompt?.feedbacks || []
+          })
+        })
+
+        // 4. Render câu hỏi ra màn hình
+        const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
+        formattedQuestions.forEach((question, idx) => {
+          renderSingleQuestion(question, idx + 1)
+        })
+
+        // 5. KHÔI PHỤC KẾT QUẢ TỪ LOCAL STORAGE
+        restoreSession()
+
+        // 6. Cập nhật điểm số ban đầu
+        updateScore()
+      }
+
+      // === CÁC HÀM XỬ LÝ DATA & RENDER ===
+
+      function formatSingleQuestionData(singleQuizData) {
+        const { prompt, correct_response, id, assessment_type } = singleQuizData
+        const answers = prompt.answers || []
+
+        const formattedAnswers = answers.map((answerText, index) => {
+          const letter = String.fromCharCode(97 + index) // a, b, c...
+          const isCorrect = correct_response.includes(letter)
+          return {
+            text: answerText,
+            value: letter, // QUAN TRỌNG: Lưu giá trị a,b,c để đối chiếu
+            isCorrect: isCorrect
+          }
+        })
+
+        return {
+          id: id,
+          assessment_type: assessment_type,
+          question: prompt.question,
+          answers: formattedAnswers,
+          explanation: prompt?.explanation || '',
+          feedbacks: prompt.feedbacks
+        }
+      }
+
+      const renderSingleQuestion = (singleQuestionData, rootIndex) => {
+        const { id, answers, question, assessment_type } = singleQuestionData
+        const inputType =
+          assessment_type === 'multi-select' ? 'checkbox' : 'radio'
+        const inputName = `answer_${id}`
+
+        const optionsHTML = answers
+          .map((option, index) => {
+            const optionId = `${id}_${index}`
+            return `
+          <div class="question-lable">
+            <input type="${inputType}"
+                   id="${optionId}"
+                   name="${inputName}"
+                   value="${option.value}" 
+                   data-is-correct="${option.isCorrect}" />
+            <label for="${optionId}">${option.text}</label>
+          </div>
+        `
+          })
+          .join('')
+
+        const container = document.createElement('div')
+        container.innerHTML = `
+        <form data-question-id="${id}"
+              id="form_${id}"
+              class="single-question-container"
+              onsubmit="submitButtonListener(event)">
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <p style="font-weight:600">Question ${rootIndex}:</p>
+            <button type="button"
+                    class="explanation-btn"
+                    data-question-id="${id}"
+                    onclick="renderExplanation(event)">
+              View Explanation
+            </button>
+          </div>
+
+          <div style="margin-bottom:8px;line-height:1.5">${question}</div>
+
+          <div class="options-container">
+            ${optionsHTML}
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="submit" class="button submit-btn">Submit</button>
+          </div>
+        </form>
+      `
+        quizContainerElement.appendChild(container)
+      }
+
+      // === XỬ LÝ SỰ KIỆN SUBMIT & TÍNH ĐIỂM ===
+
+      const submitButtonListener = (e) => {
+        e.preventDefault()
+        const form = e.target
+        const questionId = form.dataset.questionId
+
+        // Gọi hàm xử lý logic kiểm tra
+        const result = processSubmission(form, questionId)
+
+        if (result.hasSelection) {
+          // Lưu vào localStorage nếu người dùng đã chọn
+          saveProgress(questionId, Array.from(result.userSelectedValues))
+        } else {
+          alert('Vui lòng chọn ít nhất một đáp án!')
+        }
+      }
+
+      // Hàm tách biệt logic kiểm tra để dùng chung cho cả lúc Submit và lúc Load lại trang
+      function processSubmission(form, questionId) {
+        const inputs = form.querySelectorAll(
+          'input[type="radio"], input[type="checkbox"]'
+        )
+        const userSelectedValues = new Set()
+        const actualCorrectValues = new Set()
+        let hasSelection = false
+
+        inputs.forEach((input) => {
+          if (input.checked) {
+            userSelectedValues.add(input.value)
+            hasSelection = true
+          }
+          if (input.dataset.isCorrect === 'true') {
+            actualCorrectValues.add(input.value)
+          }
+        })
+
+        if (!hasSelection) return { hasSelection: false }
+
+        // So sánh 2 tập hợp đáp án
+        const isFullyCorrect = setsAreEqual(
+          userSelectedValues,
+          actualCorrectValues
+        )
+
+        // Cập nhật biến toàn cục
+        if (isFullyCorrect) {
+          correct.add(questionId)
+          incorrect.delete(questionId)
+        } else {
+          incorrect.add(questionId)
+          correct.delete(questionId)
+        }
+
+        updateScore()
+
+        // Hiển thị UI (Xanh/Đỏ)
+        form.querySelectorAll('.question-lable').forEach((labelContainer) => {
+          const input = labelContainer.querySelector('input')
+          labelContainer.classList.remove('correct-answer', 'incorrect-answer')
+
+          // Disable input sau khi nộp để tránh sửa
+          // input.disabled = true;
+          // form.querySelector('.submit-btn').disabled = true;
+
+          if (input.dataset.isCorrect === 'true') {
+            labelContainer.classList.add('correct-answer')
+          } else if (input.checked && input.dataset.isCorrect === 'false') {
+            labelContainer.classList.add('incorrect-answer')
+          }
+        })
+
+        return { hasSelection: true, userSelectedValues }
+      }
+
+      // === CÁC HÀM TIỆN ÍCH (HELPER) ===
+
+      function updateScore() {
+        const currentPercentageElement =
+          document.getElementById('current-score')
+        const correctAnswerElement = document.getElementById('correct-answers')
+        const wrongAnswerElement = document.getElementById('wrong-answers')
+
+        if (correctAnswerElement) correctAnswerElement.innerHTML = correct.size
+        if (wrongAnswerElement) wrongAnswerElement.innerHTML = incorrect.size
+
+        if (totalNumberOfQuestions > 0 && currentPercentageElement) {
+          const score = Number(
+            (correct.size / totalNumberOfQuestions) * 100
+          ).toFixed(0)
+          currentPercentageElement.innerHTML = score + '%'
+        }
+      }
+
+      function setsAreEqual(setA, setB) {
+        if (setA.size !== setB.size) return false
+        for (const item of setA) {
+          if (!setB.has(item)) return false
+        }
+        return true
+      }
+
+      function renderExplanation(ev) {
+        const questionId = ev.target.dataset.questionId
+        const data = questionMap.get(questionId)
+        modalTextElement.innerHTML = ''
+        if (!data) {
+          modalTextElement.innerHTML = '<p>Không có giải thích.</p>'
+        } else {
+          if (data.explanation) modalTextElement.innerHTML += data.explanation
+          if (data.feedbacks)
+            data.feedbacks.forEach((fb) => (modalTextElement.innerHTML += fb))
+        }
+        dialog.showModal()
+      }
+
+      // === LOCAL STORAGE LOGIC ===
+
+      function saveProgress(questionId, selectedValues) {
+        // Lấy dữ liệu cũ
+        let progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+        // Cập nhật câu hỏi hiện tại
+        progress[questionId] = selectedValues
+        // Lưu lại
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+      }
+
+      function restoreSession() {
+        const progress = JSON.parse(localStorage.getItem(STORAGE_KEY))
+        if (!progress) return
+
+        // Duyệt qua từng câu hỏi đã lưu
+        for (const [qId, values] of Object.entries(progress)) {
+          const form = document.getElementById(`form_${qId}`)
+          if (form) {
+            // Tích lại các ô input
+            const inputs = form.querySelectorAll('input')
+            let hasChecked = false
+            inputs.forEach((input) => {
+              if (values.includes(input.value)) {
+                input.checked = true
+                hasChecked = true
+              }
+            })
+
+            // Nếu có tích, chạy lại logic kiểm tra để hiện màu xanh/đỏ và tính điểm
+            if (hasChecked) {
+              processSubmission(form, qId)
+            }
+          }
+        }
+      }
+
+      function resetProgress() {
+        if (
+          confirm('Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu?')
+        ) {
+          localStorage.removeItem(STORAGE_KEY)
+          location.reload()
+        }
+      }
+
+      // === CHỨC NĂNG IN ẤN ===
+      function printQuiz(showAnswers) {
+        if (showAnswers) {
+          // CHẾ ĐỘ 1: IN ĐÁP ÁN (KEY)
+          // Thêm class để CSS kích hoạt hiển thị đáp án đúng
+          document.body.classList.add('show-correct-answers')
+          window.print()
+
+          // Sau khi in xong thì tắt chế độ hiện đáp án
+          setTimeout(() => {
+            document.body.classList.remove('show-correct-answers')
+          }, 500)
+        } else {
+          // CHẾ ĐỘ 2: IN ĐỀ BÀI (BLANK)
+          // Bước A: Lưu trạng thái hiện tại (thực ra đã lưu trong localStorage rồi)
+
+          // Bước B: Xóa sạch giao diện tạm thời để in ra giấy trắng tinh
+          const inputs = document.querySelectorAll('input')
+          const labels = document.querySelectorAll('.question-lable')
+
+          // Bỏ tích toàn bộ input
+          inputs.forEach((input) => (input.checked = false))
+
+          // Xóa màu xanh/đỏ
+          labels.forEach((label) => {
+            label.classList.remove('correct-answer', 'incorrect-answer')
+          })
+
+          // Bước C: Gọi lệnh in
+          window.print()
+
+          // Bước D: Khôi phục lại bài làm sau khi in xong
+          setTimeout(() => {
+            // Gọi lại hàm restoreSession để lấy lại dữ liệu từ LocalStorage
+            // và tô lại màu như cũ cho người dùng tiếp tục làm
+            restoreSession()
+          }, 500)
+        }
+      }
+
+      // Sự kiện đóng modal khi click ra ngoài
+      if (dialog) {
+        dialog.addEventListener('click', (e) => {
+          const rect = dialog.getBoundingClientRect()
+          if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          ) {
+            dialog.close()
+          }
+        })
+      }
+
+      // Nạp thêm style in ấn động để đảm bảo nút in hoạt động tốt
+      const styleSheet = document.createElement('style')
+      styleSheet.innerText = `
+      @media print {
+        body.show-correct-answers input[data-is-correct="true"] + label {
+          border: 2px solid #000 !important;
+          font-weight: bold !important;
+          background-color: #e5e7eb !important;
+        }
+        body.show-correct-answers input[data-is-correct="true"] + label::after {
+          content: "✔";
+          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        }
+      }
+    `
+      document.head.appendChild(styleSheet)
+
+      // CHẠY CHƯƠNG TRÌNH
+      window.onload = main
+    </script>
+  </body>
+
+  <style>
+    .modal-container {
+      padding: 0;
+      border: none;
+      max-width: 700px;
+    }
+
+    #modal-content {
+      position: relative;
+      padding: 20px;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    @media print {
+      /* 1. Reset giao diện về trắng đen cơ bản */
+      body,
+      main,
+      #quiz-container,
+      .single-question-container,
+      #quiz-meta-container {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+
+      /* 2. Ẩn các thành phần không cần thiết khi in */
+      #score-stats-container, 
+      #print-actions, /* Ẩn chính các nút in này đi */
+      .submit-btn, 
+      .explanation-btn, 
+      dialog,
+      .modal-container {
+        display: none !important;
+      }
+
+      /* 3. Định dạng câu hỏi để không bị ngắt trang xấu */
+      .single-question-container {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #ccc !important;
+        margin-bottom: 15px !important;
+        padding-bottom: 10px !important;
+      }
+
+      /* === LOGIC HIỂN THỊ ĐÁP ÁN === */
+
+      /* Mặc định (In đề bài): Ẩn mọi dấu hiệu đúng sai */
+      /* Không làm gì cả, để mặc định như lúc chưa làm */
+
+      /* CHẾ ĐỘ CÓ ĐÁP ÁN: Chỉ kích hoạt khi body có class 'show-correct-answers' */
+      body.show-correct-answers input[data-is-correct='true'] + label {
+        border: 2px solid #000 !important; /* Đóng khung đậm */
+        font-weight: bold !important;
+        background-color: #e5e7eb !important; /* Nền xám nhẹ */
+        position: relative;
+        padding-right: 30px;
+      }
+
+      /* Thêm dấu tích (✓) vào đáp án đúng để dễ nhìn hơn */
+      body.show-correct-answers input[data-is-correct='true'] + label::after {
+        content: '✔';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        font-weight: bold;
+      }
+    }
+  </style>
+</html>

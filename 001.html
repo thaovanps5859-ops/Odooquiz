@@ -1,0 +1,2550 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz</title>
+    <style>
+      * {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          'Open Sans',
+          'Helvetica Neue',
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+
+      main {
+        padding-top: 48px;
+      }
+
+      :root {
+        --large-device-width: 850px;
+        --primary-color: #0f172a;
+        --secondary-color: #020617;
+        --primary-text-color: #c7d1dd;
+        --secondary-text-color: #061602;
+        --success-background: hsl(159, 82%, 24%);
+        --success-foreground: hsl(164, 86%, 16%);
+        --success: hsl(160, 84%, 39%);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info-background: hsl(218, 81%, 8%);
+        --info-foreground: hsl(217, 91%, 85%);
+        --border-color: #d1d7dc;
+        --check-box-size: 20px;
+        /* control the size */
+        --check-box-color: var(--info-foreground);
+        /* the active color */
+      }
+
+      body {
+        position: relative;
+        background-color: #020617;
+        color: var(--primary-text-color);
+      }
+
+      #score-stats-container {
+        position: fixed;
+        z-index: 10;
+        top: 0;
+        height: 40px;
+        width: 100%;
+        background-color: var(--info-background);
+
+        padding: 0px 16px;
+        color: var(--info-foreground);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #quiz-container {
+        border-radius: 8px;
+        display: flex;
+        gap: 16px;
+        flex-direction: column;
+      }
+
+      /* === Base Styles for both Radio and Checkbox === */
+      input[type='radio'],
+      input[type='checkbox'] {
+        height: var(--check-box-size);
+        aspect-ratio: 1;
+        border: calc(var(--check-box-size) / 8) solid #939393;
+        padding: calc(var(--check-box-size) / 8);
+        background: radial-gradient(
+            farthest-side,
+            var(--check-box-color) 94%,
+            #0000
+          )
+          50%/0 0 no-repeat content-box;
+        outline-offset: calc(var(--check-box-size) / 10);
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        font-size: inherit;
+        transition: 0.3s;
+      }
+
+      input[type='radio']:checked,
+      input[type='checkbox']:checked {
+        border-color: var(--check-box-color);
+        background-size: 100% 100%;
+      }
+
+      input[type='radio']:disabled,
+      input[type='checkbox']:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* === Specific Styles === */
+      input[type='radio'] {
+        border-radius: 50%;
+        /* Makes it a circle */
+      }
+
+      input[type='checkbox'] {
+        border-radius: 4px;
+        /* Makes it a square */
+      }
+
+      label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 767px) {
+        input[type='radio'],
+        input[type='checkbox'],
+        label {
+          cursor: default;
+        }
+
+        #quiz-container {
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+      }
+
+      /* PC (Desktop devices) */
+      @media (min-width: 768px) {
+        body {
+          display: flex;
+          justify-content: center;
+        }
+
+        main {
+          max-width: var(--large-device-width);
+        }
+
+        #score-stats-container {
+          max-width: var(--large-device-width);
+        }
+
+        dialog {
+          max-width: var(--large-device-width);
+        }
+      }
+
+      @media print {
+        input[type='radio'],
+        input[type='checkbox'] {
+          background: none !important;
+          border-color: #939393 !important;
+        }
+
+        input[type='radio']:checked,
+        input[type='checkbox']:checked {
+          border-color: #939393 !important;
+        }
+      }
+
+      .question-lable {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        outline: none;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .button {
+        background-color: var(--success-background);
+        border: none;
+        color: #f4f5f7;
+        opacity: 0.8;
+        font-size: 18px;
+        flex-grow: 1;
+        padding: 8px 16px;
+        border-radius: 8px;
+      }
+
+      .button:hover {
+        opacity: 1;
+      }
+
+      .button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .explanation-btn {
+        border: none;
+        color: var(--success);
+        background-color: transparent;
+      }
+
+      .single-question-container {
+        background-color: var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      #modal-content {
+        padding: 16px;
+        line-height: 24px;
+      }
+
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      dialog {
+        position: fixed;
+        border: 1px solid var(--border-color);
+        background-color: var(--primary-color);
+        color: rgb(240, 241, 248);
+        padding: 16px;
+        border-radius: 8px;
+        width: 80vw;
+        max-height: 80vh;
+        overflow: auto;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+
+      #close-modal-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        padding: 2px 8px;
+        border-radius: 2px;
+        border: none;
+        background-color: var(--danger);
+      }
+
+      .correct-answer > label {
+        border: 2px solid var(--success);
+        width: 100%;
+      }
+
+      .incorrect-answer > label {
+        border: 2px solid var(--danger);
+        width: 100%;
+      }
+
+      .options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      #quiz-meta-container {
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        margin-bottom: 12px;
+        padding: 8px;
+      }
+
+      #quiz-title {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      #quiz-description {
+        line-height: 1.5;
+        padding: 2px 6px;
+      }
+    </style>
+  </head>
+
+  <body onload="main()">
+    <main>
+      <div
+        id="print-actions"
+        style="
+          margin-bottom: 20px;
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          flex-wrap: wrap;
+        "
+      >
+        <button
+          type="button"
+          class="button"
+          style="background-color: #3b82f6"
+          onclick="printQuiz(false)"
+        >
+          🖨️ In đề bài
+        </button>
+        <button
+          type="button"
+          class="button"
+          style="background-color: #ef4444"
+          onclick="printQuiz(true)"
+        >
+          🖨️ In đáp án
+        </button>
+        <button
+          type="button"
+          class="button"
+          style="background-color: #f59e0b"
+          onclick="resetProgress()"
+        >
+          🔄 Làm lại từ đầu
+        </button>
+      </div>
+      <section id="quiz-meta-container">
+        <h1 id="quiz-title"></h1>
+        <p id="quiz-description"></p>
+      </section>
+      <section id="score-stats-container">
+        <div id="score-card">
+          Score: <span id="current-score">999</span>
+          <!-- <span id="pass-percent">999%</span> -->
+        </div>
+        <div>Correct: <span id="correct-answers">999</span></div>
+        <div>Incorrect: <span id="wrong-answers">999</span></div>
+      </section>
+
+      <section id="quiz-container"></section>
+
+      <dialog id="modal" class="modal-container">
+        <div id="modal-content">
+          <button type="button" class="modal-close-btn" aria-label="Close">
+            ✕
+          </button>
+
+          <p id="modal-text"></p>
+        </div>
+      </dialog>
+    </main>
+
+    <script>
+      const quizData = {
+        pass_percent: null,
+        questions: [
+          {
+            _class: 'assessment',
+            id: 137497369,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Within a record, what is the correct way to schedule an activity?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>According to Odoo\u2019s standard interface (Odoo 15\u201319), </em><strong><em>activities are scheduled directly from the chatter using the \u201cActivity\u201d button</em></strong><em>.<br>When you click it, Odoo opens the scheduling window where you define:</em></p><ul><li><p><em>Activity Type</em></p></li><li><p><em>Due Date</em></p></li><li><p><em>Assigned User</em></p></li><li><p><em>Optional Note</em></p></li></ul><p><em>This is the official and documented workflow for creating activities inside any record (Contacts, CRM, Projects, Accounting, etc.).</em></p>',
+                '<ol><li><p><em>Odoo </em><strong><em>does not display a \u201cNew Activity\u201d option in the chatter menu</em></strong><em>.</em></p></li><li><p><em>The phrasing suggests a menu item that does not exist in the interface, so it is not accurate.</em></p></li></ol>',
+                '<ol><li><p><em>Odoo </em><strong><em>does not provide an \u201cActivities panel\u201d in the record header</em></strong><em>.</em></p></li><li><p><em>The activity features are always triggered from the </em><strong><em>chatter</em></strong><em>, not from the record header.</em></p></li><li><p><em>\u201cAdd Activity\u201d is not a standard button in any native Odoo view.</em></p></li></ol>'
+              ],
+              explanation:
+                '<p>To schedule an activity inside a record in Odoo, navigate to the "Activity" tab in the chatter section. From there, you can select the activity type, assign it to a user, set a due date, and add a summary. This ensures proper task management and tracking within the system.</p><p><img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-22_05-55-30-d74ded37687b5f2c4db7ac30284f3e44.png"></p>',
+              answers: [
+                '<p>Press the <strong>"Activity"</strong> button located at the top of the chatter, then pick the activity type, set the due date, assign it to a user, and add a note.</p>',
+                '<p>Select <strong>\u201cNew Activity\u201d</strong> from the chatter menu and specify the activity type, the responsible user, and the deadline.</p>',
+                '<p>Open the <strong>Activities</strong> section from the record header and click <strong>\u201cAdd Activity\u201d</strong> to enter the activity information.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Introduction',
+            question_plain:
+              'Within a record, what is the correct way to schedule an activity?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497371,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What feature in Odoo can help a user enhance the security of their account?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because a VPN is a network security tool that does not directly impact Odoo account protection.</em></p>',
+                '<p><em>This is incorrect because using an incognito window only impacts browser privacy and does not provide additional account-level security in Odoo.</em></p>',
+                "<p><em>This is correct because enabling 2FA adds an extra layer of security to the user's Odoo account by requiring a second authentication step.</em></p>"
+              ],
+              explanation:
+                '<p>Odoo offers 2FA (Two-Factor Authentication) as a robust security feature to better protect user accounts. By requiring a second authentication factor, it significantly reduces the risk of unauthorized access. </p>',
+              answers: [
+                '<p>VPN (Virtual Private Network)</p>',
+                '<p>Use an incognito browser window</p>',
+                '<p>2FA (Two-Factor Authentication)</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Introduction',
+            question_plain:
+              'What feature in Odoo can help a user enhance the security of their account?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497373,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What steps are required on the Odoo dashboard to rearrange the placement of the app icons?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because rearranging app icons does not require enabling developer mode or accessing the Settings app.</em></p>',
+                '<p><em>This is incorrect because these shortcuts are not related to rearranging app icons on the dashboard.</em></p>',
+                '<p><em>This is correct because holding and dragging app icons directly on the dashboard allows users to rearrange them.</em></p>'
+              ],
+              explanation:
+                '<p>To rearrange the placement of app icons on the Odoo dashboard, users simply need to click and hold an app icon, which will tilt slightly to indicate it is movable. They can then drag it to a new position within the app grid. This process is intuitive and does not require developer mode or shortcuts.</p>',
+              answers: [
+                '<p>Enter developer mode and go to the Settings app and check the box labeled "reorder icons." Now drag and drop the icons on the dashboard.</p>',
+                '<p>Press and hold Command-K or Control-K and click on any app icon to drag it to a new location.</p>',
+                '<p>Click on an app icon and hold the mouse button down; the icon will tilt slightly to the right, indicating it can be moved and dragged into a new position within the app grid.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Introduction',
+            question_plain:
+              'What steps are required on the Odoo dashboard to rearrange the placement of the app icons?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497375,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can a user enable or disable onboarding tours in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because onboarding tours are not managed through the Settings app or Technical menu.</em></p>',
+                '<p><em>This is incorrect because users have the ability to enable or disable onboarding tours themselves.</em></p>',
+                '<p><em>This is correct because users can manage onboarding tours through their User menu, where the option to enable or disable tours is available.</em></p>'
+              ],
+              explanation:
+                '<p>Users can enable or disable onboarding tours directly through their User menu in Odoo. This provides flexibility for users who prefer to skip or revisit onboarding instructions as needed.</p>',
+              answers: [
+                '<p>Through the Settings app, under the Technical menu</p>',
+                '<p>They cannot, they have to complete any onboarding tours they have been assigned.</p>',
+                '<p>Through their User menu</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Introduction',
+            question_plain:
+              'How can a user enable or disable onboarding tours in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497377,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the correct method to bulk add or remove followers from several records at once in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Odoo allows follower management in bulk </em><strong><em>only from the List View</em></strong><em>.<br>When multiple records (e.g., CRM leads, tasks, invoices, opportunities) are selected:</em></p><ul><li><p><em>A contextual </em><strong><em>Actions</em></strong><em> menu appears.</em></p></li><li><p><em>One of the standard actions is </em><strong><em>Add Followers</em></strong><em> or </em><strong><em>Remove Followers</em></strong><em>, depending on the model\u2019s configuration.</em></p></li><li><p><em>This is the officially supported method to update followers in batches.</em></p></li></ul><p><em>This bulk action applies follower updates simultaneously to all selected records.</em></p>',
+                '<ol><li><p><em>Managing followers from the </em><strong><em>Form View</em></strong><em> requires opening each record individually and editing the chatter\u2019s follower list one by one.</em></p></li><li><p><em>This is </em><strong><em>not a bulk operation</em></strong><em>, so it does not answer the question about handling multiple records at once.</em></p></li></ol>',
+                '<ol><li><p><em>The </em><strong><em>Settings \u2192 Users &amp; Companies</em></strong><em> menu does not allow modifying follower lists for records.</em></p></li><li><p><em>This area manages user permissions, companies, and system configuration\u2014not record followers.</em></p></li><li><p><em>Odoo does </em><strong><em>not</em></strong><em> offer follower mass update options from the Settings module.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>From the List View, select the desired records, open the Actions menu, and choose Add/Remove Followers.</strong></p>',
+                '<p><strong>Open each record individually in Form View and adjust the followers one by one through the chatter.</strong></p>',
+                '<p><strong>Go to Settings \u2192 Users &amp; Companies and modify follower lists there for all related records.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Introduction',
+            question_plain:
+              'What is the correct method to bulk add or remove followers from several records at once in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497379,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When merging multiple contacts, what does Odoo do with the fields belonging to the secondary contacts when they are combined into the master contact?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Odoo does </em><strong><em>not discard</em></strong><em> secondary contact information.</em></p></li><li><p><em>Data is not lost: relevant fields are merged, and linked documents are reassigned.</em></p></li><li><p><em>Only the duplicate (secondary) records are deleted after merging\u2014not their data.</em></p></li></ol>',
+                '<p><em>According to Odoo\u2019s official behavior for contact merging:</em></p><ul><li><p><em>You select one record as the </em><strong><em>master</em></strong><em>.</em></p></li><li><p><em>Fields already filled in the master remain untouched.</em></p></li><li><p><strong><em>Non-empty fields</em></strong><em> from the secondary contacts are used to complete missing information in the master.</em></p></li><li><p><em>Linked records (invoices, opportunities, activities, etc.) are also reassigned to the master.</em></p></li></ul><p><em>Odoo\u2019s merge logic is designed to preserve existing master data and enrich it with missing information from duplicates.</em></p><p><em>This avoids accidental overwriting and ensures the master record is as complete as possible.</em></p>',
+                "<ul><li><p><em>Odoo does </em><strong><em>not allow secondary contacts to overwrite the master\u2019s fields</em></strong><em>.</em></p></li><li><p><em>The system prioritizes the master record's existing values.</em></p></li><li><p><em>Overwriting all fields would contradict the purpose of selecting a master contact.</em></p></li></ul>"
+              ],
+              answers: [
+                '<p><strong>Odoo removes all data from the secondary contacts except for their linked documents.</strong></p>',
+                '<p><strong>The master contact keeps its existing fields, and any non-empty fields from the secondary contacts are merged into it.</strong></p>',
+                '<p><strong>All fields from the secondary contacts fully replace the information stored in the master contact.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Introduction',
+            question_plain:
+              'When merging multiple contacts, what does Odoo do with the fields belonging to the secondary contacts when they are combined into the master contact?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497381,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you display 800 records at once in a list view?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo does not display all records by default; it paginates the view for better performance.</em></p>',
+                '<p><em>This is correct because Odoo allows users to adjust the number of records displayed by specifying a custom range in the page indicator.</em></p>',
+                '<p><em>This is incorrect because while Odoo defaults to 80 records, users can modify the range manually to view up to 800 records.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo\u2019s list view, the number of displayed records is limited by default for performance reasons. However, users can override this by adjusting the range in the page indicator next to the view options, allowing them to display up to 800 records or more within the range. This provides flexibility for users who need to work with larger datasets.</p>',
+              answers: [
+                '<p>All records are always visible in the list view</p>',
+                '<p>By using the page indicator next to the view options and specifying a range like 1-800</p>',
+                '<p>It\u2019s not possible; Odoo limits the display to a maximum of 80 records per page</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Introduction',
+            question_plain:
+              'How can you display 800 records at once in a list view?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497383,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>What is the difference between a message/discussion and a log note in Odoo's chatter?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is correct because messages/discussions notify external recipients and followers, while log notes are for internal communication and can optionally notify users via @ mentions.</em></p>',
+                '<p><em>This is incorrect because log notes are not sent to customers and are typically used for internal purposes only.</em></p>',
+                '<p><em>This is incorrect because messages/discussions and log notes serve distinct purposes, with one being external-facing and the other internal.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, messages/discussions are used for external communication and notify all followers, including customers, whereas log notes are primarily for internal communication and visible only within the chatter unless specific users are mentioned. This distinction ensures clarity in managing internal and external interactions.</p>',
+              answers: [
+                '<p>A message/discussion is sent to the customer and notifies all the followers, whereas a log note is only seen in the chatter by internal users or via @ mentions.</p>',
+                '<p>Messages/discussions are sent to customers via email from Odoo, while log notes are only sent via Odoo internal notifications to customers.</p>',
+                '<p>There is no difference between a message/discussion and a log note in Odoo.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Introduction',
+            question_plain:
+              "What is the difference between a message/discussion and a log note in Odoo's chatter?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497475,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How many languages can be installed in an Odoo database?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p>This is incorrect because Odoo allows multiple languages to be installed, and there is no restriction on the number of languages.</p>',
+                '<p>This is correct because Odoo does not impose a limit on the number of languages you can install in the system.</p>',
+                '<p>This is incorrect because there is no subscription-related restriction on the number of languages that can be installed in Odoo.</p>'
+              ],
+              explanation:
+                '<p>Odoo supports the installation of multiple languages to meet the needs of businesses operating in multilingual environments. There is no predefined limit, allowing users to install as many languages as required without any additional subscription modifications. This ensures flexibility for organizations with diverse language requirements.</p>',
+              answers: [
+                '<p>Languages must be installed one at a time</p>',
+                '<p>You can install multiple languages without any limitation</p>',
+                '<p>You can install up to 3 languages, after which the subscription must be upgraded</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Introduction',
+            question_plain:
+              'How many languages can be installed in an Odoo database?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497477,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens when a record is archived in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo allows users to archive records, hiding them from regular views and deactivating them.</em></p>',
+                '<p><em>This is correct because archiving a record removes it from regular views and makes it inactive, though it can still be accessed or restored by authorized users.</em></p>',
+                '<p><em>This is incorrect because archived records can be unarchived and modified again if necessary.</em></p>'
+              ],
+              explanation:
+                '<p>Archiving a record in Odoo hides it from regular views and deactivates it, but the record is not permanently inaccessible or frozen. Users with the appropriate permissions can still unarchive and edit the record if needed. Unfortunately, no specific Odoo documentation URL could be located for this feature.</p>',
+              answers: [
+                '<p>There is no way to archive records in Odoo.</p>',
+                '<p>When a record is archived in Odoo, it is hidden from regular view and no longer active.</p>',
+                "<p>When a record is archived, nobody can ever modify it; it's frozen forever.</p>"
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Introduction',
+            question_plain: 'What happens when a record is archived in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497385,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the correct way to store a commonly used search filter so it can be reused later?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><strong><em>User Preferences</em></strong><em> in Settings do not contain any feature to store or manage saved filters.</em></p></li><li><p><em>Preferences handle language, notifications, time zones, signatures, and access rights\u2014not search filters.</em></p></li><li><p><em>There is no mechanism to add a filter to this menu.</em></p></li></ol>',
+                '<p><em>Odoo\u2019s official method for saving reusable search filters is through the </em><strong><em>Favorites</em></strong><em> menu.<br>The steps are:</em></p><ol><li><p><em>Apply your filter (domain, group-by, or search criteria).</em></p></li><li><p><em>Click </em><strong><em>Favorites</em></strong><em>.</em></p></li><li><p><em>Choose </em><strong><em>Save Current Search</em></strong><em>.</em></p></li><li><p><em>Optionally mark it as a default filter or make it shared.</em></p></li></ol><p><em>This creates a </em><strong><em>saved filter</em></strong><em> that appears for future use in that model.</em></p><p><em>This is the only documented and user-facing method for storing search criteria.</em></p>',
+                '<ol><li><p><em>Developer Mode allows saving </em><strong><em>custom views</em></strong><em>, not search filters.</em></p></li><li><p><em>Custom views refer to XML-based form, tree, kanban, or search view modifications\u2014not saved search criteria.</em></p></li><li><p><em>Saving a \u201ccustom view\u201d would not store a dynamic filter accessible through Favorites.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Add the filter inside your User Preferences from the Settings menu.</strong></p>',
+                '<p><strong>Once the filter is applied, open Favorites and select Save Current Search.</strong></p>',
+                '<p><strong>Store the filter as a custom view using Developer Mode.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Introduction',
+            question_plain:
+              'What is the correct way to store a commonly used search filter so it can be reused later?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497387,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you set the visibility of a customer record across multiple companies in a multi-company environment?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo allows customer records to be visible across companies when the appropriate settings are applied.</em></p>',
+                '<p><em>This is incorrect because Odoo does not provide an explicit "Shared with All Companies" option. Instead, the "Company" field must be left blank to achieve this.</em></p>',
+                '<p><em>This is correct because leaving the "Company" field empty ensures that the customer record is visible across all companies in a multi-company environment</em></p>'
+              ],
+              explanation:
+                '<p>In a multi-company environment, customer visibility across companies is determined by the "Company" field in the contact record. Leaving this field blank ensures that the record is accessible to all companies, enabling efficient sharing and collaboration. Specifying a company will limit visibility to a single company.</p>',
+              answers: [
+                '<p>Customers are restricted to a single company and cannot be shared</p>',
+                '<p>Enable the option "Shared with All Companies" on the contact record</p>',
+                '<p>Leave the "Company" field blank on the contact record (Sales &amp; Purchase tab)</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Introduction',
+            question_plain:
+              'How can you set the visibility of a customer record across multiple companies in a multi-company environment?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497389,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What steps should be followed to archive a company in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Odoo allows companies to be archived through the General Settings.</em></p>',
+                '<p>This is incorrect because users with administrative rights can archive companies themselves without needing Odoo Support.</p>',
+                '<p>This is correct because the archive function in Odoo is available in the company management section under General Settings. Selecting "Archive" will hide the company but retain its data for future reference.</p>'
+              ],
+              explanation:
+                '<p>In Odoo, archiving a company is a simple process managed through General Settings. Administrators can navigate to the "Manage Companies" section, select the desired company, and use the "Archive" option under the Action menu. This function allows the company to be hidden while keeping its data intact, making it accessible if needed later.</p>',
+              answers: [
+                '<p>It\u2019s not possible to archive a company in Odoo</p>',
+                '<p>Contact Odoo; this is a modification that needs to be handled by Odoo Support</p>',
+                '<p>Go to General Settings &gt; Manage Companies &gt; Select the company line (list view) &gt; Action &gt; Archive</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Introduction',
+            question_plain:
+              'What steps should be followed to archive a company in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497391,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the process to access the technical menu in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the technical menu is not visible in the Settings module by default; it requires enabling developer mode first.</em></p>',
+                '<p><em>This is incorrect because there is no separate "technical module" to install for accessing the technical menu.</em></p>',
+                '<p><em>This is correct because the technical menu becomes accessible only after developer mode is activated, which can then be found under the Settings module.</em></p>'
+              ],
+              explanation:
+                '<p>To access the technical menu in Odoo, developer mode must first be activated. Once enabled, the technical menu appears in the Settings module, allowing access to advanced configuration options. This feature is essential for administrative and technical tasks.</p>',
+              answers: [
+                '<p>Go to the Settings module and it automatically appears there.</p>',
+                '<p>Load the technical module from the Apps module and it will be accessible.</p>',
+                '<p>Activate developer mode and go to the Settings module.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Introduction',
+            question_plain:
+              'What is the process to access the technical menu in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497393,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the purpose of activating Superuser mode in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because Superuser mode does not provide the capability to impersonate other users.</em></p>',
+                '<p><em>This is correct because Superuser mode overrides all record rules and access rights, granting unrestricted access.</em></p>',
+                '<p><em>This is incorrect because Superuser mode does not temporarily grant specific administrative permissions; it bypasses restrictions entirely.</em></p>'
+              ],
+              explanation:
+                '<p>Activating Superuser mode in Odoo grants the user the ability to bypass all record rules and access rights, enabling unrestricted access across the system. This mode is typically used for debugging or resolving complex issues.</p>',
+              answers: [
+                '<p>It allows the user to impersonate any other user</p>',
+                '<p>It allows the user to bypass record rules and access rights</p>',
+                '<p>It provides the user with temporary Administration Access Rights</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Introduction',
+            question_plain:
+              'What is the purpose of activating Superuser mode in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497395,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which two contact types does Odoo support when creating or managing contacts?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo\u2019s </em><strong><em>Contacts</em></strong><em> application, every contact must be defined as either:</em></p><ul><li><p><strong><em>Person</em></strong><em> \u2192 an individual</em></p></li><li><p><strong><em>Company</em></strong><em> \u2192 an organization</em></p></li></ul><p><em>This is the official structure of the </em><code><em>res.partner</em></code><em> model.<br>These two types determine how the contact behaves:</em></p><ul><li><p><em>A </em><strong><em>Company</em></strong><em> can have multiple </em><strong><em>People</em></strong><em> as child contacts (employees, departments, etc.).</em></p></li><li><p><em>A </em><strong><em>Person</em></strong><em> can be linked to a Company but cannot contain other contacts under it.</em></p></li></ul><p><em>These two options appear consistently in the Form View under the \u201cCompany Type\u201d field.</em></p>',
+                '<ol><li><p><em>Odoo does </em><strong><em>not</em></strong><em> include \u201cJoint\u201d as a contact type.</em></p></li><li><p><em>There is no \u201cJoint\u201d configuration in the </em><code><em>res.partner</em></code><em> model or UI.</em></p></li></ol>',
+                '<ol><li><p>Odoo does <strong>not</strong> include \u201cJoint\u201d as a contact type.</p></li><li><p>There is no \u201cJoint\u201d configuration in the <code>res.partner</code> model or UI.</p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Person and Company.</strong></p>',
+                '<p><strong>Person and Joint.</strong></p>',
+                '<p><strong>Company and Not-for-Profit.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Introduction',
+            question_plain:
+              'Which two contact types does Odoo support when creating or managing contacts?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497397,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo, what does it indicate when a product\u2019s forecasted quantity is lower than its quantity on hand?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p>A failed purchase order does not change the forecasted quantity in a way that systematically lowers it below On Hand.</p></li><li><p>Odoo does not mark POs as \u201cfailed\u201d; they would be in a normal state such as RFQ, Purchase Order, or Canceled.</p></li><li><p>Forecasted quantity reflects all confirmed incoming and outgoing moves, not PO issues.</p></li></ol>',
+                '<ol><li><p><em>Odoo does not track \u201ctemporary delays\u201d as a factor in forecast availability.</em></p></li><li><p><em>Incoming products are counted only if the receipt is confirmed and in progress.</em></p></li><li><p><em>A delay does not cause the forecast to drop below On Hand unless outgoing moves exceed incoming moves\u2014which brings us back to Option 3.</em></p></li></ol>',
+                '<p><em>In Odoo Inventory, the </em><strong><em>forecasted quantity</em></strong><em> (also seen as \u201cForecasted on Hand\u201d) is calculated using:</em></p><ul><li><p><em>Quantity on Hand</em></p></li><li><p><em>Incoming stock (POs, transfers to receive)</em></p></li><li><p><em>Outgoing stock (sales, deliveries, internal transfers)</em></p></li></ul><p><strong><em>Forecasted Quantity = On Hand + Incoming \u2013 Outgoing</em></strong></p><p><em>Therefore, if the forecasted quantity is </em><strong><em>lower</em></strong><em> than the actual </em><strong><em>on-hand</em></strong><em> quantity, the only correct interpretation is:</em></p><p><strong><em>There are more outgoing reservations than incoming replenishments.</em></strong></p><p><em>This usually means sales orders, manufacturing pulls, or pickings are scheduled and will reduce available stock.</em></p><p><em>This aligns with Odoo\u2019s stock rules and the logic used in the Forecast Report and Availability computations.</em></p>'
+              ],
+              answers: [
+                '<p><strong>A purchase order intended to restock the item has failed.</strong></p>',
+                '<p><strong>Replacement items are planned to arrive but are experiencing a temporary delay.</strong></p>',
+                '<p><strong>The product will have more units going out than coming in.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'In Odoo, what does it indicate when a product\u2019s forecasted quantity is lower than its quantity on hand?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497399,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When defining Pricelist Rules in Odoo, what distinguishes the <strong>Discount</strong> price type from the <strong>Formula</strong> price type?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo\u2019s Pricelist system:</em></p><p><strong><em>Discount Price Type</em></strong></p><ul><li><p><em>Only lets you apply a </em><strong><em>straight percentage discount</em></strong><em> on the product\u2019s sales price.</em></p></li><li><p><em>No additional computation logic.</em></p></li><li><p><em>It\u2019s the simplest rule type available.</em></p></li></ul><p><strong><em>Formula Price Type</em></strong></p><p><em>Provides advanced pricing capabilities, including:</em></p><ul><li><p><em>Setting a </em><strong><em>discount</em></strong><em> or </em><strong><em>surcharge</em></strong></p></li><li><p><em>Calculating based on </em><strong><em>cost</em></strong><em>, </em><strong><em>public price</em></strong><em>, or </em><strong><em>other pricelist</em></strong></p></li><li><p><em>Defining </em><strong><em>rounding</em></strong><em>, </em><strong><em>margins</em></strong><em>, and </em><strong><em>extra fees</em></strong></p></li><li><p><em>Using </em><strong><em>advanced computation formulas</em></strong></p></li></ul><p><em>Thus, Formula is more flexible and allows </em><strong><em>additional rules</em></strong><em>, not just percentage reduction.</em></p><p><em>This aligns with Odoo Documentation \u2192 Sales \u2192 Pricelists.</em></p>',
+                '<ol><li><p><strong><em>Minimum quantity</em></strong><em> (a.k.a. \u201cMin. Quantity\u201d or "Quantity Threshold") is an attribute of the </em><strong><em>Pricelist Rule</em></strong><em>, not tied to the price type.</em></p></li><li><p><em>Both Discount and Formula rules can use minimum quantities.</em></p></li><li><p><em>This option misrepresents how Odoo structures rule conditions.</em></p></li></ol>',
+                '<ol><li><p><strong><em>Validity Periods apply to the entire Pricelist</em></strong><em>, not to individual rule types.</em></p></li><li><p><em>Discount and Formula rules do </em><strong><em>not</em></strong><em> behave differently regarding date ranges.</em></p></li><li><p><em>Price types have no influence on the ability to set a Validity Period.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>The Formula price type allows you to configure extra pricing rules beyond a simple percentage discount.</strong></p>',
+                '<p><strong>The Discount price type can enforce a minimum purchase quantity, while the Formula price type cannot.</strong></p>',
+                '<p><strong>The Formula price type enables you to define a Validity Period for the Pricelist, but the Discount price type does not.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'When defining Pricelist Rules in Odoo, what distinguishes the Discount price type from the Formula price type?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497479,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How do you configure a customer so that <strong>quotations</strong> automatically use <strong>separate Invoice and Delivery addresses</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Odoo handles </em><strong><em>multiple addresses</em></strong><em> by adding child contacts to a customer with specific </em><strong><em>address types</em></strong><em>:</em></p><ul><li><p><strong><em>Invoice Address</em></strong></p></li><li><p><strong><em>Delivery Address</em></strong></p></li><li><p><em>(Optional: Other addresses like Contact, Private, etc.)</em></p></li></ul><p><em>How it works:</em></p><ol><li><p><em>Open </em><strong><em>Contacts</em></strong><em> app</em></p></li><li><p><em>Select the customer</em></p></li><li><p><em>Go to the </em><strong><em>Contacts</em></strong><em> tab</em></p></li><li><p><em>Click </em><strong><em>Add Contact</em></strong></p></li><li><p><em>Create one contact with </em><strong><em>Address Type = Invoice</em></strong></p></li><li><p><em>Create another with </em><strong><em>Address Type = Delivery</em></strong></p></li></ol><p><em>When you later create a </em><strong><em>quotation</em></strong><em> for this customer:</em></p><ul><li><p><em>Odoo automatically fills </em><strong><em>Invoice Address</em></strong><em> from the Invoice contact</em></p></li><li><p><em>Odoo automatically fills </em><strong><em>Delivery Address</em></strong><em> from the Delivery contact</em></p></li></ul><p><em>This is the standard and intended workflow.</em></p>',
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>No such configuration exists.</em></p></li><li><p><em>Odoo always supports separate addresses without needing to enable a setting.</em></p></li></ul>',
+                '<p><em>Incorrect because:</em></p><ul><li><p><em>Delivery Methods control </em><strong><em>shipping carriers</em></strong><em>, fees, and rules, not addresses.</em></p></li><li><p><em>They do not influence invoice/delivery address behavior on quotations.</em></p></li></ul>'
+              ],
+              answers: [
+                '<p>In the <strong>Contacts</strong> app, open the customer, go to the <strong>Contacts</strong> tab, click <strong>\u201cAdd Contact\u201d</strong>, then create one contact with the <strong>Invoice</strong> address type and another with the <strong>Delivery</strong> address type. These will auto-fill on quotations. </p>',
+                '<p>In the <strong>Settings</strong> app, enable \u201cCustomer Addresses\u201d under \u201cCustomer Invoices\u201d to unlock separate address fields on quotations.</p>',
+                '<p>In the <strong>Sales</strong> app, go to <strong>Delivery Method</strong>, create a new method, and set it to \u201cInvoice address only.\u201d</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'How do you configure a customer so that quotations automatically use separate Invoice and Delivery addresses?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497401,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When you confirm a quotation for a product of type \u201cGoods\u201d that uses the <em>Delivered quantities</em> invoicing policy, what correctly describes the invoicing behavior?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><em>When the delivery is still in </em><strong><em>Ready</em></strong><em>, nothing is delivered yet.</em></p></li><li><p><em>With the Delivered quantities policy, </em><strong><em>0 units are deliverable</em></strong><em>, so Odoo </em><strong><em>does not allow invoice creation</em></strong><em> from the Sales Order.</em></p></li><li><p><em>Attempting to invoice at this stage results in </em><strong><em>no billable lines</em></strong><em>.</em></p></li></ul><p><em>Thus, this option contradicts how Delivered quantities works.</em></p>',
+                '<p><em>For </em><strong><em>Goods</em></strong><em> with the invoicing policy set to </em><strong><em>Delivered quantities</em></strong><em>, Odoo follows this rule:</em></p><p><strong><em>You cannot invoice anything until it has been delivered.</em></strong></p><p><em>Here is the official workflow:</em></p><ol><li><p><em>Confirm the quotation \u2192 a Delivery Order (DO) is created.</em></p></li><li><p><em>The DO must be </em><strong><em>processed</em></strong><em> (products moved from \u201cReserved/Ready\u201d to \u201cDone\u201d).</em></p></li><li><p><em>Only after the delivery is completed does Odoo allow:</em></p><ul><li><p><strong><em>Create Invoice \u2192 Regular Invoice</em></strong></p></li><li><p><em>The system uses the delivered quantity (qty_done).</em></p></li></ul></li></ol><p><em>This matches Odoo Documentation: Sales \u2192 Invoicing Policies \u2192 Delivered Quantities.</em></p><p><em>So the system blocks invoice creation until the DO is in </em><strong><em>Done</em></strong><em>, not when it\u2019s merely \u201cReady.\u201d</em></p>',
+                '<ul><li><p><em>Odoo does </em><strong><em>not</em></strong><em> automatically generate invoices for delivered goods.</em></p></li><li><p><em>Invoices are only created manually (or via automation tools, but not by default).</em></p></li><li><p><em>The user must click </em><strong><em>Create Invoice</em></strong><em> after delivery.</em></p></li></ul><p><em>Therefore, this option incorrectly assumes automated invoice creation.</em></p>'
+              ],
+              answers: [
+                '<p><strong>A draft Regular invoice can be created even if the delivery order is only in the \u2018Ready\u2019 stage.</strong></p>',
+                '<p><strong>You can only create a Regular draft invoice after the delivery order has been completed.</strong></p>',
+                '<p><strong>A Regular draft invoice is automatically generated once the delivery order is completed.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'When you confirm a quotation for a product of type \u201cGoods\u201d that uses the Delivered quantities invoicing policy, what correctly describes the invoicing behavior?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497403,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Where can the profit margin for an individual sales order be viewed in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Odoo does </em><strong><em>not</em></strong><em> calculate margins only quarterly.</em></p></li><li><p><em>Margins are calculated </em><strong><em>per line</em></strong><em> and </em><strong><em>per sales order</em></strong><em> in real time.</em></p></li><li><p><em>Quarterly grouping is not part of the Margins feature.</em></p></li></ol>',
+                '<p><em>Odoo includes an optional feature called </em><strong><em>Margins</em></strong><em> in the Sales app.<br>When enabled:</em></p><ul><li><p><em>A </em><strong><em>Margin</em></strong><em> field appears on each Sales Order line.</em></p></li><li><p><em>A </em><strong><em>Total Margin</em></strong><em> appears on the overall Sales Order.</em></p></li><li><p><em>Margins are calculated using:</em></p><p><strong><em>Margin = Sales Price \u2013 Cost</em></strong></p></li></ul><p><em>This is available directly on the Sales Order form, making it the correct and documented location for viewing per-order margin information.</em></p><p><em>The configuration is found under:</em></p><p><strong><em>Sales \u2192 Configuration \u2192 Settings \u2192 Pricing \u2192 Margins</em></strong></p>',
+                '<ol><li><p><em>There is </em><strong><em>no dedicated \u201cMargins\u201d menu</em></strong><em> in the Reporting section of the Sales app.</em></p></li><li><p><em>Margins do appear inside some reporting measures, but the question specifically asks for a given sales order.</em></p></li><li><p><em>The correct place is the </em><strong><em>Sales Order itself</em></strong><em>, not the Reporting dashboard.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Margins are calculated only on a quarterly basis for all orders together.</strong></p>',
+                '<p><strong>The margin for a sales order is visible directly on that sales order, provided the \u201cMargins\u201d option is enabled in the Sales app settings.</strong></p>',
+                '<p><strong>Margins can be viewed only by opening the Reporting menu and selecting \u201cMargins.\u201d</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'Where can the profit margin for an individual sales order be viewed in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497405,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What requirement must be met when setting a default unit of measure and a purchase unit of measure for a product?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Correct: Units of measure must belong to the same category to ensure proper conversion between the default unit and the purchase unit during transactions.</em></p>',
+                '<p><em>Incorrect: Units from different categories are incompatible and cannot be converted or linked directly, making this setup invalid.</em></p>',
+                '<p><em>Incorrect: Units of measure do not need to share the same name as long as they belong to the same category for appropriate conversion.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, the units of measure used for purchasing and default usage must belong to the same UoM category. This ensures that Odoo can accurately convert between these units during transactions. Using units from different categories is not permitted because they have no predefined conversion relationship, which could lead to errors in inventory and reporting.</p>',
+              answers: [
+                '<p>The purchase unit of measure must belong to the same UoM category as the default unit of measure.</p>',
+                '<p>The two units of measure must be from different categories.</p>',
+                '<p>The two units of measure must have the same name.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'What requirement must be met when setting a default unit of measure and a purchase unit of measure for a product?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497407,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>How should you configure the product form in Odoo for a consultant who visits the customer's location to perform a home appraisal?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>A consultant is </em><strong><em>not</em></strong><em> considered a \u201cGood.\u201d</em></p></li><li><p><em>The consultant\u2019s presence is not \u201cdelivered\u201d as a stockable item.</em></p></li><li><p><em>Using \u201cDelivered quantities\u201d creates inventory-related steps (delivery orders), which are </em><strong><em>not</em></strong><em> appropriate for services.</em></p></li><li><p><em>This setup would cause workflow issues in Sales and Inventory.</em></p></li></ol>',
+                "<p><em>In Odoo, any activity performed by a consultant\u2014whether remote or at the customer's site\u2014must be configured as a </em><strong><em>Service</em></strong><em> product.<br>The fact that the consultant travels does </em><strong><em>not</em></strong><em> make this a \u201cGoods\u201d product; no physical item is being moved or stocked.</em></p><p><em>For a </em><strong><em>one-time, fixed-fee appraisal</em></strong><em>, the correct configuration is:</em></p><ul><li><p><strong><em>Product Type:</em></strong><em> Service</em></p></li><li><p><strong><em>Invoicing Policy:</em></strong><em> Prepaid/Fixed Price (meaning invoice on ordered quantity)</em></p></li></ul><p><em>This is exactly how Odoo models professional services, inspections, consultations, on-site work, etc.</em></p><p><em>This configuration ensures:</em></p><ul><li><p><em>No stock moves</em></p></li><li><p><em>No delivery orders</em></p></li><li><p><em>The service can be invoiced immediately based on the order</em></p></li></ul><p><em>This matches Odoo documentation under Sales \u2192 Products \u2192 Product Types \u2192 Services.</em></p>",
+                "<p><em>It doesn't apply here because </em><strong><em>no goods are delivered</em></strong><em>.</em></p>"
+              ],
+              answers: [
+                '<p><strong>Use Product Type \u201cGoods\u201d with the Invoicing Policy set to \u201cDelivered quantities,\u201d because the consultant is delivering themselves to the customer.</strong></p>',
+                '<p><strong>Use Product Type \u201cService\u201d with the Invoicing Policy set to \u201cPrepaid/Fixed Price,\u201d because the consultant is providing a one-time service.</strong></p>',
+                '<p><strong>Use Product Type \u201cCombo,\u201d since the appraisal is a service but the consultant\u2019s travel counts as delivering a good.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              "How should you configure the product form in Odoo for a consultant who visits the customer's location to perform a home appraisal?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497481,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>If a sales order is confirmed on December 1st, and the product has a customer lead time of 7 days and a security lead time of 2 days, what will the scheduled delivery date be, assuming there is sufficient stock available?</p>',
+              relatedLectureIds: [],
+              links: [
+                '[Odoo - Lead Times](https://www.odoo.com/documentation/18.0/applications/inventory_and_mrp/inventory/warehouses_storage/replenishment/lead_times.html)'
+              ],
+              feedbacks: [
+                '<p><em>Incorrect: December 8th includes only the customer lead time (7 days) but omits the security lead time of 2 days.</em></p>',
+                '<p><em>Incorrect: December 10th assumes a lead time longer than the given customer lead time and security lead time combined.</em></p>',
+                '<p><em>Correct: The delivery date is calculated by adding 7 days (customer lead time) and subtracting 2 days (security lead time) to the confirmation date, December 1st, resulting in December 6th.</em></p>'
+              ],
+              answers: [
+                '<p>December 8th.</p>',
+                '<p>December 10th. </p>',
+                '<p>December 6th.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'If a sales order is confirmed on December 1st, and the product has a customer lead time of 7 days and a security lead time of 2 days, what will the scheduled delivery date be, assuming there is sufficient stock available?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497483,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>Which of the following is not a valid option under 'Variants Creation Mode' when creating product attributes in Odoo?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>Incorrect: 'Instantly' is a valid option that allows product variants to be created as soon as the attribute is added.</em></p>",
+                "<p><em>Correct: 'Automatically' is not a valid option under the 'Variants Creation Mode.' Odoo uses terms like 'Instantly' or 'Dynamically' for this functionality.</em></p>",
+                "<p><em>Incorrect: 'Dynamically' is a valid option where variants are created only when needed, such as when the product is added to a sales order.</em></p>"
+              ],
+              explanation:
+                "<p>Odoo provides specific modes for creating product variants to manage inventory efficiently. The valid options, 'Instantly' and 'Dynamically,' cater to different use cases, such as immediate creation or creation upon demand. The term 'Automatically' does not exist in this context, making it the incorrect choice.</p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-03_23-52-17-b4f413982a519787c36ca7eb861eb7b3.png\">",
+              answers: [
+                '<p>Instantly</p>',
+                '<p>Automatically</p>',
+                '<p>Dynamically</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              "Which of the following is not a valid option under 'Variants Creation Mode' when creating product attributes in Odoo?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497409,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>How can you configure Odoo to display the product 'Cozy Sweater' as a suggested option when a customer adds the product 'Crocheted Poncho Unisize' to their shopping cart in the online store?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>Correct: Configuring the </em>Cozy Sweater<em> as an 'Optional Product' under the 'Sales' tab of the </em>Crocheted Poncho Unisize<em> ensures that it appears as a suggested option during the sales process.</em></p>",
+                '<p><em>Incorrect</em></p>',
+                '<p><em>Incorrect</em></p>'
+              ],
+              explanation:
+                '<p><em>Optional Products are used in Odoo to suggest additional items that complement a primary product during the sales process. Configuring the </em>Cozy Sweater<em> as an Optional Product under the Sales tab of the </em>Crocheted Poncho Unisize<em> ensures that it is offered as a recommended option when the </em>Crocheted Poncho Unisize<em> is added to a cart. This setup supports upselling and enhancing the customer\'s purchasing experience.</em></p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-22_23-26-54-4c325ed239ea6f79498e43f58340b592.png">',
+              answers: [
+                "<p>List the Cozy Sweater as an 'Optional Product' on the Crocheted Poncho Unisize's product form (under 'Sales' tab).</p>",
+                "<p>List the Cozy Sweater as an 'Alternative Product' on the Crocheted Poncho Unisize's product form (under 'Inventory' tab).</p>",
+                "<p>List the Crocheted Poncho Unisize as an 'Alternative Product' on the Cozy Sweater's product form (under 'General Information' tab).</p>"
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              "How can you configure Odoo to display the product 'Cozy Sweater' as a suggested option when a customer adds the product 'Crocheted Poncho Unisize' to their shopping cart in the online store?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497411,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens in Odoo when a customer completes a purchase in the online store?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect: Quotations are typically created during the sales process, not after an online purchase is finalized. This is not relevant to the scenario described.</em></p>',
+                '<p><em>Incorrect: Opportunities are created in the CRM module based on sales leads or prospects, not as a result of completing an online purchase.</em></p>',
+                "<p><em>Correct: When the 'Automatic Invoice' setting is enabled, Odoo generates a sales order and an invoice immediately upon purchase completion in the online store.</em></p>"
+              ],
+              explanation:
+                "<p><em>In Odoo, the actions triggered by completing an online store purchase depend on the system settings. The 'Automatic Invoice' setting ensures that both a sales order and an invoice are created seamlessly upon purchase completion. Other options, such as creating quotations or CRM opportunities, are unrelated to finalized online store transactions.</em></p>",
+              answers: [
+                "<p><strong>Odoo automatically creates a quotation in the Sales app (if the 'Automatic Quotation' setting is activated).</strong></p>",
+                "<p>Odoo automatically creates a new opportunity in the CRM pipeline (if the 'Automatic Opportunity' setting is activated).</p>",
+                "<p>Odoo automatically creates a sales order and invoice in the Sales app (if the 'Automatic Invoice' setting is activated).</p>"
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'What happens in Odoo when a customer completes a purchase in the online store?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497413,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>To set up a \u201cBuy 10 waffles, Get 1 Free\u201d promotion, which Sales app setting must be enabled in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>A free item </em><strong><em>cannot</em></strong><em> be modeled correctly using only a 100% discount.</em></p></li><li><p><em>Discounts apply per order, not as a cumulative reward across multiple purchases.</em></p></li><li><p><em>The offer is tied to repeat visits, not to a single sales order.</em></p></li></ol>',
+                '<ol><li><p><em>Pricelists do not support </em><strong><em>BOGO</em></strong><em> or multi-purchase loyalty rules.</em></p></li><li><p><em>Pricelists modify prices per order but do </em><strong><em>not</em></strong><em> track customer history or total quantities purchased over time.</em></p></li><li><p><em>Odoo has no native \u201cBOGO\u201d option inside Pricelists.</em></p></li></ol>',
+                '<p><em>A \u201cBuy X, Get Y\u201d offer\u2014such as Buy 10 waffles, get 1 free, is a classic </em><strong><em>loyalty reward</em></strong><em>.<br>In Odoo, these types of rules are created under:</em></p><p><strong><em>Sales \u2192 Configuration \u2192 Settings \u2192 Promotions, Loyalty &amp; Gift Card</em></strong></p><p><em>Enabling this feature allows you to configure:</em></p><ul><li><p><strong><em>Loyalty Programs</em></strong></p></li><li><p><strong><em>Rewards</em></strong><em> (e.g., free products)</em></p></li><li><p><strong><em>Rules</em></strong><em> (e.g., earn points per purchase and redeem them)</em></p></li></ul><p><em>This feature is designed precisely for customer-repeat incentives, including punch-card style rewards.</em></p><p><em>Thus, activating </em><strong><em>Promotions, Loyalty &amp; Gift Card</em></strong><em> is the required first step.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Discounts, because the free sandwich is simply treated as an item sold with a 100% discount.</strong></p>',
+                '<p><strong>Pricelists, because you need to create a dedicated Pricelist using the BOGO configuration.</strong></p>',
+                '<p><strong>Promotions, Loyalty &amp; Gift Card, because you are setting up a loyalty reward program.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'To set up a \u201cBuy 10 waffles, Get 1 Free\u201d promotion, which Sales app setting must be enabled in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497415,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the correct distinction between a <strong>pro-forma invoice</strong> and a <strong>standard invoice</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo, a </em><strong><em>pro-forma invoice</em></strong><em>:</em></p><ul><li><p><em>Is generated from a quotation or sales order.</em></p></li><li><p><em>Provides a </em><strong><em>preview of the final invoice</em></strong><em>, showing the customer what the charges will be.</em></p></li><li><p><em>Does </em><strong><em>not</em></strong><em> trigger any accounting entry.</em></p></li><li><p><em>Is </em><strong><em>not</em></strong><em> a request for payment.</em></p></li><li><p><em>Is meant for informational or approval purposes before the final invoice.</em></p></li></ul><p><em>A </em><strong><em>standard invoice</em></strong><em>, on the other hand:</em></p><ul><li><p><em>Is the </em><strong><em>official request for payment</em></strong><em>.</em></p></li><li><p><em>Creates accounting entries (journal items, receivables).</em></p></li><li><p><em>Affects revenue, taxes, and financial reporting.</em></p></li></ul><p><em>This aligns with Odoo Documentation: Sales \u2192 Quotations \u2192 Pro-forma Invoice.</em></p>',
+                '<ul><li><p><em>While many jurisdictions consider pro-forma invoices non-binding, </em><strong><em>the key distinction in Odoo is functional</em></strong><em>, not legal:<br>\u2013 Pro-forma invoices do not record accounting entries nor request payment.</em></p></li><li><p><em>The question is about behavior </em><strong><em>in the software</em></strong><em>, not legal enforceability.</em></p></li></ul><p><em>Thus, this answer shifts focus to legalities not relevant to Odoo\u2019s system logic.</em></p>',
+                '<ol><li><p><em>A pro-forma invoice </em><strong><em>does not</em></strong><em> follow a special \u201cprofessional services\u201d format.</em></p></li><li><p><em>It is simply a </em><strong><em>non-accounting preview</em></strong><em> of a real invoice, regardless of the industry.</em></p></li><li><p><em>Legal consultations and similar services use the same invoice formats as all other products/services in Odoo.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>A pro-forma invoice is not used to request payment from a customer; instead, it serves as a confirmation step between the quotation and the actual invoice.</strong></p>',
+                '<p><strong>A pro-forma invoice is legally non-binding, meaning neither party can be sued for not fulfilling what it states.</strong></p>',
+                '<p><strong>A pro-forma invoice uses a fixed professional-services format intended for things like legal consultations.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'What is the correct distinction between a pro-forma invoice and a standard invoice in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497417,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What is the correct way to set up a pricelist in Odoo to offer progressive discounts based on the quantity purchased by a customer (e.g., 4% discount for 0-15 units, 8% discount for 16 or more units)?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Correct: This method allows you to define separate pricing rules for different quantity ranges within a single pricelist. It ensures that the discount is applied based on the quantity purchased by the customer.</em></p>',
+                '<p><em>Incorrect: This approach creates multiple pricelists, which cannot be applied progressively. Users would need to switch between pricelists manually, which is not practical or efficient</em></p>',
+                '<p><em>Incorrect: A single line in a pricelist cannot define multiple pricing rules for different quantity ranges. It can only apply one static rule.</em></p>'
+              ],
+              explanation:
+                '<p>Progressive discounts are implemented by specifying pricing rules for different quantity ranges within the same pricelist. Each rule defines the discount or price adjustment for a specific range of quantities, ensuring accurate and automated pricing based on purchase volume.</p>',
+              answers: [
+                '<p>Create a single pricelist with multiple lines, where each line corresponds to a specific quantity range.</p>',
+                '<p>Create multiple pricelists, each containing a single pricing rule for a different quantity range.</p>',
+                '<p>Use one pricelist with a single line and include all quantity ranges and discounts in that line.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'What is the correct way to set up a pricelist in Odoo to offer progressive discounts based on the quantity purchased by a customer (e.g., 4% discount for 0-15 units, 8% discount for 16 or more units)?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497419,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>A customer wants to purchase an expensive product that you rarely sell. The supplier\u2019s delivery lead time is <strong>shorter</strong> than the delivery lead time you promise to your customer. Given this situation, what is the most suitable procurement method to manage this product efficiently in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><em>\u201cBulk Discounts\u201d has </em><strong><em>nothing to do with procurement strategy</em></strong><em> for slow-moving, expensive items.</em></p></li><li><p><em>Buying more than ten units contradicts the scenario: you </em><strong><em>do not sell this item often</em></strong><em>, and bulk buying would create unwanted inventory.</em></p></li><li><p><em>This feature also does not exist as a procurement optimization for MTO use cases.</em></p></li></ul>',
+                '<ul><li><p><em>The </em><strong><em>Master Production Schedule (MPS)</em></strong><em> is used for:</em></p><ul><li><p><em>Production planning</em></p></li><li><p><em>Forecasting demand</em></p></li><li><p><em>Managing components for manufactured goods</em></p></li></ul></li></ul><p><em>It is </em><strong><em>not</em></strong><em> intended for:</em></p><ul><li><p><em>Slow-moving purchased products</em></p></li><li><p><em>Expensive items</em></p></li><li><p><em>One-off customer requests</em></p></li></ul><p><em>MPS is a production tool, not a purchasing route.</em></p>',
+                '<p><em>\u201c</em><strong><em>Replenish on Order (MTO)</em></strong><em>\u201d is the recommended route for expensive, low-turnover products that you </em><strong><em>do not want to keep in stock</em></strong><em>.</em></p><p><em>Why MTO is ideal here:</em></p><ul><li><p><em>You rarely sell this product \u2192 keeping inventory would tie up cash unnecessarily.</em></p></li><li><p><em>The supplier can deliver </em><strong><em>faster than your customer lead time</em></strong><em> \u2192 you have enough buffer to order after the customer purchases.</em></p></li><li><p><em>MTO ensures:</em></p><ul><li><p><em>A </em><strong><em>Purchase Order</em></strong><em> is automatically created once a sales order is confirmed.</em></p></li><li><p><em>No inventory is held ahead of time.</em></p></li><li><p><em>Zero risk of dead stock for costly items.</em></p></li></ul></li></ul><p><em>This follows Odoo Documentation: Inventory \u2192 Routes \u2192 Make To Order (MTO).</em></p>'
+              ],
+              answers: [
+                '<p><strong>Enable \u201cBulk Discounts\u201d in the Settings app so that purchasing more than ten units automatically secures a cheaper rate in the RFQ.</strong></p>',
+                '<p><strong>Use the Master Production Schedule tool.</strong></p>',
+                '<p><strong>Set the product\u2019s route to \u201cReplenish on Order (MTO).\u201d</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'A customer wants to purchase an expensive product that you rarely sell. The supplier\u2019s delivery lead time is shorter than the delivery lead time you promise to your customer. Given this situation, what is the most suitable procurement method to manage this product efficiently in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497421,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo\u2019s customer portal, which of the following actions is a customer <strong>NOT</strong> able to perform?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo, </em><strong><em>customers cannot manage or edit pricelists</em></strong><em> through the customer portal.<br>Pricelist configuration is strictly an internal, back-office function handled by:</em></p><ul><li><p><em>Sales administrators</em></p></li><li><p><em>Pricelist managers</em></p></li><li><p><em>Internal users with pricing permissions</em></p></li></ul><p><em>Customers can </em><strong><em>view prices</em></strong><em> assigned to them, but they cannot:</em></p><ul><li><p><em>Create pricelists</em></p></li><li><p><em>Edit them</em></p></li><li><p><em>Select different pricelists</em></p></li><li><p><em>Update price rules</em></p></li></ul><p><em>Thus, this is the action they cannot perform.</em></p>',
+                '<ol><li><p><em>Odoo\u2019s portal supports </em><strong><em>eWallet / stored credit</em></strong><em> functionality when payment providers that support it are installed and enabled (e.g., Payment Providers \u2192 Wallet).</em></p></li><li><p><em>Customers </em><strong><em>can add funds</em></strong><em> to their wallet from the portal so they can use them for future purchases or invoice payments.</em></p></li></ol>',
+                '<ul><li><p><em>If payment terms and online payment providers allow it, customers </em><strong><em>can</em></strong><em>:</em></p><ul><li><p><em>Submit </em><strong><em>partial payments</em></strong></p></li><li><p><em>Submit </em><strong><em>down payments</em></strong></p></li><li><p><em>Pay invoices in multiple installments</em></p></li></ul></li></ul><p><em>These options appear directly in the portal\u2019s invoice view when the configuration allows it.</em></p><p><em>So customers can perform this action.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Manage pricelists for the products they frequently purchase.</strong></p>',
+                '<p><strong>Add money to their eWallet.</strong></p>',
+                '<p><strong>Make partial payments or down payments on invoices (when payment terms enable it).</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'In Odoo\u2019s customer portal, which of the following actions is a customer NOT able to perform?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497423,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What does it imply when a product is classified as the "Combo" type in the system?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Correct: The "Combo" product type allows customers to select one item from multiple options within the defined combo, making it versatile and customizable.</em></p>',
+                '<p><em>Incorrect: The "Combo" type is not necessarily a combination of a good and service; it focuses on offering multiple product choices rather than combining distinct types.</em></p>',
+                '<p><em>Incorrect: The "Combo" product type does not require customers to select multiple variants; it provides the flexibility to choose a single product from a predefined selection.</em></p>'
+              ],
+              explanation:
+                '<p>The "Combo" product type is designed to offer customers the flexibility of choosing one product from a predefined selection of items. This setup is often used for promotional offers, meal deals, or customizable kits. It enhances customer satisfaction by giving them choice, without requiring them to purchase multiple items or combining goods and services.</p>',
+              answers: [
+                '<p>When purchasing this product type, the customer can choose one product from a range of available options.</p>',
+                '<p>This product is a combination of a "Good" and a "Service".</p>',
+                '<p>When purchasing this product, the customer must select multiple product variants.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'What does it imply when a product is classified as the "Combo" type in the system?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497425,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo, what does the <strong>Customer Lead Time</strong> field on a product form indicate?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>The \u201corder date calculation\u201d is not related to Customer Lead Time.</em></p></li><li><p><em>Customer Lead Time affects the delivery date, not the quotation or order date.</em></p></li><li><p><em>Odoo does not compute quotation dates from this field.</em></p></li></ol>',
+                '<p><em>The </em><strong><em>Customer Lead Time</em></strong><em> field defines the </em><strong><em>promise-to-deliver delay</em></strong><em> for a product.</em></p><p><em>It represents:</em></p><ul><li><p><em>The number of days </em><strong><em>between Sales Order confirmation</em></strong><em> and the </em><strong><em>promised delivery date</em></strong><em> to the customer.</em></p></li><li><p><em>Odoo automatically computes the expected delivery date using this value.</em></p></li></ul><p><em>For example:<br>If Customer Lead Time = 5 days, and you confirm the SO on April 10, Odoo will set the expected delivery date to April 15.</em></p><p><em>This is documented under:<br></em><strong><em>Inventory \u2192 Products \u2192 Lead Times \u2192 Customer Lead Time</em></strong></p>',
+                '<ol><li><p><em>Displaying Terms &amp; Conditions on a quotation is managed in </em><strong><em>Sales \u2192 Configuration \u2192 Settings</em></strong><em>, not through product lead time fields.</em></p></li><li><p><em>Customer Lead Time has no connection to T&amp;C behavior.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>The calculated order date derived from the quotation date.</strong></p>',
+                '<p><strong>The number of days promised to the customer between confirming the sales order and delivering the product.</strong></p>',
+                '<p><strong>A confirmation that the Terms &amp; Conditions will be shown on the quotation.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'In Odoo, what does the Customer Lead Time field on a product form indicate?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497427,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo, what does it indicate when a product has both <strong>\u201cManufacture\u201d</strong> and <strong>\u201cReplenish on Order (MTO)\u201d</strong> enabled in the Inventory tab?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>When both \u201cManufacture\u201d and MTO are active, Odoo </em><strong><em>does NOT</em></strong><em> generate a purchase RFQ.</em></p></li><li><p><em>Purchasing would only happen if the </em><strong><em>Buy</em></strong><em> route were enabled instead of Manufacture.</em></p></li><li><p><em>Therefore, this option describes the MTO + Buy flow, not the MTO + Manufacture flow.</em></p></li></ol>',
+                '<ul><li><p><em>Odoo does </em><strong><em>not</em></strong><em> contact vendors to come onsite to manufacture products.</em></p></li><li><p><em>Manufacturing in Odoo is internal (your own production operations).</em></p></li><li><p><em>Inventory reaching zero does </em><strong><em>not</em></strong><em> automatically trigger anything unless a reordering rule is used\u2014still unrelated to contacting vendors.</em></p></li></ul><p><em>This option misrepresents how Odoo\u2019s procurement and manufacturing systems work.</em></p>',
+                '<p><em>In Odoo, enabling both </em><strong><em>Manufacture</em></strong><em> and </em><strong><em>Replenish on Order (MTO)</em></strong><em> gives you the classic \u201cMake To Order Manufacturing\u201d flow.</em></p><p><em>Here is how it works:</em></p><p><strong><em>MTO behavior</em></strong></p><ul><li><p><em>When a Sales Order is confirmed, Odoo sees that the product should </em><strong><em>not</em></strong><em> come from stock.</em></p></li><li><p><em>Instead, it should be </em><strong><em>replenished specifically for that order</em></strong><em>.</em></p></li></ul><p><strong><em>Manufacture behavior</em></strong></p><ul><li><p><em>When replenishment is required (triggered by MTO), Odoo will use the </em><strong><em>Manufacture</em></strong><em> route.</em></p></li><li><p><em>This creates a </em><strong><em>Manufacturing Order (MO)</em></strong><em> rather than a Purchase Order.</em></p></li></ul><p><em>Result:</em></p><p><strong><em>Confirming a SO automatically triggers a Manufacturing Order.</em></strong></p><p><em>This is the documented Odoo workflow for custom/personalized or low-stock manufactured products.</em></p>'
+              ],
+              answers: [
+                '<p><strong>When a sales order is confirmed, Odoo will generate a Request for Quotation (RFQ) to buy the product from a vendor if inventory is insufficient.</strong></p>',
+                '<p><strong>When the stock level reaches zero, a vendor is automatically contacted to come manufacture the product in your warehouse.</strong></p>',
+                '<p><strong>When a sales order or a manufacturing order is confirmed, a manufacturing order will be created.</strong></p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'In Odoo, what does it indicate when a product has both \u201cManufacture\u201d and \u201cReplenish on Order (MTO)\u201d enabled in the Inventory tab?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497429,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>When is it most appropriate to use 'Order Grid Entry' as the sales variant selection type for a product?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect</em></p>',
+                "<p><em>Incorrect: This scenario does not require the use of 'Order Grid Entry' since the feature is designed to handle multiple variants, not individual recommendations.</em></p>",
+                "<p><em>Correct: 'Order Grid Entry' is most useful in scenarios involving multiple product variants, as it allows salespeople to efficiently select quantities for various combinations in a grid format.</em></p>"
+              ],
+              explanation:
+                "<p><em>The 'Order Grid Entry' functionality is specifically designed to simplify and accelerate the selection process when dealing with products that have multiple variants (e.g., size and color). It provides an intuitive grid interface, making it easier to manage complex orders where clients require a variety of combinations in a single quotation.</em></p>",
+              answers: [
+                '<p>When clients want their sales orders organized in a grid.</p>',
+                '<p>When salespeople typically recommend specific product variants to clients.</p>',
+                '<p>When salespeople often create large quotations with many product variants for clients.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              "When is it most appropriate to use 'Order Grid Entry' as the sales variant selection type for a product?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497431,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which type of commission plan is appropriate when you want to reward salespeople for strong performance, but without assigning a specific target?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>A </em><strong><em>target-based commission plan</em></strong><em> requires a defined quota or goal.</em></p></li><li><p><em>Commissions are paid only when the salesperson reaches that target.</em></p></li><li><p><em>Since the scenario specifies </em><strong><em>no specific goal</em></strong><em>, this plan does not apply.</em></p></li></ol>',
+                '<p><em>In Odoo\u2019s </em><strong><em>Sales Commissions</em></strong><em> framework, the </em><strong><em>achievement-based</em></strong><em> plan is specifically designed for situations where:</em></p><ul><li><p><em>You want to reward high performers</em></p></li><li><p><strong><em>No explicit sales target</em></strong><em> or quota is defined</em></p></li><li><p><em>Commissions are applied based on performance milestones, achievements, or thresholds</em></p></li></ul><p><em>This structure allows you to motivate salespeople for general success, not tied to a fixed numerical goal.</em></p><p><em>This is the correct match for \u201crewarding high performance without a specific target.\u201d</em></p>',
+                '<ol><li><p><em>A </em><strong><em>variable</em></strong><em> commission plan adjusts commissions based on factors like margin, product category, or revenue tiers.</em></p></li><li><p><em>It does </em><strong><em>not</em></strong><em> exist for the purpose of rewarding performance without a defined goal.</em></p></li><li><p><em>It also isn\u2019t tied to \u201cachievement,\u201d but rather to pricing or product factors.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>A target-based commission plan.</strong></p>',
+                '<p><strong>An achievement-based commission plan.</strong></p>',
+                '<p><strong>A variable commission plan.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'Which type of commission plan is appropriate when you want to reward salespeople for strong performance, but without assigning a specific target?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497433,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which commission plan type should you use when you want to reward salespeople for achieving a <strong>fixed, predefined quarterly sales goal</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>A </em><strong><em>target-based commission plan</em></strong><em> is specifically designed for cases where:</em></p><ul><li><p><em>There is a </em><strong><em>defined sales target</em></strong><em> (e.g., a quarterly quota).</em></p></li><li><p><em>Commissions are tied to the salesperson </em><strong><em>reaching or exceeding</em></strong><em> that target.</em></p></li><li><p><em>The reward is directly connected to hitting the predefined number.</em></p></li></ul><p><em>This aligns perfectly with the scenario:<br>\u27a1\ufe0f Rewarding salespeople for achieving a fixed quarterly goal.</em></p><p><em>Odoo documentation places fixed-goal, period-based commission structures under </em><strong><em>target-based</em></strong><em> plans.</em></p>',
+                '<ol><li><p><em>An </em><strong><em>achievement-based</em></strong><em> plan is used when </em><strong><em>no specific target</em></strong><em> is set.</em></p></li><li><p><em>It rewards general high performance or milestones, not hitting a fixed number.</em></p></li><li><p><em>The scenario clearly defines a specific quarterly goal, which does </em><strong><em>not</em></strong><em> match this plan type.</em></p></li></ol>',
+                '<ol><li><p><em>Although both plan types reward success, only </em><strong><em>target-based</em></strong><em> plans involve a predefined numeric goal.</em></p></li><li><p><em>Achievement-based plans do </em><strong><em>not</em></strong><em> use fixed targets.</em></p></li><li><p><em>Therefore, you cannot use both interchangeably for this case.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>A target-based commission plan.</strong></p>',
+                '<p><strong>An achievement-based commission plan.</strong></p>',
+                '<p><strong>Either a target-based or an achievement-based commission plan.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'Which commission plan type should you use when you want to reward salespeople for achieving a fixed, predefined quarterly sales goal?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497435,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo, what does it indicate when a product\u2019s <strong>forecasted quantity</strong> is <strong>higher</strong> than its current <strong>quantity on hand</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>\u201cInclude Components in Forecasts\u201d only affects </em><strong><em>components for manufacturing</em></strong><em>, not finished product quantities.</em></p></li><li><p><em>It </em><strong><em>does not</em></strong><em> artificially raise the forecasted quantity of a finished good.</em></p></li><li><p><em>Forecasts only include actual incoming moves, not hypothetical manufacturing possibilities.</em></p></li></ol>',
+                '<p><em>In Odoo, </em><strong><em>Forecasted Quantity</em></strong><em> is calculated using:</em></p><p><strong><em>Forecasted = On Hand + Incoming \u2212 Outgoing</em></strong></p><p><em>Therefore, when the </em><strong><em>forecasted quantity is higher than the quantity on hand</em></strong><em>, it means:</em></p><p><em>\u27a1\ufe0f </em><strong><em>There are incoming stock moves that will increase inventory in the future.</em></strong></p><p><em>These incoming moves can come from:</em></p><ul><li><p><strong><em>Purchase Orders</em></strong><em> (products ordered from suppliers)</em></p></li><li><p><strong><em>Manufacturing Orders</em></strong><em> (finished goods expected to be produced)</em></p></li><li><p><strong><em>Return receipts</em></strong><em> (customer returns or vendor refunds)</em></p></li></ul><p><em>All of these raise the forecasted value above the current on-hand quantity.</em></p><p><em>This matches Odoo\u2019s standard forecast logic in Inventory \u2192 Reporting \u2192 Forecasted Inventory.</em></p>',
+                '<ol><li><p><em>A sales order \u201cfailing\u201d is </em><strong><em>not a concept in Odoo</em></strong><em>\u2014SO lines are delivered or not, but they do not \u201cfail.\u201d</em></p></li><li><p><em>Even if a delivery were canceled, it would not raise forecasted above on-hand unless there were actual incoming moves.</em></p></li><li><p><em>Forecasted quantity changes only when incoming or outgoing stock moves are confirmed.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>You enabled \u201cInclude Components in Forecasts,\u201d so the system is counting potential units you might manufacture in the future.</strong></p>',
+                '<p><strong>New stock is expected to arrive due to a purchase order, manufacturing order, or product returns.</strong></p>',
+                '<p><strong>A sales order has failed, so products were not removed from inventory as expected.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'In Odoo, what does it indicate when a product\u2019s forecasted quantity is higher than its current quantity on hand?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497437,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>A customer purchases a jacket using a pricelist that applies a <strong>\u201310% discount</strong>. The jacket\u2019s sales price is <strong>$99</strong>. What is the final price after applying the pricelist?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>$89.10 would be correct only if the \u201310% were treated as a normal discount.</em></p><p><em>But under the </em><strong><em>Formula pricelist</em></strong><em> calculation, negative discounts represent surcharges, not reductions.</em></p>',
+                '<p><em>In Odoo\u2019s </em><strong><em>Formula</em></strong><em> price computation:</em></p><ul><li><p><em>The \u201cDiscount\u201d field accepts positive or negative values.</em></p></li><li><p><strong><em>A negative discount increases the price</em></strong><em>, because it is treated as a surcharge.</em></p></li></ul><p><em>The system applies:</em></p><p><strong><em>Final Price = Base Price \u00d7 (1 \u2013 Discount)</em></strong></p><p><em>Here:</em></p><ul><li><p><em>Base price = </em><strong><em>99</em></strong></p></li><li><p><em>Discount = </em><strong><em>\u20130.10</em></strong></p></li></ul><p><em>So:</em></p><ul><li><p><em>1 \u2013 (\u20130.10) = 1.10</em></p></li><li><p><em>99 \u00d7 1.10 = </em><strong><em>108.90</em></strong></p></li></ul><p><em>Thus, with a \u201310% rule under a </em><strong><em>Formula Pricelist</em></strong><em>, the price </em><strong><em>increases</em></strong><em> by 10%.</em></p>',
+                '<p><em>$90.00 does not correspond to any valid formula outcome in Odoo\u2019s pricelist computation logic for \u201310%.</em></p>'
+              ],
+              answers: [
+                '<p>$89.10 </p>',
+                '<p>$108.90</p>',
+                '<p><strong>$90.00</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'A customer purchases a jacket using a pricelist that applies a \u201310% discount. The jacket\u2019s sales price is $99. What is the final price after applying the pricelist?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497439,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What are the methods to prevent a specific product from being included in quotations?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Correct but not the only option</em></p>',
+                '<p><em>Correct but not the only option</em></p>',
+                '<p><em>Correct: Both archiving the product and using the sale warning system are valid methods for preventing a product from appearing in quotations.</em></p>'
+              ],
+              explanation:
+                '<p>To restrict a product from being used in quotations, Odoo provides two key options: archiving the product or setting a blocking warning. Archiving ensures the product is no longer accessible for selection, whereas setting a warning allows you to block its usage dynamically. These features are useful for managing product availability and compliance with sales policies.</p>',
+              answers: [
+                '<p>By archiving the product.</p>',
+                '<p>By setting a blocking warning on the product (requires activating the "Sale Warnings" setting).</p>',
+                '<p>Both solutions are applicable.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'What are the methods to prevent a specific product from being included in quotations?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497441,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>Why might a product configured under 'Sales' and available for sales quotations not appear in your eCommerce shop?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect: Odoo does not restrict products from being displayed based on a minimum price in the eCommerce shop.</em></p>',
+                "<p><em>Correct: For a product to appear in the eCommerce shop, it must be marked as 'Published.' This setting ensures the product is visible to customers browsing the online store.</em></p>",
+                '<p><em>Incorrect: Products can simultaneously be available for sales quotations and displayed in the eCommerce shop in Odoo. There is no mutual exclusivity in the functionality.</em></p>'
+              ],
+              explanation:
+                '<p>In Odoo, a product needs to be explicitly marked as \'Published\' under the eCommerce configuration to appear on the website. This ensures control over which products are visible online. A product can be configured for use in sales quotations and eCommerce simultaneously, so this is not a limitation. If a product is not appearing in the eCommerce shop, verifying its publication status is the first step.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_00-34-35-02682b328079433f2e40c268336f416b.png">',
+              answers: [
+                '<p>It is under the eCommerce minimum price of $10.</p>',
+                "<p>Under 'eCommerce Shop' in the Sales tab, you need to check the 'Is Published' option or toggle it from 'Unpublished' to 'Published' on your website.</p>",
+                '<p>Products cannot be sellable on a sales quotation and an eCommerce website at the same time.</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              "Why might a product configured under 'Sales' and available for sales quotations not appear in your eCommerce shop?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497443,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>You sell leather jackets that are highly customizable with many possible Attribute combinations. Which <strong>Display Type</strong>should you choose in Odoo so you don\u2019t need to manually create every possible Variant combination?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo, the </em><strong><em>Multi-checkbox</em></strong><em> display type is used for </em><strong><em>Optional Products</em></strong><em> or </em><strong><em>Extra Customization Options</em></strong><em> that should:</em></p><ul><li><p><strong><em>Not generate variants</em></strong><em>,</em></p></li><li><p><strong><em>Not multiply possible combinations</em></strong><em>, and</em></p></li><li><p><strong><em>Not create new product variants automatically</em></strong><em>.</em></p></li></ul><p><em>This is the correct choice when selling </em><strong><em>customizable products</em></strong><em> where you want customers (or internal users) to select multiple attributes </em><strong><em>without generating product variants</em></strong><em>.</em></p><p><em>Using </em><strong><em>Multi-checkbox</em></strong><em> allows you to present customizable options without creating hundreds or thousands of variants, which is the exact goal in this scenario.</em></p>',
+                '<ol><li><p><em>\u201cImage\u201d is just a visual display type for selecting attributes like color or pattern.</em></p></li><li><p><strong><em>It still generates variants</em></strong><em> for every attribute combination.</em></p></li><li><p><em>This does not solve the issue of avoiding manual variant creation.</em></p></li></ol>',
+                '<ol><li><p><em>\u201cSelect\u201d is the default dropdown-style attribute selection.</em></p></li><li><p><em>It also </em><strong><em>creates variants</em></strong><em> for each attribute value.</em></p></li><li><p><em>This would explode the number of variants if your jacket has many attributes.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Multi-checkbox</strong></p>',
+                '<p><strong>Image</strong></p>',
+                '<p><strong>Select</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'You sell leather jackets that are highly customizable with many possible Attribute combinations. Which Display Typeshould you choose in Odoo so you don\u2019t need to manually create every possible Variant combination?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138508223,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>If you want to group specific sales order lines on a quotation or sales order to calculate and display subtotals, which feature would you use?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect: Product categories are used for organizing products into groups for reporting or categorization, but they do not allow grouping of lines with subtotals on a sales order.</em></p>',
+                '<p><em>Incorrect</em></p>',
+                '<p><em>Correct: Sections allow you to group sales order lines into logical segments and add subtotals for each section, making the quotation or sales order more organized and clear.</em></p>'
+              ],
+              explanation:
+                '<p>The Sections feature is ideal for grouping related lines in a sales order or quotation and presenting subtotals for those groups. This is particularly useful when quoting products or services that are grouped into distinct parts, such as different project phases or product bundles, to make the document more comprehensible for the customer.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-10_22-57-33-12f4408c2f185f5c1801734b932f9cce.png">',
+              answers: [
+                '<p>Product categories</p>',
+                '<p>Sequences</p>',
+                '<p>Sections</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'If you want to group specific sales order lines on a quotation or sales order to calculate and display subtotals, which feature would you use?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138508233,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question: '<p>Can all products be added to a sales order?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect: Not all products are available for use in sales orders. Products must be specifically configured for sales to be included in a sales order.</em></p>',
+                '<p><em>Incorrect: Stock availability is not the deciding factor for whether a product can be added to a sales order. Products can still be added regardless of stock, provided they are marked for sales.</em></p>',
+                "<p><em>Correct: Only products marked as 'Available in Sales' on the product form can be used in a sales order. This ensures that products intended for sales are correctly categorized.</em></p>"
+              ],
+              explanation:
+                '<p>In Odoo, products must be explicitly configured as available for sales in the product form to be included in a sales order. This configuration prevents unintentional inclusion of products not meant for sales, such as raw materials or internally consumed items. Stock availability is not a limiting factor; sales can still proceed even if the product is not currently in stock, depending on the business process setup.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-10_23-00-32-ee25679ea9ad4551cd022e6e54da3df6.png">',
+              answers: [
+                '<p>Yes, you can use all your products.</p>',
+                '<p>No, you can only use products you currently have in stock.</p>',
+                "<p>No, you can only use products that you have marked as available under the 'Sales' section in the product form.</p>"
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain: 'Can all products be added to a sales order?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138508499,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When working with <strong>pricelists</strong> in Sales and selecting a product on a quotation, how does Odoo determine the <strong>unit price</strong>? Which statement is correct?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Partially true, but incomplete \u2014 misses the recomputation behavior when changing pricelists.</em></p>',
+                '<p><em>Partially true, but pricelists do override the Sales Price, so the first statement is essential.</em></p>',
+                '<p><em>Odoo\u2019s pricelist system is designed to </em><strong><em>replace</em></strong><em> the standard product Sales Price whenever a pricelist is applied. Here\u2019s how each statement works:</em></p><p><strong><em>\u2714 Statement 1: Pricelist price overrides Sales Price</em></strong></p><p><em>This is correct.<br>When you select a product on a quotation:</em></p><ul><li><p><em>Odoo checks the active </em><strong><em>pricelist</em></strong></p></li><li><p><em>If the product has a rule (fixed price, discount, formula\u2026), that price is used</em></p></li><li><p><em>The price on the product form (Sales Price) becomes irrelevant in this context</em></p></li></ul><p><em>The Sales Price is only a default fallback when no pricelist rule applies.</em></p><p><strong><em>\u2714 Statement 2: Changing the pricelist on a quotation recomputes prices</em></strong></p><p><em>Also correct.</em></p><p><em>When you switch the pricelist on an existing quotation:</em></p><ul><li><p><em>Odoo </em><strong><em>recomputes the unit price</em></strong><em> for each product line</em></p></li><li><p><em>The new price rules are immediately applied</em></p></li><li><p><em>This ensures the quotation always reflects the active pricelist</em></p></li></ul><p><em>This behavior is built-in and requires no customization.</em></p>'
+              ],
+              answers: [
+                '<p>If a product is linked to a pricelist, the pricelist price always overrides the Sales Price defined on the product form.</p>',
+                '<p>Whenever you change the pricelist on a quotation, Odoo automatically updates the unit price of existing quotation lines.</p>',
+                '<p>Both statements are true.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'When working with pricelists in Sales and selecting a product on a quotation, how does Odoo determine the unit price? Which statement is correct?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138508511,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you issue a preliminary invoice to a customer before confirming a sale in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>Correct: Enabling the 'Pro-Forma Invoice' setting allows users to send a non-final invoice (pro-forma invoice) to customers directly from a quotation before confirming the sale.</em></p>",
+                "<p><em>Incorrect: Odoo does not include a 'Preliminary Invoice' setting or feature. This option does not exist within Odoo</em></p>",
+                "<p><em>Incorrect: Odoo provides the 'Pro-Forma Invoice' feature precisely to address this requirement.</em></p>"
+              ],
+              explanation:
+                '<p>Pro-forma invoices are useful for providing customers with an estimated invoice before finalizing a sale. Odoo supports this process by allowing businesses to generate and send pro-forma invoices through the quotation interface, ensuring transparency and aligning expectations with the customer before committing to the sale.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-10_23-24-12-363baaedf20fa4f7c7a543635bb1f0f0.png">\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-10_23-24-12-865e3865dee243ed4956ae951f438caa.png">',
+              answers: [
+                "<p>Activate 'Pro-Forma Invoice' setting, and click 'Send Pro-Forma Invoice' button on the quotation.</p>",
+                "<p>Activate 'Preliminary Invoice' setting, and click 'Pre-Lim Invoice' button on the quotation.</p>",
+                '<p>This is not possible in Odoo.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'How can you issue a preliminary invoice to a customer before confirming a sale in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497445,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>At what point in the sales workflow does Odoo decrease the <strong>on-hand quantity</strong> of a product in Inventory?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In Odoo\u2019s standard Sales \u2192 Inventory flow, the </em><strong><em>only</em></strong><em> action that physically decreases on-hand stock is:</em></p><p><strong><em>Validating the delivery order (stock picking).</em></strong></p><p><em>When the warehouse user clicks </em><strong><em>Validate</em></strong><em> on the Delivery Order:</em></p><ul><li><p><em>The system marks the goods as shipped.</em></p></li><li><p><em>A completed stock move is created.</em></p></li><li><p><em>The </em><strong><em>on-hand quantity decreases immediately.</em></strong></p></li></ul><p><em>This is the moment Odoo considers products to have left your warehouse.</em></p>',
+                '<ul><li><p><em>Confirming a Sales Order </em><strong><em>does not</em></strong><em> move stock.</em></p></li><li><p><em>It simply reserves or forecasts product availability.</em></p></li><li><p><em>No physical inventory change occurs.</em></p></li></ul><p><em>SO confirmation only creates the delivery order, not the stock movement.</em></p>',
+                '<ol><li><p><em>Paying the customer invoice belongs to Accounting, not Inventory.</em></p></li><li><p><em>Payment has </em><strong><em>no effect</em></strong><em> on stock levels.</em></p></li><li><p><em>Products may be shipped long before or after payment depending on the business flow.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>When the delivery order is validated.</strong></p>',
+                '<p><strong>When the sales order is validated.</strong></p>',
+                '<p><strong>When the customer invoice is paid.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'At what point in the sales workflow does Odoo decrease the on-hand quantity of a product in Inventory?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497447,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How would you configure a promotion in Odoo to offer the following: "Receive a free Black embroidered t-shirt with purchases of $100 or more"?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect: This method applies a discount but does not add the </em>Black embroidered t-shirt<em> as a product. Using a description alone is insufficient to fulfill the promotional requirement.</em></p>',
+                "<p><em>Incorrect: The Reward Type 'Free Shipping' does not allocate a free tote bag to the customer; it only waives the shipping fee.</em></p>",
+                '<p><em>Correct: This method ensures that the </em>Black embroidered t-shirt<em> is automatically added as a free product once the purchase amount meets the $100 threshold.</em></p>'
+              ],
+              explanation:
+                "<p><em>To correctly configure a promotion that adds a free </em>Black embroidered t-shirt<em>with purchases of $100 or more, the Conditional Rule must be set to check the purchase amount ($100). The Reward Type 'Free Product' must be selected, and the </em>Black embroidered t-shirt<em> product must be specified in the configuration. This ensures that the promotion is applied automatically and the tote bag is added to the customer's order without requiring manual intervention.</em></p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_01-05-44-8ff186ff014385e174f3f1c304325667.png\">",
+              answers: [
+                "<p>Create a Conditional Rule with the minimum quantity set to '100' and create a Reward with Reward Type set to 'Discount.' Then, enter 'Free Black embroidered t-shirt' in the Description On Order field.</p>",
+                "<p>Create a Conditional Rule with the minimum purchase set to '$100' and create a Reward with Reward Type set to 'Free Shipping.' Then, enter 'Free Black embroidered t-shirt' in the Description On Order field.</p>",
+                "<p>Create a Conditional Rule with the minimum purchase set to '$100' and create a Reward with Reward Type set to 'Free Product.' Then, create or select 'Black embroidered t-shirt' in the Product field.</p>"
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'How would you configure a promotion in Odoo to offer the following: "Receive a free Black embroidered t-shirt with purchases of $100 or more"?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497449,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>When generating gift cards in Odoo, for whom can they be created?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Incorrect: Gift cards can be created for anonymous customers when the recipient is not specified, but this is not the only option.</em></p>',
+                '<p><em>Incorrect: Gift cards can be generated for specific customers by linking the gift card to their profile, but this is not the sole possibility.</em></p>',
+                '<p><em>Correct: Odoo allows generating gift cards for both anonymous customers (not linked to any profile) and specific customers (linked to their profile for tracking purposes).</em></p>'
+              ],
+              explanation:
+                "<p>Odoo's gift card functionality is flexible, enabling businesses to cater to both walk-in customers (anonymous) and loyal customers (selected). This flexibility ensures that gift cards can be used in diverse scenarios, such as gifting or assigning them to specific recipients for tracking purposes.</p>",
+              answers: [
+                '<p>Anonymous Customer</p>',
+                '<p>Selected Customers</p>',
+                '<p>Both</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Sales',
+            question_plain:
+              'When generating gift cards in Odoo, for whom can they be created?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497451,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>How can you configure an upsell product to appear at the bottom of another product page in your eCommerce store?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>Correct: The 'Alternative Products' field in the 'Sales' tab allows you to configure upsell products that appear at the bottom of the corresponding product page.</em></p>",
+                '<p><em>Incorrect: Odoo does not support drag-and-drop functionality for configuring upsell products directly in the website builder.</em></p>',
+                "<p><em>Incorrect: Odoo provides a straightforward way to add upsell products using the 'Alternative Products' feature.</em></p>"
+              ],
+              explanation:
+                "<p>To configure an upsell product in Odoo's eCommerce module, you can use the 'Alternative Products' field located in the 'Sales' tab of the relevant product. This feature enables you to recommend complementary or higher-value items to customers, boosting sales and enhancing the shopping experience. This configuration ensures the selected upsell product is displayed at the bottom of the primary product's page.</p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_01-09-39-208628b5019284331426d60f9bd231c6.png\">",
+              answers: [
+                "<p>In the 'Sales' tab of your eCommerce product, enter the upsell product in the 'Alternative Products' field.</p>",
+                '<p>In your eCommerce website, drag and drop the product from the Odoo product page (open on a separate tab).</p>',
+                '<p>There is no way to add an upsell product to the bottom of a product page in the eCommerce store.</p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'How can you configure an upsell product to appear at the bottom of another product page in your eCommerce store?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497453,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following options is <strong>NOT</strong> valid when configuring an <strong>achievement-based commission plan</strong> for your sales team in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>A plan based on </em><strong><em>Amount Invoiced</em></strong><em> is one of the selectable, supported metrics.</em></p>',
+                '<p><em>In Odoo\u2019s commission plan system the valid metrics you can choose for an </em><strong><em>achievement-based plan</em></strong><em> include:</em></p><ul><li><p><strong><em>Amount Invoiced</em></strong></p></li><li><p><strong><em>Amount Sold</em></strong></p></li><li><p><strong><em>Quantity Invoiced</em></strong></p></li><li><p><strong><em>Quantity Sold</em></strong></p></li><li><p><strong><em>Margin</em></strong></p></li><li><p><strong><em>MRR</em></strong></p></li></ul><p><em>These are all </em><strong><em>actual performance metrics</em></strong><em>, based on invoicing, delivered quantities, sales confirmations, and financial results.</em></p><p><strong><em>Quotations are NOT included</em></strong><em>, because:</em></p><ul><li><p><em>A quotation is not a confirmed sale.</em></p></li><li><p><em>It does not create revenue or operational activity.</em></p></li><li><p><em>Odoo does not reward salespeople based on potential or unconfirmed numbers.</em></p></li></ul><p><em>Therefore, a commission plan </em><strong><em>cannot</em></strong><em> be based on quoted amounts.</em></p>',
+                '<p><em>A plan based on </em><strong><em>Quantity Sold</em></strong><em> is also a valid, selectable metric (as shown in the dropdown).</em></p>'
+              ],
+              answers: [
+                '<p><strong>A plan based on the total amount of sales invoiced</strong></p>',
+                '<p><strong>A plan based on the total amount of sales quoted</strong></p>',
+                '<p><strong>A plan based on the total quantity of products sold</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Sales',
+            question_plain:
+              'Which of the following options is NOT valid when configuring an achievement-based commission plan for your sales team in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497455,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo, what does it indicate when the <strong>\u201cBuy\u201d</strong> route is enabled in the Inventory tab of a product?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>The </em><strong><em>Buy</em></strong><em> route tells Odoo:</em></p><p><em>\u27a1\ufe0f \u201cWhen this product needs replenishment, </em><strong><em>purchase it</em></strong><em> from a vendor.\u201d</em></p><p><em>This route is activated when:</em></p><ul><li><p><em>A </em><strong><em>Reordering Rule</em></strong><em> triggers (e.g., stock reaches Min Quantity), or</em></p></li><li><p><strong><em>Replenish on Order (MTO)</em></strong><em> is also checked and a Sales Order confirms.</em></p></li></ul><p><em>In both cases, Odoo looks at the </em><strong><em>Buy route</em></strong><em> and generates:</em></p><p><strong><em>A Request for Quotation (RFQ)</em></strong></p><p><em>\u2026which can later be confirmed into a Purchase Order.</em></p><p><em>This is the standard procurement flow described in Odoo Documentation:<br></em><strong><em>Inventory \u2192 Configuration \u2192 Routes \u2192 Buy.</em></strong></p>',
+                '<ol><li><p><em>Manufacturing orders come only from the </em><strong><em>Manufacture</em></strong><em> route.</em></p></li><li><p><em>The Buy route has </em><strong><em>no link</em></strong><em> to internal production processes.</em></p></li><li><p><em>Reordering + Buy </em><strong><em>always</em></strong><em> results in an RFQ, never an MO.</em></p></li></ol>',
+                '<ol><li><p><em>Confirming a Sales Order triggers an MO only when </em><strong><em>Manufacture + MTO</em></strong><em> are enabled.</em></p></li><li><p><em>The </em><strong><em>Buy</em></strong><em> route is strictly for purchasing, not manufacturing.</em></p></li><li><p><em>Sales Order confirmation alone does </em><strong><em>not</em></strong><em> create a manufacturing order.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>When a reordering rule for the product is triggered, Odoo will automatically create a Request for Quotation (RFQ) to purchase the product from a vendor.</strong></p>',
+                '<p><strong>When a reordering rule is triggered, Odoo will generate a manufacturing order.</strong></p>',
+                '<p><strong>When a sales order is confirmed, Odoo will generate a manufacturing order.</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Sales',
+            question_plain:
+              'In Odoo, what does it indicate when the \u201cBuy\u201d route is enabled in the Inventory tab of a product?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497457,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p><strong>When creating a new survey in Odoo, which of the following is NOT an available survey type?</strong></p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ul><li><p><strong>Recruitment</strong> \u2192 Valid </p></li></ul>',
+                '<p>Odoo 19 offers the following survey types:</p><ul><li><p><strong>Survey</strong></p></li><li><p><strong>Live session</strong></p></li><li><p><strong>Assessment</strong></p></li><li><p><strong>Custom</strong></p></li><li><p><strong>Recruitment</strong></p></li><li><p><strong>Appraisal</strong></p></li></ul><p>There is <strong>no option called \u201cQuestionnaire.\u201d</strong><br>Even though surveys may <em>function</em> like questionnaires, that term is <strong>not</strong> used in Odoo\u2019s interface.</p><p>Therefore:</p><ul><li><p><strong>Recruitment</strong> \u2192 Valid </p></li><li><p><strong>Assessment</strong> \u2192 Valid </p></li><li><p><strong>Questionnaire</strong> \u2192 \u274c Not a survey type in Odoo</p></li></ul>',
+                '<ul><li><p><strong>Assessment</strong> \u2192 Valid </p></li></ul>'
+              ],
+              answers: [
+                '<p><strong>Recruitment</strong></p>',
+                '<p><strong>Questionnaire</strong></p>',
+                '<p><strong>Assessment</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              'When creating a new survey in Odoo, which of the following is NOT an available survey type?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497459,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Can a survey participant be directed to a specific question based on their answer to a previous question in Odoo? Select the correct option.</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This answer is incorrect because Odoo does not use the term 'Parent Questions' or provide this feature in the way described. The conditional flow is handled differently.</em></p>",
+                "<p><em>This answer is correct because Odoo supports conditional logic in surveys through the 'Conditional Display' feature. It allows specific questions to be shown based on the respondent's answers to previous questions, ensuring a dynamic and personalized survey flow.</em></p>",
+                '<p><em>This answer is incorrect because Odoo does have a feature for conditional display, enabling dynamic survey logic.</em></p>'
+              ],
+              explanation:
+                "<p>The correct answer is \"Yes. It's called 'Conditional Display' (Go to the Question &gt; Options tab &gt; Locate the 'Conditional Display' section &gt; Choose a Triggering Answer).\" Odoo's 'Conditional Display' feature provides a flexible way to create dynamic surveys by guiding participants through relevant questions based on their prior responses. This improves user engagement and ensures that surveys remain concise and contextually relevant.</p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_01-27-09-5683da81f6370e67bd63b156ac8f958f.png\">",
+              answers: [
+                "<p>Yes. It's called 'Parent Questions.' (Go to the Question &gt; Settings tab &gt; Determine Parent Question &amp; Child Answer)</p>",
+                "<p>Yes. It's called 'Conditional Display' (Go to the Question &gt; Options tab &gt; Locate the 'Conditional Display' section &gt; Choose a Triggering Answer)</p>",
+                '<p>No, this option is not available in Odoo</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              'Can a survey participant be directed to a specific question based on their answer to a previous question in Odoo? Select the correct option.',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497461,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo Surveys, what happens when you click <strong>See results \u2192 Analyze Results</strong>?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<ol><li><p><em>Odoo does NOT create a participant-by-participant side-by-side comparison.</em></p></li><li><p><em>Individual responses appear under </em><strong><em>See results \u2192 Answers</em></strong><em>, not in Analyze Results.</em></p></li><li><p><em>Analyze Results is about aggregated data, not participant comparison.</em></p></li></ol>',
+                '<p><em>When you open a survey and select:</em></p><p><strong><em>See results \u2192 Analyze Results</em></strong></p><p><em>Odoo automatically generates an </em><strong><em>Odoo Spreadsheet</em></strong><em> containing:</em></p><ul><li><p><em>Response data</em></p></li><li><p><em>Summary tables</em></p></li><li><p><em>Pivot-style analysis</em></p></li><li><p><em>Charts (if applicable)</em></p></li></ul><p><em>This gives you a dynamic analysis workspace where you can filter, group, and manipulate results directly inside the spreadsheet.</em></p><p><em>This behavior is documented under the Survey app\u2019s </em><strong><em>Analyze Results</em></strong><em> feature.</em></p>',
+                '<ol><li><p><em>Odoo does NOT merge or compare results across different surveys.</em></p></li><li><p><em>Analysis is always limited to the </em><strong><em>single survey</em></strong><em> you are viewing.</em></p></li><li><p><em>There is no multi-survey comparison tool in the Survey module.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>A side-by-side comparison is generated for each participant.</strong></p>',
+                '<p><strong>The survey results are inserted into a Spreadsheet.</strong></p>',
+                '<p><strong>The results are compared across multiple surveys.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              'In Odoo Surveys, what happens when you click See results \u2192 Analyze Results?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497463,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Can participants in Live Sessions receive incentives for responding to questions promptly?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is incorrect because Odoo does not provide a manual process to analyze individual response times in 'Reporting' for the purpose of sending rewards like vouchers.</em></p>",
+                '<p><em>This is incorrect because Odoo has a specific feature in Live Sessions to reward quick answers, making this statement misleading.</em></p>',
+                "<p><em>This is correct because Odoo includes the 'Reward quick answers' feature, which allows organizers to incentivize participants by awarding bonus points for prompt responses. This feature encourages faster engagement during Live Sessions.</em></p>"
+              ],
+              explanation:
+                "<p>Odoo's Live Session surveys come with interactive features to enhance participation and engagement. The 'Reward quick answers' functionality is an example of this, as it assigns additional points to participants who respond quickly. This feature can be enabled under the 'Options' tab in the Live Session survey form. It provides a gamified experience, motivating users to stay engaged and react promptly to questions. </p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_01-31-31-66decc867b1e81a61f0d46b441975c4f.png\">",
+              answers: [
+                "<p>Yes, analyze their response time in 'Reporting,' and send them a voucher in the mail</p>",
+                '<p>No, there is no such option in Odoo \u2013 all answers are counted equally</p>',
+                "<p>Yes, activate 'Reward quick answers' in the Live Session section of the 'Options' tab on a Live Session survey form</p>"
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Survey',
+            question_plain:
+              'Can participants in Live Sessions receive incentives for responding to questions promptly?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497465,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>What does the 'Allow Roaming' option allow participants to do during a survey?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is incorrect because the 'Allow Roaming' feature does not enable participants to save their progress and resume later. Instead, pausing and resuming functionality depends on other survey settings.</em></p>",
+                "<p><em>This is incorrect because 'Allow Roaming' does not permit participants to share their responses. Survey sharing is unrelated to navigation capabilities provided by this option.</em></p>",
+                "<p><em>This is correct because the 'Allow Roaming' option specifically gives participants the ability to navigate backward within the survey, enabling them to revisit and edit answers on previous pages.</em></p>"
+              ],
+              explanation:
+                '<p>This question tests the understanding of the \'Allow Roaming\' feature in Odoo surveys. The functionality is crucial for improving participant flexibility by allowing them to review or correct their responses during the survey process.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_01-33-55-ba52426306c03fc243034baefa919f13.png">',
+              answers: [
+                '<p>They can pause the survey and complete it at a different day/time.</p>',
+                '<p>They can share their responses with other participants.</p>',
+                '<p>They can go back to previous pages of the survey, if needed.</p>'
+              ]
+            },
+            correct_response: ['c'],
+            section: 'Survey',
+            question_plain:
+              "What does the 'Allow Roaming' option allow participants to do during a survey?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497467,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following survey question types <strong>cannot</strong> be used to generate leads in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This option can generate leads because Odoo can evaluate the selected answer and trigger CRM lead creation based on predefined rules.</em></p>',
+                '<p><em>In Odoo Surveys, only specific question types can trigger </em><strong><em>Lead Generation</em></strong><em>, such as:</em></p><ul><li><p><em>Multiple-choice questions (single or multiple answers)</em></p></li><li><p><em>Dropdown selection</em></p></li><li><p><em>Certain scored answer types</em></p></li></ul><p><em>These work because Odoo needs </em><strong><em>structured, selectable answers</em></strong><em> to map the response to a CRM lead field or qualification criteria.</em></p><p><em>Why Single line text box cannot generate leads:</em></p><ul><li><p><em>It produces </em><strong><em>free-text</em></strong><em>, unstructured input.</em></p></li><li><p><em>Odoo cannot map this open-ended text to CRM fields or use it to trigger lead creation rules.</em></p></li><li><p><em>Therefore, text-based fields (single line or paragraph) </em><strong><em>cannot</em></strong><em> be used for automated lead generation.</em></p></li></ul>',
+                '<ol><li><p><em>Matrix questions can be used for lead scoring and qualification.</em></p></li><li><p><em>They can feed structured answer data into decision rules for lead creation.</em></p></li></ol>'
+              ],
+              answers: [
+                '<p><strong>Multiple Choice: only one answer</strong></p>',
+                '<p><strong>Single line text box</strong></p>',
+                '<p><strong>Matrix</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              'Which of the following survey question types cannot be used to generate leads in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497469,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>What happens if "Randomized per section" is chosen as the "Question Selection" option?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>This is incorrect because the "Randomized per section" option is related to the structure of the survey questions, not the participant selection. Participant selection remains unaffected by this feature.</em></p>',
+                '<p><em>This is the correct answer. When "Randomized per section" is enabled, the survey selects a specific number of questions at random from each section. Users can adjust the number of displayed questions, offering variability to participants while ensuring diverse question exposure. However, this mode is bypassed in Live Session surveys to maintain consistency during real-time interactions.</em></p>',
+                '<p>This is incorrect. The feature deals with question randomization rather than participant management. Moreover, it is not a default setting for Live Session surveys, which do not support randomized question sections.</p>'
+              ],
+              explanation:
+                '<p>The "Randomized per section" setting is useful for maintaining dynamic surveys by presenting a subset of questions to participants. This enhances the survey experience by reducing redundancy and keeping the process engaging, especially for repetitive topics across different sections. However, this option does not apply to Live Session surveys, which require uniformity to ensure clarity and consistency in live settings.</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-11-23_01-42-24-b77950fb16daa421b527a14a8a4fd57f.png">',
+              answers: [
+                '<p>It randomizes which registered participant can take a survey</p>',
+                '<p>The survey will only display a randomly chosen question from each section of the survey. Users can configure the number of random questions per section of the survey. This mode is ignored for Live Session surveys</p>',
+                '<p>Users can configure the number of random participants per section of your survey. This mode is default for Live Session surveys</p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              'What happens if "Randomized per section" is chosen as the "Question Selection" option?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497471,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>Which of the following options is <strong>NOT</strong> available when conducting a <strong>Live Session</strong> in Odoo?</p>',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>In a </em><strong><em>Live Session</em></strong><em>, Odoo allows you to:</em></p><ul><li><p><em>Display questions one at a time</em></p></li><li><p><em>Control when participants can answer</em></p></li><li><p><em>Set </em><strong><em>a time limit per question</em></strong><em> (countdown timer)</em></p></li><li><p><em>Use scoring, including \u201cscoring without correct answers\u201d</em></p></li><li><p><em>Include Matrix-type questions</em></p></li></ul><p><em>However, a </em><strong><em>global survey time limit</em></strong><em> (a time limit for the entire survey) is </em><strong><em>NOT</em></strong><em> available in Live Session mode.</em></p><p><em>A global time limit is only available when the survey type is </em><strong><em>Custom</em></strong><em>, not in Live Sessions.</em></p><p><em>Therefore:</em></p><p><em>\u2714 You can time individual questions<br>\u2718 You cannot time the entire survey in Live Session</em></p>',
+                '<p><em>In Live Sessions, you can run surveys where participants receive points even without correct/incorrect answer validation. This is typically used for polls, icebreakers, and non-graded interactions.</em></p>',
+                '<p><em>Matrix question types work normally in Live Sessions. They display row/column choices and participants select answers in real time. There is no restriction preventing them from being used.</em></p>'
+              ],
+              answers: [
+                '<p><strong>Survey time limit</strong></p>',
+                '<p><strong>Scoring without Answers</strong></p>',
+                '<p><strong>Matrix Questions</strong></p>'
+              ]
+            },
+            correct_response: ['a'],
+            section: 'Survey',
+            question_plain:
+              'Which of the following options is NOT available when conducting a Live Session in Odoo?',
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 138580573,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                "<p>What are the available methods for displaying progress in the 'Options' tab of a survey form?</p>",
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                "<p><em>This is not correct because while it combines a percentage and a visual bar, this combination is not available in Odoo's current survey progress settings.</em></p>",
+                '<p><em>This is the correct answer because Odoo allows survey creators to display progress by showing the percentage of questions left along with a numeric representation, such as "2 out of 5 questions." This dual format ensures clarity for participants.</em></p>',
+                '<p><em>This is not correct because Odoo does not combine a graphical bar with numeric values for survey progress.</em></p>'
+              ],
+              explanation:
+                "<p>This question tests knowledge of how survey progress can be displayed to participants in Odoo. Displaying progress helps reduce survey abandonment by making it clear how much of the survey remains. The correct option, 'Percentage left' and 'Number,' reflects Odoo's emphasis on clarity and simplicity in guiding participants through surveys.</p>\n<img src=\"https://img-c.udemycdn.com/redactor/raw/practice_test_question_explanation/2025-12-11_22-22-45-7eec0394f45b4913f2f42061ca56cac7.png\">",
+              answers: [
+                "<p>'Percentage left' and 'Progress bar'</p>",
+                "<p>'Percentage left' and 'Number'</p>",
+                "<p>'Progress bar' and 'Number'</p>"
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              "What are the available methods for displaying progress in the 'Options' tab of a survey form?",
+            related_lectures: []
+          },
+          {
+            _class: 'assessment',
+            id: 137497473,
+            assessment_type: 'multiple-choice',
+            prompt: {
+              question:
+                '<p>In Odoo Surveys, what does the <strong>star icon</strong> displayed next to a survey question mean?</p>\n<img src="https://img-c.udemycdn.com/redactor/raw/practice_test_question/2025-11-23_01-59-28-76566101e6cb9f70e4d9925881fc39ea.png">',
+              relatedLectureIds: [],
+              links: [],
+              feedbacks: [
+                '<p><em>Conditional visibility (showing questions only if previous answers match rules) uses </em><strong><em>conditional logic settings</em></strong><em>, NOT the star icon.</em></p><p><br></p><p><em>The star is unrelated to question visibility.</em></p>',
+                '<p><em>In Odoo\u2019s Survey app, the </em><strong><em>star icon</em></strong><em> (\u2605) marks:</em></p><p><em>\u27a1\ufe0f </em><strong><em>Questions that contain at least one answer option configured to generate a lead in the CRM app.</em></strong></p><p><em>This means:</em></p><ul><li><p><em>The question itself is not required to always generate a lead</em></p></li><li><p><em>Only </em><strong><em>one or more</em></strong><em> answers inside it are flagged for lead creation</em></p></li><li><p><em>Odoo shows the star to help survey designers quickly identify which questions contribute to lead generation workflows</em></p></li></ul><p><em>This is the official behavior documented in Odoo\u2019s Survey \u2192 Lead Generation features.</em></p>',
+                '<p><em>If every answer generated a lead, the star icon would still look </em><strong><em>exactly the same</em></strong><em>, because Odoo only indicates:</em></p><ul><li><p><em>\u201cAt least one answer generates a lead\u201d</em></p></li></ul><p><em>It does not distinguish between one answer or all answers.</em></p>'
+              ],
+              answers: [
+                '<p><strong>The question will only appear if a previous answer triggers it.</strong></p>',
+                '<p><strong>At least one answer in this question is configured to create a lead.</strong></p>',
+                '<p><strong>Every answer in this question automatically creates a lead.</strong></p>'
+              ]
+            },
+            correct_response: ['b'],
+            section: 'Survey',
+            question_plain:
+              'In Odoo Surveys, what does the star icon displayed next to a survey question mean?',
+            related_lectures: []
+          }
+        ]
+      }
+
+      let correct = new Set()
+      let incorrect = new Set()
+      let totalNumberOfQuestions = 0
+
+      // Lấy thông tin từ quizData (xử lý trường hợp thiếu field)
+      const quizTitle =
+        (typeof quizData !== 'undefined' && quizData.quiz_title) || 'Odoo Quiz'
+      const quizDescription =
+        (typeof quizData !== 'undefined' && quizData.quiz_description) ||
+        'Test your knowledge.'
+      const rawQuestions =
+        typeof quizData !== 'undefined' && quizData.questions
+          ? quizData.questions
+          : []
+      const passPercent =
+        (typeof quizData !== 'undefined' && quizData.pass_percent) || 0
+
+      const modalTextElement = document.getElementById('modal-text')
+      const quizContainerElement = document.getElementById('quiz-container')
+      const dialog = document.querySelector('dialog')
+      const closeButton = document.getElementById('close-modal-btn')
+      const quizTitleElement = document.getElementById('quiz-title')
+      const quizDescriptionElement = document.getElementById('quiz-description')
+      const STORAGE_KEY = 'odoo_quiz_progress_v1' // Key lưu vào trình duyệt
+
+      // Map để lưu giải thích phục vụ Modal
+      const questionMap = new Map()
+
+      // === HÀM CHÍNH ===
+      function main() {
+        // 1. Cập nhật Meta
+        document.title = quizTitle
+        if (quizTitleElement) quizTitleElement.innerHTML = quizTitle
+        if (quizDescriptionElement)
+          quizDescriptionElement.innerHTML = quizDescription
+
+        const passPercentElement = document.getElementById('pass-percent')
+        if (passPercentElement)
+          passPercentElement.innerHTML = passPercent ? `${passPercent}%` : 'N/A'
+
+        totalNumberOfQuestions = rawQuestions.length
+
+        if (closeButton) {
+          closeButton.addEventListener('click', () => dialog.close())
+        }
+
+        // 2. Xử lý dữ liệu câu hỏi (TẮT SHUFFLE ĐỂ ĐỒNG BỘ VỊ TRÍ NẾU CẦN)
+        // Nếu bạn muốn random mỗi lần F5 thì mở lại đoạn này, nhưng lưu ý thứ tự hiển thị sẽ khác nhau.
+        // Dữ liệu lưu trong localStorage dựa trên ID câu hỏi nên vẫn đúng dù có random.
+        /*
+      for (let i = rawQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rawQuestions[i], rawQuestions[j]] = [rawQuestions[j], rawQuestions[i]];
+      }
+      */
+
+        // 3. Chuẩn bị Map dữ liệu giải thích
+        rawQuestions.forEach((q) => {
+          questionMap.set(q.id.toString(), {
+            explanation: q.prompt?.explanation || '',
+            feedbacks: q.prompt?.feedbacks || []
+          })
+        })
+
+        // 4. Render câu hỏi ra màn hình
+        const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
+        formattedQuestions.forEach((question, idx) => {
+          renderSingleQuestion(question, idx + 1)
+        })
+
+        // 5. KHÔI PHỤC KẾT QUẢ TỪ LOCAL STORAGE
+        restoreSession()
+
+        // 6. Cập nhật điểm số ban đầu
+        updateScore()
+      }
+
+      // === CÁC HÀM XỬ LÝ DATA & RENDER ===
+
+      function formatSingleQuestionData(singleQuizData) {
+        const { prompt, correct_response, id, assessment_type } = singleQuizData
+        const answers = prompt.answers || []
+
+        const formattedAnswers = answers.map((answerText, index) => {
+          const letter = String.fromCharCode(97 + index) // a, b, c...
+          const isCorrect = correct_response.includes(letter)
+          return {
+            text: answerText,
+            value: letter, // QUAN TRỌNG: Lưu giá trị a,b,c để đối chiếu
+            isCorrect: isCorrect
+          }
+        })
+
+        return {
+          id: id,
+          assessment_type: assessment_type,
+          question: prompt.question,
+          answers: formattedAnswers,
+          explanation: prompt?.explanation || '',
+          feedbacks: prompt.feedbacks
+        }
+      }
+
+      const renderSingleQuestion = (singleQuestionData, rootIndex) => {
+        const { id, answers, question, assessment_type } = singleQuestionData
+        const inputType =
+          assessment_type === 'multi-select' ? 'checkbox' : 'radio'
+        const inputName = `answer_${id}`
+
+        const optionsHTML = answers
+          .map((option, index) => {
+            const optionId = `${id}_${index}`
+            return `
+          <div class="question-lable">
+            <input type="${inputType}"
+                   id="${optionId}"
+                   name="${inputName}"
+                   value="${option.value}" 
+                   data-is-correct="${option.isCorrect}" />
+            <label for="${optionId}">${option.text}</label>
+          </div>
+        `
+          })
+          .join('')
+
+        const container = document.createElement('div')
+        container.innerHTML = `
+        <form data-question-id="${id}"
+              id="form_${id}"
+              class="single-question-container"
+              onsubmit="submitButtonListener(event)">
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <p style="font-weight:600">Question ${rootIndex}:</p>
+            <button type="button"
+                    class="explanation-btn"
+                    data-question-id="${id}"
+                    onclick="renderExplanation(event)">
+              View Explanation
+            </button>
+          </div>
+
+          <div style="margin-bottom:8px;line-height:1.5">${question}</div>
+
+          <div class="options-container">
+            ${optionsHTML}
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="submit" class="button submit-btn">Submit</button>
+          </div>
+        </form>
+      `
+        quizContainerElement.appendChild(container)
+      }
+
+      // === XỬ LÝ SỰ KIỆN SUBMIT & TÍNH ĐIỂM ===
+
+      const submitButtonListener = (e) => {
+        e.preventDefault()
+        const form = e.target
+        const questionId = form.dataset.questionId
+
+        // Gọi hàm xử lý logic kiểm tra
+        const result = processSubmission(form, questionId)
+
+        if (result.hasSelection) {
+          // Lưu vào localStorage nếu người dùng đã chọn
+          saveProgress(questionId, Array.from(result.userSelectedValues))
+        } else {
+          alert('Vui lòng chọn ít nhất một đáp án!')
+        }
+      }
+
+      // Hàm tách biệt logic kiểm tra để dùng chung cho cả lúc Submit và lúc Load lại trang
+      function processSubmission(form, questionId) {
+        const inputs = form.querySelectorAll(
+          'input[type="radio"], input[type="checkbox"]'
+        )
+        const userSelectedValues = new Set()
+        const actualCorrectValues = new Set()
+        let hasSelection = false
+
+        inputs.forEach((input) => {
+          if (input.checked) {
+            userSelectedValues.add(input.value)
+            hasSelection = true
+          }
+          if (input.dataset.isCorrect === 'true') {
+            actualCorrectValues.add(input.value)
+          }
+        })
+
+        if (!hasSelection) return { hasSelection: false }
+
+        // So sánh 2 tập hợp đáp án
+        const isFullyCorrect = setsAreEqual(
+          userSelectedValues,
+          actualCorrectValues
+        )
+
+        // Cập nhật biến toàn cục
+        if (isFullyCorrect) {
+          correct.add(questionId)
+          incorrect.delete(questionId)
+        } else {
+          incorrect.add(questionId)
+          correct.delete(questionId)
+        }
+
+        updateScore()
+
+        // Hiển thị UI (Xanh/Đỏ)
+        form.querySelectorAll('.question-lable').forEach((labelContainer) => {
+          const input = labelContainer.querySelector('input')
+          labelContainer.classList.remove('correct-answer', 'incorrect-answer')
+
+          // Disable input sau khi nộp để tránh sửa
+          // input.disabled = true;
+          // form.querySelector('.submit-btn').disabled = true;
+
+          if (input.dataset.isCorrect === 'true') {
+            labelContainer.classList.add('correct-answer')
+          } else if (input.checked && input.dataset.isCorrect === 'false') {
+            labelContainer.classList.add('incorrect-answer')
+          }
+        })
+
+        return { hasSelection: true, userSelectedValues }
+      }
+
+      // === CÁC HÀM TIỆN ÍCH (HELPER) ===
+
+      function updateScore() {
+        const currentPercentageElement =
+          document.getElementById('current-score')
+        const correctAnswerElement = document.getElementById('correct-answers')
+        const wrongAnswerElement = document.getElementById('wrong-answers')
+
+        if (correctAnswerElement) correctAnswerElement.innerHTML = correct.size
+        if (wrongAnswerElement) wrongAnswerElement.innerHTML = incorrect.size
+
+        if (totalNumberOfQuestions > 0 && currentPercentageElement) {
+          const score = Number(
+            (correct.size / totalNumberOfQuestions) * 100
+          ).toFixed(0)
+          currentPercentageElement.innerHTML = score + '%'
+        }
+      }
+
+      function setsAreEqual(setA, setB) {
+        if (setA.size !== setB.size) return false
+        for (const item of setA) {
+          if (!setB.has(item)) return false
+        }
+        return true
+      }
+
+      function renderExplanation(ev) {
+        const questionId = ev.target.dataset.questionId
+        const data = questionMap.get(questionId)
+        modalTextElement.innerHTML = ''
+        if (!data) {
+          modalTextElement.innerHTML = '<p>Không có giải thích.</p>'
+        } else {
+          if (data.explanation) modalTextElement.innerHTML += data.explanation
+          if (data.feedbacks)
+            data.feedbacks.forEach((fb) => (modalTextElement.innerHTML += fb))
+        }
+        dialog.showModal()
+      }
+
+      // === LOCAL STORAGE LOGIC ===
+
+      function saveProgress(questionId, selectedValues) {
+        // Lấy dữ liệu cũ
+        let progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+        // Cập nhật câu hỏi hiện tại
+        progress[questionId] = selectedValues
+        // Lưu lại
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+      }
+
+      function restoreSession() {
+        const progress = JSON.parse(localStorage.getItem(STORAGE_KEY))
+        if (!progress) return
+
+        // Duyệt qua từng câu hỏi đã lưu
+        for (const [qId, values] of Object.entries(progress)) {
+          const form = document.getElementById(`form_${qId}`)
+          if (form) {
+            // Tích lại các ô input
+            const inputs = form.querySelectorAll('input')
+            let hasChecked = false
+            inputs.forEach((input) => {
+              if (values.includes(input.value)) {
+                input.checked = true
+                hasChecked = true
+              }
+            })
+
+            // Nếu có tích, chạy lại logic kiểm tra để hiện màu xanh/đỏ và tính điểm
+            if (hasChecked) {
+              processSubmission(form, qId)
+            }
+          }
+        }
+      }
+
+      function resetProgress() {
+        if (
+          confirm('Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu?')
+        ) {
+          localStorage.removeItem(STORAGE_KEY)
+          location.reload()
+        }
+      }
+
+      // === CHỨC NĂNG IN ẤN ===
+      function printQuiz(showAnswers) {
+        if (showAnswers) {
+          // CHẾ ĐỘ 1: IN ĐÁP ÁN (KEY)
+          // Thêm class để CSS kích hoạt hiển thị đáp án đúng
+          document.body.classList.add('show-correct-answers')
+          window.print()
+
+          // Sau khi in xong thì tắt chế độ hiện đáp án
+          setTimeout(() => {
+            document.body.classList.remove('show-correct-answers')
+          }, 500)
+        } else {
+          // CHẾ ĐỘ 2: IN ĐỀ BÀI (BLANK)
+          // Bước A: Lưu trạng thái hiện tại (thực ra đã lưu trong localStorage rồi)
+
+          // Bước B: Xóa sạch giao diện tạm thời để in ra giấy trắng tinh
+          const inputs = document.querySelectorAll('input')
+          const labels = document.querySelectorAll('.question-lable')
+
+          // Bỏ tích toàn bộ input
+          inputs.forEach((input) => (input.checked = false))
+
+          // Xóa màu xanh/đỏ
+          labels.forEach((label) => {
+            label.classList.remove('correct-answer', 'incorrect-answer')
+          })
+
+          // Bước C: Gọi lệnh in
+          window.print()
+
+          // Bước D: Khôi phục lại bài làm sau khi in xong
+          setTimeout(() => {
+            // Gọi lại hàm restoreSession để lấy lại dữ liệu từ LocalStorage
+            // và tô lại màu như cũ cho người dùng tiếp tục làm
+            restoreSession()
+          }, 500)
+        }
+      }
+
+      // Sự kiện đóng modal khi click ra ngoài
+      if (dialog) {
+        dialog.addEventListener('click', (e) => {
+          const rect = dialog.getBoundingClientRect()
+          if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          ) {
+            dialog.close()
+          }
+        })
+      }
+
+      // Nạp thêm style in ấn động để đảm bảo nút in hoạt động tốt
+      const styleSheet = document.createElement('style')
+      styleSheet.innerText = `
+      @media print {
+        body.show-correct-answers input[data-is-correct="true"] + label {
+          border: 2px solid #000 !important;
+          font-weight: bold !important;
+          background-color: #e5e7eb !important;
+        }
+        body.show-correct-answers input[data-is-correct="true"] + label::after {
+          content: "✔";
+          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        }
+      }
+    `
+      document.head.appendChild(styleSheet)
+
+      // CHẠY CHƯƠNG TRÌNH
+      window.onload = main
+    </script>
+  </body>
+
+  <style>
+    .modal-container {
+      padding: 0;
+      border: none;
+      max-width: 700px;
+    }
+
+    #modal-content {
+      position: relative;
+      padding: 20px;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    @media print {
+      /* 1. Reset giao diện về trắng đen cơ bản */
+      body,
+      main,
+      #quiz-container,
+      .single-question-container,
+      #quiz-meta-container {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+
+      /* 2. Ẩn các thành phần không cần thiết khi in */
+      #score-stats-container, 
+      #print-actions, /* Ẩn chính các nút in này đi */
+      .submit-btn, 
+      .explanation-btn, 
+      dialog,
+      .modal-container {
+        display: none !important;
+      }
+
+      /* 3. Định dạng câu hỏi để không bị ngắt trang xấu */
+      .single-question-container {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #ccc !important;
+        margin-bottom: 15px !important;
+        padding-bottom: 10px !important;
+      }
+
+      /* === LOGIC HIỂN THỊ ĐÁP ÁN === */
+
+      /* Mặc định (In đề bài): Ẩn mọi dấu hiệu đúng sai */
+      /* Không làm gì cả, để mặc định như lúc chưa làm */
+
+      /* CHẾ ĐỘ CÓ ĐÁP ÁN: Chỉ kích hoạt khi body có class 'show-correct-answers' */
+      body.show-correct-answers input[data-is-correct='true'] + label {
+        border: 2px solid #000 !important; /* Đóng khung đậm */
+        font-weight: bold !important;
+        background-color: #e5e7eb !important; /* Nền xám nhẹ */
+        position: relative;
+        padding-right: 30px;
+      }
+
+      /* Thêm dấu tích (✓) vào đáp án đúng để dễ nhìn hơn */
+      body.show-correct-answers input[data-is-correct='true'] + label::after {
+        content: '✔';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        font-weight: bold;
+      }
+    }
+  </style>
+</html>
