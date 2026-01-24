@@ -336,6 +336,14 @@
         >
           🔄 Làm lại từ đầu
         </button>
+        <button
+            type="button"
+            class="button"
+            style="background-color: #8b5cf6"
+            onclick="randomizeQuestions()"
+        >
+            🔀 Xáo trộn câu hỏi
+        </button>
       </div>
       <section id="quiz-meta-container">
         <h1 id="quiz-title"></h1>
@@ -2384,8 +2392,38 @@
         if (
           confirm('Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu?')
         ) {
-          localStorage.removeItem(STORAGE_KEY)
-          location.reload()
+          const progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+          const questionIds = quizData.questions.map(q => q.id.toString());
+          questionIds.forEach(id => {
+            delete progress[id];
+          });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+          location.reload();
+        }
+      }
+
+      function randomizeQuestions() {
+        if (
+            confirm('Bạn có chắc muốn xáo trộn thứ tự câu hỏi? Mọi tiến trình chưa lưu sẽ bị mất.')
+        ) {
+            // 1. Shuffle the questions
+            for (let i = rawQuestions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [rawQuestions[i], rawQuestions[j]] = [rawQuestions[j], rawQuestions[i]];
+            }
+
+            // 2. Clear the current question display
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.innerHTML = '';
+
+            // 3. Re-render the questions
+            const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
+            formattedQuestions.forEach((question, idx) => {
+                renderSingleQuestion(question, idx + 1)
+            })
+
+            // 4. Restore the session to check the answers again
+            restoreSession();
         }
       }
 
