@@ -337,12 +337,12 @@
           🔄 Làm lại từ đầu
         </button>
         <button
-            type="button"
-            class="button"
-            style="background-color: #8b5cf6"
-            onclick="randomizeQuestions()"
+          type="button"
+          class="button"
+          style="background-color: #8b5cf6"
+          onclick="randomizeQuestions()"
         >
-            🔀 Xáo trộn câu hỏi
+          🔀 Xáo trộn câu hỏi
         </button>
       </div>
       <section id="quiz-meta-container">
@@ -1975,38 +1975,43 @@
         if (
           confirm('Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu?')
         ) {
-          const progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-          const questionIds = quizData.questions.map(q => q.id.toString());
-          questionIds.forEach(id => {
-            delete progress[id];
-          });
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-          location.reload();
+          const progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+          const questionIds = quizData.questions.map((q) => q.id.toString())
+          questionIds.forEach((id) => {
+            delete progress[id]
+          })
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+          location.reload()
         }
       }
 
       function randomizeQuestions() {
         if (
-            confirm('Bạn có chắc muốn xáo trộn thứ tự câu hỏi? Mọi tiến trình chưa lưu sẽ bị mất.')
+          confirm(
+            'Bạn có chắc muốn xáo trộn thứ tự câu hỏi? Mọi tiến trình chưa lưu sẽ bị mất.'
+          )
         ) {
-            // 1. Shuffle the questions
-            for (let i = rawQuestions.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [rawQuestions[i], rawQuestions[j]] = [rawQuestions[j], rawQuestions[i]];
-            }
+          // 1. Shuffle the questions
+          for (let i = rawQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[rawQuestions[i], rawQuestions[j]] = [
+              rawQuestions[j],
+              rawQuestions[i]
+            ]
+          }
 
-            // 2. Clear the current question display
-            const quizContainer = document.getElementById('quiz-container');
-            quizContainer.innerHTML = '';
+          // 2. Clear the current question display
+          const quizContainer = document.getElementById('quiz-container')
+          quizContainer.innerHTML = ''
 
-            // 3. Re-render the questions
-            const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
-            formattedQuestions.forEach((question, idx) => {
-                renderSingleQuestion(question, idx + 1)
-            })
+          // 3. Re-render the questions
+          const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
+          formattedQuestions.forEach((question, idx) => {
+            renderSingleQuestion(question, idx + 1)
+          })
 
-            // 4. Restore the session to check the answers again
-            restoreSession();
+          // 4. Restore the session to check the answers again
+          restoreSession()
         }
       }
 
@@ -2097,6 +2102,21 @@
     #modal-content {
       position: relative;
       padding: 20px;
+    }
+
+    #modal-content img {
+      max-width: 100% !important;
+      height: auto !important;
+      display: block;
+      margin: 10px auto;
+      border-radius: 4px;
+    }
+
+    .single-question-container img {
+      max-width: 100% !important;
+      height: auto !important;
+      display: block;
+      margin: 10px 0;
     }
 
     .modal-close-btn {
