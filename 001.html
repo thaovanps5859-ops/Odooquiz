@@ -2,376 +2,642 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz</title>
+    <title>Odoo Quiz Practice Mode</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
     <style>
-      * {
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          Roboto,
-          Oxygen,
-          Ubuntu,
-          Cantarell,
-          'Open Sans',
-          'Helvetica Neue',
-          sans-serif;
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-size: 16px;
-      }
-
-      main {
-        padding-top: 48px;
-      }
-
       :root {
-        --large-device-width: 850px;
-        --primary-color: #0f172a;
-        --secondary-color: #020617;
-        --primary-text-color: #c7d1dd;
-        --secondary-text-color: #061602;
-        --success-background: hsl(159, 82%, 24%);
-        --success-foreground: hsl(164, 86%, 16%);
-        --success: hsl(160, 84%, 39%);
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --info-background: hsl(218, 81%, 8%);
-        --info-foreground: hsl(217, 91%, 85%);
-        --border-color: #d1d7dc;
-        --check-box-size: 20px;
-        /* control the size */
-        --check-box-color: var(--info-foreground);
-        /* the active color */
+        --odoo-purple: #714b67;
+        --odoo-purple-hover: #5d3d54;
+        --odoo-teal: #00a09d;
+        --text-main: #212529;
+        --text-light: #666;
+        --bg-color: #f9fafb;
+        --card-bg: #ffffff;
+        --answer-bg: #f8f9fa;
+        --answer-hover: #e9ecef;
+        --answer-border: #dee2e6;
+        --selected-bg: #f4eff2;
+        --selected-border: #714b67;
+        --success-color: #28a745;
+        --success-bg: #d4edda;
+        --danger-color: #dc3545;
+        --danger-bg: #f8d7da;
+        --max-width: 800px; /* Thu hẹp chiều rộng để dễ đọc hơn */
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+        --shadow-md:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       body {
-        position: relative;
-        background-color: #020617;
-        color: var(--primary-text-color);
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        padding-top: 60px;
       }
 
+      /* --- STICKY SCORE HEADER --- */
       #score-stats-container {
         position: fixed;
-        z-index: 10;
         top: 0;
-        height: 40px;
+        left: 0;
         width: 100%;
-        background-color: var(--info-background);
-
-        padding: 0px 16px;
-        color: var(--info-foreground);
-        font-weight: 600;
+        height: 60px;
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--answer-border);
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
+        gap: 40px;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+        font-size: 15px;
+        font-weight: 500;
       }
-
-      #quiz-container {
-        border-radius: 8px;
-        display: flex;
-        gap: 16px;
-        flex-direction: column;
-      }
-
-      /* === Base Styles for both Radio and Checkbox === */
-      input[type='radio'],
-      input[type='checkbox'] {
-        height: var(--check-box-size);
-        aspect-ratio: 1;
-        border: calc(var(--check-box-size) / 8) solid #939393;
-        padding: calc(var(--check-box-size) / 8);
-        background: radial-gradient(
-            farthest-side,
-            var(--check-box-color) 94%,
-            #0000
-          )
-          50%/0 0 no-repeat content-box;
-        outline-offset: calc(var(--check-box-size) / 10);
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        cursor: pointer;
-        font-size: inherit;
-        transition: 0.3s;
-      }
-
-      input[type='radio']:checked,
-      input[type='checkbox']:checked {
-        border-color: var(--check-box-color);
-        background-size: 100% 100%;
-      }
-
-      input[type='radio']:disabled,
-      input[type='checkbox']:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      /* === Specific Styles === */
-      input[type='radio'] {
-        border-radius: 50%;
-        /* Makes it a circle */
-      }
-
-      input[type='checkbox'] {
-        border-radius: 4px;
-        /* Makes it a square */
-      }
-
-      label {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-        padding: 4px 6px;
-        border-radius: 4px;
-      }
-
-      @media (max-width: 767px) {
-        input[type='radio'],
-        input[type='checkbox'],
-        label {
-          cursor: default;
-        }
-
-        #quiz-container {
-          margin-left: 8px;
-          margin-right: 8px;
-        }
-      }
-
-      /* PC (Desktop devices) */
-      @media (min-width: 768px) {
-        body {
-          display: flex;
-          justify-content: center;
-        }
-
-        main {
-          max-width: var(--large-device-width);
-        }
-
-        #score-stats-container {
-          max-width: var(--large-device-width);
-        }
-
-        dialog {
-          max-width: var(--large-device-width);
-        }
-      }
-
-      @media print {
-        input[type='radio'],
-        input[type='checkbox'] {
-          background: none !important;
-          border-color: #939393 !important;
-        }
-
-        input[type='radio']:checked,
-        input[type='checkbox']:checked {
-          border-color: #939393 !important;
-        }
-      }
-
-      .question-lable {
+      #score-stats-container div {
         display: flex;
         align-items: center;
         gap: 8px;
       }
-
-      button {
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        outline: none;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-      }
-
-      .button {
-        background-color: var(--success-background);
-        border: none;
-        color: #f4f5f7;
-        opacity: 0.8;
+      #score-stats-container span {
+        font-weight: 800;
         font-size: 18px;
-        flex-grow: 1;
-        padding: 8px 16px;
-        border-radius: 8px;
+      }
+      #current-score {
+        color: var(--odoo-purple);
+      }
+      #correct-answers {
+        color: var(--success-color);
+      }
+      #wrong-answers {
+        color: var(--danger-color);
       }
 
-      .button:hover {
-        opacity: 1;
+      /* --- MAIN LAYOUT --- */
+      main {
+        width: 100%;
+        max-width: var(--max-width);
+        padding: 40px 20px 120px 20px;
       }
 
-      .button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .explanation-btn {
-        border: none;
-        color: var(--success);
-        background-color: transparent;
-      }
-
-      .single-question-container {
-        background-color: var(--primary-color);
+      /* --- TOP ACTIONS --- */
+      #top-actions {
         display: flex;
-        flex-direction: column;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+      }
+      .action-btn {
+        display: flex;
+        align-items: center;
         gap: 8px;
-        padding: 16px;
-        border-radius: 8px;
+        background-color: #fff;
+        border: 1px solid #d1d5db;
+        color: #374151;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+      }
+      .action-btn:hover {
+        background-color: #f3f4f6;
+        transform: translateY(-1px);
+      }
+      .action-btn.primary {
+        background-color: var(--odoo-purple);
+        color: white;
+        border-color: var(--odoo-purple);
+      }
+      .action-btn.primary:hover {
+        background-color: var(--odoo-purple-hover);
+      }
+      .action-btn.danger {
+        color: #dc2626;
+        border-color: #fee2e2;
+        background-color: #fef2f2;
+      }
+      .action-btn.danger:hover {
+        background-color: #fee2e2;
+        border-color: #fecaca;
       }
 
-      #modal-content {
-        padding: 16px;
-        line-height: 24px;
+      /* Header Info */
+      #quiz-meta-container {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      #quiz-title {
+        font-size: 30px;
+        font-weight: 800;
+        color: #000;
+        margin: 0 0 10px 0;
+        letter-spacing: -0.5px;
+      }
+      #quiz-description {
+        font-size: 16px;
+        color: var(--text-light);
+        line-height: 1.5;
       }
 
-      dialog::backdrop {
-        background: rgba(0, 0, 0, 0.5);
+      /* --- QUESTION CARD --- */
+      .single-question-container {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--answer-border);
+        box-shadow: var(--shadow-md);
+        padding: 30px;
+        margin-bottom: 30px;
+        page-break-inside: avoid;
       }
 
-      dialog {
-        position: fixed;
-        border: 1px solid var(--border-color);
-        background-color: var(--primary-color);
-        color: rgb(240, 241, 248);
-        padding: 16px;
-        border-radius: 8px;
-        width: 80vw;
-        max-height: 80vh;
-        overflow: auto;
-        top: 50%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-50%);
+      .single-question-container p {
+        margin-top: 0;
       }
 
-      #close-modal-btn {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        padding: 2px 8px;
-        border-radius: 2px;
+      /* Question Header */
+      .single-question-container > div:first-child {
+        margin-bottom: 20px !important;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 15px;
+      }
+      .single-question-container p[style*='font-weight:600'] {
+        color: var(--odoo-purple);
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        margin: 0;
+      }
+
+      /* Explanation Button */
+      .explanation-btn {
+        color: var(--odoo-teal) !important;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background 0.2s;
         border: none;
-        background-color: var(--danger);
+        background: none;
+      }
+      .explanation-btn:hover {
+        background-color: #f0fdfd;
       }
 
-      .correct-answer > label {
-        border: 2px solid var(--success);
-        width: 100%;
+      /* Question Text */
+      .single-question-container > div:nth-child(2) {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 25px !important;
+        line-height: 1.6;
       }
 
-      .incorrect-answer > label {
-        border: 2px solid var(--danger);
-        width: 100%;
+      /* --- FIXED IMAGE CSS (WEB) --- */
+      .single-question-container img {
+        display: block;
+        max-width: 100%; /* Không bao giờ tràn khung */
+        max-height: 400px; /* Giới hạn chiều cao để không chiếm hết màn hình */
+        object-fit: contain; /* Giữ tỷ lệ ảnh */
+        margin: 20px auto; /* Căn giữa ảnh */
+        border: 1px solid #eee;
+        border-radius: 8px;
       }
 
+      /* --- ANSWER OPTIONS --- */
       .options-container {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 10px;
       }
 
-      #quiz-meta-container {
+      /* Pill Style */
+      .question-lable {
+        display: flex;
+        align-items: center;
+        background-color: var(--answer-bg);
+        border: 1px solid var(--answer-border);
+        border-radius: 50px; /* Pill style */
+        padding: 12px 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .question-lable:hover {
+        background-color: var(--answer-hover);
+        border-color: #ccc;
+      }
+
+      /* Checked State (Logic handled by CSS :checked) */
+      .question-lable:has(input:checked) {
+        background-color: #fdf4ff;
+        border-color: var(--odoo-purple);
+        box-shadow: 0 0 0 1px var(--odoo-purple) inset;
+      }
+
+      /* Input styling */
+      .question-lable input {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #999;
+        border-radius: 50%;
+        outline: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-right: 15px;
+        background: white;
+      }
+      .question-lable input[type='checkbox'] {
+        border-radius: 4px;
+      }
+
+      .question-lable input:checked {
+        position: relative;
+        border-color: var(--odoo-purple);
+        background-color: white;
+      }
+      .question-lable input:checked::after {
+        content: '';
+        display: block;
+        width: 10px;
+        height: 10px;
+        background-color: var(--odoo-purple);
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .question-lable input[type='checkbox']:checked::after {
+        border-radius: 1px;
+      }
+
+      .question-lable label {
+        font-size: 15px;
+        color: var(--text-main);
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+        line-height: 1.4;
+      }
+
+      /* Submit Button */
+      .submit-btn {
+        background-color: var(--odoo-purple);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 10px 24px;
+        border-radius: 6px;
+        border: none;
+        margin-top: 10px;
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+      .submit-btn:hover {
+        background-color: var(--odoo-purple-hover);
+        opacity: 1;
+      }
+
+      /* --- FEEDBACK COLORS --- */
+      .correct-answer {
+        border-color: var(--success-color) !important;
+        background-color: var(--success-bg) !important;
+        color: #0f5132;
+      }
+      .correct-answer input:checked {
+        border-color: var(--success-color);
+      }
+      .correct-answer input:checked::after {
+        background-color: var(--success-color);
+      }
+
+      .incorrect-answer {
+        border-color: var(--danger-color) !important;
+        background-color: var(--danger-bg) !important;
+        color: #842029;
+        opacity: 1 !important;
+      }
+      .incorrect-answer input:checked {
+        border-color: var(--danger-color);
+      }
+      .incorrect-answer input:checked::after {
+        background-color: var(--danger-color);
+      }
+
+      /* --- MODAL --- */
+      dialog {
+        border: none;
+        border-radius: 12px;
+        padding: 0;
+        width: 600px;
+        max-width: 90vw;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        font-family: 'Inter', sans-serif;
+      }
+      #modal-content {
+        padding: 30px;
+        line-height: 1.6;
+        color: #374151;
+      }
+      #modal-content img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 15px 0;
         border-radius: 8px;
-        background-color: var(--primary-color);
-        margin-bottom: 12px;
-        padding: 8px;
+        border: 1px solid #e5e7eb;
+      }
+      .modal-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #f3f4f6;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+        cursor: pointer;
+        color: #555;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-close-btn:hover {
+        background: #e5e7eb;
+        color: #000;
       }
 
-      #quiz-title {
-        text-align: center;
-        font-size: 24px;
-        margin-bottom: 8px;
+      /* ============================= */
+      /* FIXED PRINT STYLES (A4 Standard) */
+      /* ============================= */
+      #print-area {
+        display: none;
       }
 
-      #quiz-description {
-        line-height: 1.5;
-        padding: 2px 6px;
+      @media print {
+        @page {
+          size: A4;
+          margin: 1.5cm 1.5cm;
+        }
+
+        body {
+          visibility: hidden;
+          background: white;
+          font-size: 11pt;
+          color: #000;
+          padding: 0;
+          margin: 0;
+          display: block;
+        }
+
+        /* Hide UI Elements */
+        #score-stats-container,
+        #top-actions,
+        dialog,
+        .submit-btn,
+        .explanation-btn {
+          display: none !important;
+        }
+
+        /* Show Main Content */
+        main {
+          visibility: visible;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          max-width: 100%;
+          padding: 0;
+          margin: 0;
+        }
+
+        #quiz-meta-container {
+          margin-bottom: 20px;
+          border-bottom: 2px solid #000;
+          padding-bottom: 10px;
+        }
+        #quiz-title {
+          font-size: 22pt;
+          text-transform: uppercase;
+          margin-bottom: 5px;
+        }
+
+        /* Question Layout for Print */
+        .single-question-container {
+          box-shadow: none;
+          border: none;
+          border-bottom: 1px solid #ccc;
+          border-radius: 0;
+          padding: 10px 0;
+          margin-bottom: 15px;
+          page-break-inside: avoid;
+        }
+
+        /* Ẩn header câu hỏi cũ (Question X) */
+        .single-question-container > div:first-child {
+          display: none;
+        }
+
+        /* GRID LAYOUT CHO CÂU HỎI IN (Đánh số 1. 2. 3. thẳng hàng) */
+        .single-question-container {
+          display: grid;
+          grid-template-columns: 25px 1fr; /* Cột số và cột nội dung */
+          gap: 10px;
+        }
+
+        .q-text img {
+          display: block;
+          max-width: 100%; /* Không vượt quá khung cha */
+          height: auto; /* Giữ tỷ lệ */
+          margin: 15px 0;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+        }
+
+        /* Số thứ tự câu hỏi (Sử dụng CSS counter) */
+        main {
+          counter-reset: q-counter;
+        }
+        .single-question-container::before {
+          counter-increment: q-counter;
+          content: counter(q-counter) '.';
+          font-weight: bold;
+          font-size: 12pt;
+        }
+
+        /* Nội dung câu hỏi */
+        .single-question-container > div:nth-child(2) {
+          font-size: 11pt;
+          margin-bottom: 10px !important;
+          color: #000;
+          font-weight: bold;
+        }
+
+        /* FIX ẢNH KHI IN */
+        .single-question-container img {
+          max-width: 60% !important; /* Thu nhỏ ảnh khi in */
+          height: auto;
+          display: block;
+          margin: 10px 0;
+          border: 1px solid #ccc;
+        }
+
+        /* Options Print Style */
+        .options-container {
+          grid-column: 2; /* Nằm ở cột nội dung */
+          gap: 4px;
+          margin-top: 5px;
+        }
+
+        .question-lable {
+          background: none !important;
+          border: 1px solid transparent;
+          padding: 2px 0;
+          border-radius: 0;
+          min-height: auto;
+          align-items: flex-start;
+          box-shadow: none !important;
+        }
+
+        /* Thay input bằng ký tự A, B, C */
+        .question-lable input {
+          display: none;
+        }
+        .question-lable {
+          counter-reset: opt-counter;
+        }
+
+        /* Giả lập A. B. C. */
+        .options-container .question-lable::before {
+          /* Kỹ thuật CSS này hơi phức tạp vì cần đếm A,B,C. 
+                Cách đơn giản hơn là dùng JS render class A, B, C hoặc dùng list-style.
+                Nhưng ở đây ta dùng ::before của JS đã render bên dưới.
+             */
+          /* Fallback nếu không có JS xử lý in */
+          content: '○ ';
+          font-size: 12pt;
+          font-weight: bold;
+          margin-right: 8px;
+        }
+
+        /* BORDER CHO ĐÁP ÁN ĐÚNG (Khi in Key) */
+        body.show-correct-answers
+          .question-lable:has(input[data-is-correct='true']) {
+          border: 2px solid #000 !important;
+          background-color: #f0f0f0 !important;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-weight: bold;
+        }
+
+        body.show-correct-answers
+          .question-lable:has(input[data-is-correct='true'])::after {
+          content: '✓';
+          font-size: 9pt;
+          font-weight: bold;
+          margin-left: 5px;
+        }
       }
     </style>
   </head>
 
   <body onload="main()">
-    <main>
-      <div
-        id="print-actions"
-        style="
-          margin-bottom: 20px;
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-          flex-wrap: wrap;
-        "
-      >
-        <button
-          type="button"
-          class="button"
-          style="background-color: #3b82f6"
-          onclick="printQuiz(false)"
-        >
-          🖨️ In đề bài
-        </button>
-        <button
-          type="button"
-          class="button"
-          style="background-color: #ef4444"
-          onclick="printQuiz(true)"
-        >
-          🖨️ In đáp án
-        </button>
-        <button
-          type="button"
-          class="button"
-          style="background-color: #f59e0b"
-          onclick="resetProgress()"
-        >
-          🔄 Làm lại từ đầu
-        </button>
-        <button
-          type="button"
-          class="button"
-          style="background-color: #8b5cf6"
-          onclick="randomizeQuestions()"
-        >
-          🔀 Xáo trộn câu hỏi
-        </button>
+    <div id="score-stats-container">
+      <div>
+        <i class="fa-solid fa-chart-pie"></i> Score:
+        <span id="current-score">0%</span>
       </div>
+      <div>
+        <i class="fa-solid fa-circle-check"></i> Correct:
+        <span id="correct-answers">0</span>
+      </div>
+      <div>
+        <i class="fa-solid fa-circle-xmark"></i> Incorrect:
+        <span id="wrong-answers">0</span>
+      </div>
+    </div>
+
+    <main>
       <section id="quiz-meta-container">
         <h1 id="quiz-title"></h1>
         <p id="quiz-description"></p>
       </section>
-      <section id="score-stats-container">
-        <div id="score-card">
-          Score: <span id="current-score">999</span>
-          <!-- <span id="pass-percent">999%</span> -->
-        </div>
-        <div>Correct: <span id="correct-answers">999</span></div>
-        <div>Incorrect: <span id="wrong-answers">999</span></div>
-      </section>
+
+      <div id="top-actions">
+        <button class="action-btn" onclick="printQuiz(false)">
+          <i class="fa-solid fa-print"></i> Print Questions
+        </button>
+        <button class="action-btn" onclick="printQuiz(true)">
+          <i class="fa-solid fa-key"></i> Print Key
+        </button>
+        <button class="action-btn danger" onclick="resetProgress()">
+          <i class="fa-solid fa-rotate-right"></i> Restart
+        </button>
+        <button class="action-btn primary" onclick="randomizeQuestions()">
+          <i class="fa-solid fa-shuffle"></i> Shuffle
+        </button>
+      </div>
 
       <section id="quiz-container"></section>
 
       <dialog id="modal" class="modal-container">
         <div id="modal-content">
-          <button type="button" class="modal-close-btn" aria-label="Close">
+          <button
+            type="button"
+            class="modal-close-btn"
+            id="close-modal-btn"
+            aria-label="Close"
+          >
             ✕
           </button>
-
-          <p id="modal-text"></p>
+          <div
+            style="
+              font-size: 18px;
+              font-weight: 700;
+              color: var(--odoo-purple);
+              margin-bottom: 15px;
+            "
+          >
+            Explanation
+          </div>
+          <div id="modal-text"></div>
         </div>
       </dialog>
     </main>
 
     <script>
+      // === DỮ LIỆU CÂU HỎI ===
       const quizData = {
         pass_percent: null,
         questions: [
@@ -2079,286 +2345,210 @@
         ]
       }
 
+      // --- CONFIG & STATE ---
       let correct = new Set()
       let incorrect = new Set()
-      let totalNumberOfQuestions = 0
-
-      // Lấy thông tin từ quizData (xử lý trường hợp thiếu field)
-      const quizTitle =
-        (typeof quizData !== 'undefined' && quizData.quiz_title) || 'Odoo Quiz'
-      const quizDescription =
-        (typeof quizData !== 'undefined' && quizData.quiz_description) ||
-        'Test your knowledge.'
-      const rawQuestions =
-        typeof quizData !== 'undefined' && quizData.questions
-          ? quizData.questions
-          : []
-      const passPercent =
-        (typeof quizData !== 'undefined' && quizData.pass_percent) || 0
-
-      const modalTextElement = document.getElementById('modal-text')
-      const quizContainerElement = document.getElementById('quiz-container')
-      const dialog = document.querySelector('dialog')
-      const closeButton = document.getElementById('close-modal-btn')
-      const quizTitleElement = document.getElementById('quiz-title')
-      const quizDescriptionElement = document.getElementById('quiz-description')
-      const STORAGE_KEY = 'odoo_quiz_progress_v1' // Key lưu vào trình duyệt
-
-      // Map để lưu giải thích phục vụ Modal
+      let totalQuestions = 0
+      let activeQuestions = []
+      const STORAGE_KEY = 'odoo_practice_v2_progress'
+      const STORAGE_QUESTIONS_KEY = 'odoo_practice_v2_questions'
       const questionMap = new Map()
 
-      // === HÀM CHÍNH ===
+      // --- MAIN ---
       function main() {
-        // 1. Cập nhật Meta
-        document.title = quizTitle
-        if (quizTitleElement) quizTitleElement.innerHTML = quizTitle
-        if (quizDescriptionElement)
-          quizDescriptionElement.innerHTML = quizDescription
+        const savedQuestions = localStorage.getItem(STORAGE_QUESTIONS_KEY)
 
-        const passPercentElement = document.getElementById('pass-percent')
-        if (passPercentElement)
-          passPercentElement.innerHTML = passPercent ? `${passPercent}%` : 'N/A'
-
-        totalNumberOfQuestions = rawQuestions.length
-
-        if (closeButton) {
-          closeButton.addEventListener('click', () => dialog.close())
+        if (savedQuestions) {
+          activeQuestions = JSON.parse(savedQuestions)
+        } else {
+          activeQuestions = quizData.questions ? [...quizData.questions] : []
+          localStorage.setItem(
+            STORAGE_QUESTIONS_KEY,
+            JSON.stringify(activeQuestions)
+          )
         }
 
-        // 2. Xử lý dữ liệu câu hỏi (TẮT SHUFFLE ĐỂ ĐỒNG BỘ VỊ TRÍ NẾU CẦN)
-        // Nếu bạn muốn random mỗi lần F5 thì mở lại đoạn này, nhưng lưu ý thứ tự hiển thị sẽ khác nhau.
-        // Dữ liệu lưu trong localStorage dựa trên ID câu hỏi nên vẫn đúng dù có random.
-        /*
-      for (let i = rawQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rawQuestions[i], rawQuestions[j]] = [rawQuestions[j], rawQuestions[i]];
-      }
-      */
+        totalQuestions = activeQuestions.length
 
-        // 3. Chuẩn bị Map dữ liệu giải thích
-        rawQuestions.forEach((q) => {
+        document.getElementById('quiz-title').innerText =
+          quizData.quiz_title || 'Quiz'
+        document.getElementById('quiz-description').innerText =
+          `${totalQuestions} questions loaded.`
+
+        activeQuestions.forEach((q) => {
           questionMap.set(q.id.toString(), {
             explanation: q.prompt?.explanation || '',
             feedbacks: q.prompt?.feedbacks || []
           })
         })
 
-        // 4. Render câu hỏi ra màn hình
-        const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
-        formattedQuestions.forEach((question, idx) => {
-          renderSingleQuestion(question, idx + 1)
-        })
-
-        // 5. KHÔI PHỤC KẾT QUẢ TỪ LOCAL STORAGE
-        restoreSession()
-
-        // 6. Cập nhật điểm số ban đầu
-        updateScore()
-      }
-
-      // === CÁC HÀM XỬ LÝ DATA & RENDER ===
-
-      function formatSingleQuestionData(singleQuizData) {
-        const { prompt, correct_response, id, assessment_type } = singleQuizData
-        const answers = prompt.answers || []
-
-        const formattedAnswers = answers.map((answerText, index) => {
-          const letter = String.fromCharCode(97 + index) // a, b, c...
-          const isCorrect = correct_response.includes(letter)
-          return {
-            text: answerText,
-            value: letter, // QUAN TRỌNG: Lưu giá trị a,b,c để đối chiếu
-            isCorrect: isCorrect
-          }
-        })
-
-        return {
-          id: id,
-          assessment_type: assessment_type,
-          question: prompt.question,
-          answers: formattedAnswers,
-          explanation: prompt?.explanation || '',
-          feedbacks: prompt.feedbacks
-        }
-      }
-
-      const renderSingleQuestion = (singleQuestionData, rootIndex) => {
-        const { id, answers, question, assessment_type } = singleQuestionData
-        const inputType =
-          assessment_type === 'multi-select' ? 'checkbox' : 'radio'
-        const inputName = `answer_${id}`
-
-        const optionsHTML = answers
-          .map((option, index) => {
-            const optionId = `${id}_${index}`
-            return `
-          <div class="question-lable">
-            <input type="${inputType}"
-                   id="${optionId}"
-                   name="${inputName}"
-                   value="${option.value}" 
-                   data-is-correct="${option.isCorrect}" />
-            <label for="${optionId}">${option.text}</label>
-          </div>
-        `
-          })
-          .join('')
-
-        const container = document.createElement('div')
-        container.innerHTML = `
-        <form data-question-id="${id}"
-              id="form_${id}"
-              class="single-question-container"
-              onsubmit="submitButtonListener(event)">
-          
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <p style="font-weight:600">Question ${rootIndex}:</p>
-            <button type="button"
-                    class="explanation-btn"
-                    data-question-id="${id}"
-                    onclick="renderExplanation(event)">
-              View Explanation
-            </button>
-          </div>
-
-          <div style="margin-bottom:8px;line-height:1.5">${question}</div>
-
-          <div class="options-container">
-            ${optionsHTML}
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button type="submit" class="button submit-btn">Submit</button>
-          </div>
-        </form>
-      `
-        quizContainerElement.appendChild(container)
-      }
-
-      // === XỬ LÝ SỰ KIỆN SUBMIT & TÍNH ĐIỂM ===
-
-      const submitButtonListener = (e) => {
-        e.preventDefault()
-        const form = e.target
-        const questionId = form.dataset.questionId
-
-        // Gọi hàm xử lý logic kiểm tra
-        const result = processSubmission(form, questionId)
-
-        if (result.hasSelection) {
-          // Lưu vào localStorage nếu người dùng đã chọn
-          saveProgress(questionId, Array.from(result.userSelectedValues))
-        } else {
-          alert('Vui lòng chọn ít nhất một đáp án!')
-        }
-      }
-
-      // Hàm tách biệt logic kiểm tra để dùng chung cho cả lúc Submit và lúc Load lại trang
-      function processSubmission(form, questionId) {
-        const inputs = form.querySelectorAll(
-          'input[type="radio"], input[type="checkbox"]'
+        const container = document.getElementById('quiz-container')
+        container.innerHTML = ''
+        activeQuestions.forEach((q, idx) =>
+          renderQuestion(q, idx + 1, container)
         )
-        const userSelectedValues = new Set()
-        const actualCorrectValues = new Set()
+
+        restoreSession()
+        updateScore()
+
+        document.getElementById('close-modal-btn').onclick = () =>
+          document.querySelector('dialog').close()
+        document.querySelector('dialog').onclick = (e) => {
+          if (e.target === document.querySelector('dialog'))
+            document.querySelector('dialog').close()
+        }
+      }
+
+      // --- RENDER ---
+      function renderQuestion(q, idx, container) {
+        const type = q.assessment_type === 'multi-select' ? 'checkbox' : 'radio'
+        const inputName = `ans_${q.id}`
+
+        let answersHtml = ''
+        q.prompt.answers.forEach((ans, i) => {
+          let val = String.fromCharCode(97 + i)
+          let isCorrect = q.correct_response.includes(val)
+          let cleanText = ans.replace(/<\/?p>/g, '')
+          let optionId = `${q.id}_${i}`
+          let charLabel = String.fromCharCode(65 + i) + '.' // A. B. C.
+
+          answersHtml += `
+                <div class="question-lable" id="lbl_${optionId}" onclick="clickOption('${optionId}', '${type}')">
+                    <input type="${type}" id="${optionId}" name="${inputName}" value="${val}" data-is-correct="${isCorrect}">
+                    <label>
+                        <span class="print-label-text" style="display:none; margin-right:5px; font-weight:bold;">${charLabel}</span>
+                        ${cleanText}
+                    </label>
+                </div>
+            `
+        })
+
+        const html = `
+            <div class="single-question-container" id="form_${q.id}" data-qid="${q.id}">
+                <div class="q-header">
+                    <p class="q-number">Question ${idx}</p>
+                </div>
+                <div class="q-text">${q.prompt.question}</div>
+                <div class="options-container">
+                    ${answersHtml}
+                </div>
+                <div class="action-row">
+                    <button class="submit-btn" onclick="checkAnswer('${q.id}')">Check Answer</button>
+                    <button class="explanation-btn" onclick="showExplanation('${q.id}')">View Explanation</button>
+                </div>
+            </div>
+        `
+        container.insertAdjacentHTML('beforeend', html)
+      }
+
+      // --- INTERACTIONS ---
+      window.clickOption = function (id, type) {
+        const input = document.getElementById(id)
+        if (input.disabled) return
+
+        if (type === 'radio') {
+          const container = input.closest('.options-container')
+          // Update UI manually because input is hidden or styled
+          container
+            .querySelectorAll('input[type="radio"]')
+            .forEach((el) => (el.checked = false))
+          input.checked = true
+        } else {
+          // Checkbox clicks are handled natively by label, just sync if needed
+          // but here we triggered via div onclick, so we flip it
+          input.checked = !input.checked
+        }
+      }
+
+      window.checkAnswer = function (qId) {
+        const container = document.getElementById(`form_${qId}`)
+        const inputs = container.querySelectorAll('input')
+        let userVals = new Set()
+        let correctVals = new Set()
         let hasSelection = false
 
-        inputs.forEach((input) => {
-          if (input.checked) {
-            userSelectedValues.add(input.value)
+        inputs.forEach((inp) => {
+          if (inp.checked) {
+            userVals.add(inp.value)
             hasSelection = true
           }
-          if (input.dataset.isCorrect === 'true') {
-            actualCorrectValues.add(input.value)
+          if (inp.dataset.isCorrect === 'true') {
+            correctVals.add(inp.value)
           }
+          inp.disabled = true // Lock
         })
 
-        if (!hasSelection) return { hasSelection: false }
+        if (!hasSelection) {
+          alert('Please select an answer!')
+          inputs.forEach((i) => (i.disabled = false))
+          return
+        }
 
-        // So sánh 2 tập hợp đáp án
-        const isFullyCorrect = setsAreEqual(
-          userSelectedValues,
-          actualCorrectValues
-        )
-
-        // Cập nhật biến toàn cục
-        if (isFullyCorrect) {
-          correct.add(questionId)
-          incorrect.delete(questionId)
+        const isCorrect = setsAreEqual(userVals, correctVals)
+        if (isCorrect) {
+          correct.add(qId)
+          incorrect.delete(qId)
         } else {
-          incorrect.add(questionId)
-          correct.delete(questionId)
+          incorrect.add(qId)
+          correct.delete(qId)
         }
-
         updateScore()
+        saveProgress(qId, Array.from(userVals))
 
-        // Hiển thị UI (Xanh/Đỏ)
-        form.querySelectorAll('.question-lable').forEach((labelContainer) => {
-          const input = labelContainer.querySelector('input')
-          labelContainer.classList.remove('correct-answer', 'incorrect-answer')
+        // UI FEEDBACK
+        container.querySelectorAll('.question-lable').forEach((lbl) => {
+          const inp = lbl.querySelector('input')
 
-          // Disable input sau khi nộp để tránh sửa
-          // input.disabled = true;
-          // form.querySelector('.submit-btn').disabled = true;
-
-          if (input.dataset.isCorrect === 'true') {
-            labelContainer.classList.add('correct-answer')
-          } else if (input.checked && input.dataset.isCorrect === 'false') {
-            labelContainer.classList.add('incorrect-answer')
+          if (inp.dataset.isCorrect === 'true') {
+            lbl.classList.add('correct-answer')
+          } else if (inp.checked && inp.dataset.isCorrect === 'false') {
+            lbl.classList.add('incorrect-answer')
           }
         })
 
-        return { hasSelection: true, userSelectedValues }
+        container.querySelector('.submit-btn').style.display = 'none'
+        container.querySelector('.explanation-btn').style.display =
+          'inline-block'
       }
 
-      // === CÁC HÀM TIỆN ÍCH (HELPER) ===
-
-      function updateScore() {
-        const currentPercentageElement =
-          document.getElementById('current-score')
-        const correctAnswerElement = document.getElementById('correct-answers')
-        const wrongAnswerElement = document.getElementById('wrong-answers')
-
-        if (correctAnswerElement) correctAnswerElement.innerHTML = correct.size
-        if (wrongAnswerElement) wrongAnswerElement.innerHTML = incorrect.size
-
-        if (totalNumberOfQuestions > 0 && currentPercentageElement) {
-          const score = Number(
-            (correct.size / totalNumberOfQuestions) * 100
-          ).toFixed(0)
-          currentPercentageElement.innerHTML = score + '%'
-        }
-      }
-
-      function setsAreEqual(setA, setB) {
-        if (setA.size !== setB.size) return false
-        for (const item of setA) {
-          if (!setB.has(item)) return false
-        }
+      function setsAreEqual(a, b) {
+        if (a.size !== b.size) return false
+        for (const item of a) if (!b.has(item)) return false
         return true
       }
 
-      function renderExplanation(ev) {
-        const questionId = ev.target.dataset.questionId
-        const data = questionMap.get(questionId)
-        modalTextElement.innerHTML = ''
-        if (!data) {
-          modalTextElement.innerHTML = '<p>Không có giải thích.</p>'
-        } else {
-          if (data.explanation) modalTextElement.innerHTML += data.explanation
-          if (data.feedbacks)
-            data.feedbacks.forEach((fb) => (modalTextElement.innerHTML += fb))
-        }
-        dialog.showModal()
+      function updateScore() {
+        document.getElementById('correct-answers').innerText = correct.size
+        document.getElementById('wrong-answers').innerText = incorrect.size
+        const pct =
+          totalQuestions > 0
+            ? Math.round((correct.size / totalQuestions) * 100)
+            : 0
+        document.getElementById('current-score').innerText = pct + '%'
       }
 
-      // === LOCAL STORAGE LOGIC ===
+      function showExplanation(qId) {
+        const data = questionMap.get(qId.toString())
+        const content = document.getElementById('modal-text')
+        content.innerHTML = ''
+        if (data) {
+          if (data.explanation) content.innerHTML += data.explanation
+          if (data.feedbacks)
+            data.feedbacks.forEach(
+              (fb) =>
+                (content.innerHTML +=
+                  `<hr style="margin:10px 0;border:0;border-top:1px dashed #ccc;">` +
+                  fb)
+            )
+        } else {
+          content.innerHTML = '<p>No explanation available.</p>'
+        }
+        document.getElementById('modal').showModal()
+      }
 
-      function saveProgress(questionId, selectedValues) {
-        // Lấy dữ liệu cũ
+      function saveProgress(qId, vals) {
         let progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
-        // Cập nhật câu hỏi hiện tại
-        progress[questionId] = selectedValues
-        // Lưu lại
+        progress[qId] = vals
         localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
       }
 
@@ -2366,243 +2556,63 @@
         const progress = JSON.parse(localStorage.getItem(STORAGE_KEY))
         if (!progress) return
 
-        // Duyệt qua từng câu hỏi đã lưu
-        for (const [qId, values] of Object.entries(progress)) {
-          const form = document.getElementById(`form_${qId}`)
-          if (form) {
-            // Tích lại các ô input
-            const inputs = form.querySelectorAll('input')
-            let hasChecked = false
-            inputs.forEach((input) => {
-              if (values.includes(input.value)) {
-                input.checked = true
-                hasChecked = true
-              }
+        Object.keys(progress).forEach((qId) => {
+          const container = document.getElementById(`form_${qId}`)
+          if (container) {
+            const vals = progress[qId]
+            container.querySelectorAll('input').forEach((inp) => {
+              if (vals.includes(inp.value)) inp.checked = true
             })
-
-            // Nếu có tích, chạy lại logic kiểm tra để hiện màu xanh/đỏ và tính điểm
-            if (hasChecked) {
-              processSubmission(form, qId)
-            }
+            checkAnswer(qId)
           }
-        }
+        })
       }
 
       function resetProgress() {
-        if (
-          confirm('Bạn có chắc muốn xóa toàn bộ kết quả và làm lại từ đầu?')
-        ) {
-          const progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
-          const questionIds = quizData.questions.map((q) => q.id.toString())
-          questionIds.forEach((id) => {
-            delete progress[id]
-          })
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+        if (confirm('Reset all answers?')) {
+          localStorage.removeItem(STORAGE_KEY)
           location.reload()
         }
       }
 
       function randomizeQuestions() {
-        if (
-          confirm(
-            'Bạn có chắc muốn xáo trộn thứ tự câu hỏi? Mọi tiến trình chưa lưu sẽ bị mất.'
-          )
-        ) {
-          // 1. Shuffle the questions
-          for (let i = rawQuestions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-            ;[rawQuestions[i], rawQuestions[j]] = [
-              rawQuestions[j],
-              rawQuestions[i]
-            ]
-          }
+        if (!confirm('Shuffle questions? Current progress will be lost.'))
+          return
 
-          // 2. Clear the current question display
-          const quizContainer = document.getElementById('quiz-container')
-          quizContainer.innerHTML = ''
+        localStorage.removeItem(STORAGE_KEY)
+        correct.clear()
+        incorrect.clear()
+        updateScore()
 
-          // 3. Re-render the questions
-          const formattedQuestions = rawQuestions.map(formatSingleQuestionData)
-          formattedQuestions.forEach((question, idx) => {
-            renderSingleQuestion(question, idx + 1)
-          })
-
-          // 4. Restore the session to check the answers again
-          restoreSession()
+        let newOrder = [...(quizData.questions || [])]
+        for (let i = newOrder.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[newOrder[i], newOrder[j]] = [newOrder[j], newOrder[i]]
         }
+        localStorage.setItem(STORAGE_QUESTIONS_KEY, JSON.stringify(newOrder))
+        location.reload()
       }
 
-      // === CHỨC NĂNG IN ẤN ===
       function printQuiz(showAnswers) {
         if (showAnswers) {
-          // CHẾ ĐỘ 1: IN ĐÁP ÁN (KEY)
-          // Thêm class để CSS kích hoạt hiển thị đáp án đúng
           document.body.classList.add('show-correct-answers')
-          window.print()
-
-          // Sau khi in xong thì tắt chế độ hiện đáp án
-          setTimeout(() => {
-            document.body.classList.remove('show-correct-answers')
-          }, 500)
-        } else {
-          // CHẾ ĐỘ 2: IN ĐỀ BÀI (BLANK)
-          // Bước A: Lưu trạng thái hiện tại (thực ra đã lưu trong localStorage rồi)
-
-          // Bước B: Xóa sạch giao diện tạm thời để in ra giấy trắng tinh
-          const inputs = document.querySelectorAll('input')
-          const labels = document.querySelectorAll('.question-lable')
-
-          // Bỏ tích toàn bộ input
-          inputs.forEach((input) => (input.checked = false))
-
-          // Xóa màu xanh/đỏ
-          labels.forEach((label) => {
-            label.classList.remove('correct-answer', 'incorrect-answer')
-          })
-
-          // Bước C: Gọi lệnh in
-          window.print()
-
-          // Bước D: Khôi phục lại bài làm sau khi in xong
-          setTimeout(() => {
-            // Gọi lại hàm restoreSession để lấy lại dữ liệu từ LocalStorage
-            // và tô lại màu như cũ cho người dùng tiếp tục làm
-            restoreSession()
-          }, 500)
         }
+        window.print()
+        setTimeout(
+          () => document.body.classList.remove('show-correct-answers'),
+          500
+        )
       }
 
-      // Sự kiện đóng modal khi click ra ngoài
-      if (dialog) {
-        dialog.addEventListener('click', (e) => {
-          const rect = dialog.getBoundingClientRect()
-          if (
-            e.clientX < rect.left ||
-            e.clientX > rect.right ||
-            e.clientY < rect.top ||
-            e.clientY > rect.bottom
-          ) {
-            dialog.close()
-          }
-        })
-      }
-
-      // Nạp thêm style in ấn động để đảm bảo nút in hoạt động tốt
+      // CSS Injection for Print Labels (A. B. C.)
       const styleSheet = document.createElement('style')
       styleSheet.innerText = `
       @media print {
-        body.show-correct-answers input[data-is-correct="true"] + label {
-          border: 2px solid #000 !important;
-          font-weight: bold !important;
-          background-color: #e5e7eb !important;
-        }
-        body.show-correct-answers input[data-is-correct="true"] + label::after {
-          content: "✔";
-          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-        }
+        .print-label-text { display: inline !important; }
+        .question-lable::before { content: none !important; } /* Xóa dấu tròn giả cũ */
       }
-    `
+      `
       document.head.appendChild(styleSheet)
-
-      // CHẠY CHƯƠNG TRÌNH
-      window.onload = main
     </script>
   </body>
-
-  <style>
-    .modal-container {
-      padding: 0;
-      border: none;
-      max-width: 700px;
-    }
-
-    #modal-content {
-      position: relative;
-      padding: 20px;
-    }
-
-    #modal-content img {
-      max-width: 100% !important;
-      height: auto !important;
-      display: block;
-      margin: 10px auto;
-      border-radius: 4px;
-    }
-
-    .single-question-container img {
-      max-width: 100% !important;
-      height: auto !important;
-      display: block;
-      margin: 10px 0;
-    }
-
-    .modal-close-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: transparent;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    @media print {
-      /* 1. Reset giao diện về trắng đen cơ bản */
-      body,
-      main,
-      #quiz-container,
-      .single-question-container,
-      #quiz-meta-container {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-      }
-
-      /* 2. Ẩn các thành phần không cần thiết khi in */
-      #score-stats-container, 
-      #print-actions, /* Ẩn chính các nút in này đi */
-      .submit-btn, 
-      .explanation-btn, 
-      dialog,
-      .modal-container {
-        display: none !important;
-      }
-
-      /* 3. Định dạng câu hỏi để không bị ngắt trang xấu */
-      .single-question-container {
-        page-break-inside: avoid;
-        border-bottom: 1px solid #ccc !important;
-        margin-bottom: 15px !important;
-        padding-bottom: 10px !important;
-      }
-
-      /* === LOGIC HIỂN THỊ ĐÁP ÁN === */
-
-      /* Mặc định (In đề bài): Ẩn mọi dấu hiệu đúng sai */
-      /* Không làm gì cả, để mặc định như lúc chưa làm */
-
-      /* CHẾ ĐỘ CÓ ĐÁP ÁN: Chỉ kích hoạt khi body có class 'show-correct-answers' */
-      body.show-correct-answers input[data-is-correct='true'] + label {
-        border: 2px solid #000 !important; /* Đóng khung đậm */
-        font-weight: bold !important;
-        background-color: #e5e7eb !important; /* Nền xám nhẹ */
-        position: relative;
-        padding-right: 30px;
-      }
-
-      /* Thêm dấu tích (✓) vào đáp án đúng để dễ nhìn hơn */
-      body.show-correct-answers input[data-is-correct='true'] + label::after {
-        content: '✔';
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 18px;
-        font-weight: bold;
-      }
-    }
-  </style>
 </html>
