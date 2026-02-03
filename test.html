@@ -2,9 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Odoo Certification Simulation</title>
+    <title>Odoo Functional Certification</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,7 +11,6 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -20,512 +18,567 @@
 
     <style>
       :root {
-        /* Odoo Color Palette */
         --odoo-purple: #714b67;
-        --odoo-purple-dark: #56364d;
-        --odoo-teal: #017e84;
-        --odoo-teal-light: #00a09d;
-
-        --bg-gray: #f9fafb;
-        --border-color: #e0e0e0;
-        --text-primary: #212529;
-        --text-secondary: #666666;
-
-        --success-green: #28a745;
-        --success-bg: #d4edda;
-        --danger-red: #dc3545;
-        --danger-bg: #f8d7da;
-
-        --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        --odoo-purple-hover: #5d3d54;
+        --text-main: #212529;
+        --text-light: #666;
+        --bg-color: #ffffff;
+        --answer-bg: #f8f9fa;
+        --answer-hover: #e9ecef;
+        --answer-border: #dee2e6;
+        --selected-bg: #f4eff2;
+        --selected-border: #714b67;
+        --max-width: 960px;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
       }
 
       * {
-        font-family: 'Inter', sans-serif;
         box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       body {
-        background-color: var(--bg-gray);
-        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
         margin: 0;
-        padding-top: 70px; /* Space for fixed header */
-        padding-bottom: 50px;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
       }
 
-      /* --- HEADER --- */
-      .odoo-header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 60px;
-        background: #ffffff;
-        border-bottom: 1px solid var(--border-color);
+      /* --- LAYOUT --- */
+      .app-container {
+        width: 100%;
+        max-width: var(--max-width);
+        padding: 40px 20px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 24px;
-        z-index: 1000;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        flex-direction: column;
       }
 
-      .logo-section {
+      /* --- HEADER & TOOLBAR --- */
+      .header-wrapper {
+        margin-bottom: 30px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+      }
+
+      .top-toolbar {
         display: flex;
-        align-items: center;
+        justify-content: flex-end;
         gap: 10px;
-        font-weight: 700;
-        font-size: 20px;
-        color: var(--odoo-purple);
+        margin-bottom: 15px;
       }
 
-      .logo-section span {
-        color: var(--text-primary);
-        font-weight: 400;
-      }
-
-      .stats-section {
-        display: flex;
-        gap: 20px;
-        font-size: 14px;
-        font-weight: 500;
-      }
-
-      .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .stat-badge {
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-weight: 600;
+      .tool-btn {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 6px 12px;
         font-size: 13px;
-      }
-      .bg-purple {
-        background-color: #f3eff2;
-        color: var(--odoo-purple);
-      }
-      .bg-green {
-        background-color: var(--success-bg);
-        color: var(--success-green);
-      }
-      .bg-red {
-        background-color: var(--danger-bg);
-        color: var(--danger-red);
-      }
-
-      /* --- CONTROL BAR --- */
-      .control-bar {
-        max-width: 960px;
-        margin: 24px auto 16px auto;
-        padding: 0 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .quiz-info h1 {
-        font-size: 24px;
-        color: var(--odoo-purple);
-        margin: 0;
-      }
-      .quiz-info p {
-        margin: 4px 0 0 0;
-        color: var(--text-secondary);
-        font-size: 14px;
-      }
-
-      .actions {
-        display: flex;
-        gap: 8px;
-      }
-
-      .btn {
-        border: 1px solid var(--border-color);
-        background: white;
-        color: var(--text-primary);
-        padding: 8px 16px;
         border-radius: 4px;
-        font-size: 14px;
-        font-weight: 500;
         cursor: pointer;
-        display: inline-flex;
+        color: #555;
+        display: flex;
         align-items: center;
         gap: 6px;
         transition: all 0.2s;
       }
-
-      .btn:hover {
-        background-color: #f8f9fa;
-        border-color: #b3b3b3;
-      }
-      .btn-primary {
-        background-color: var(--odoo-purple);
-        color: white;
-        border-color: var(--odoo-purple);
-      }
-      .btn-primary:hover {
-        background-color: var(--odoo-purple-dark);
-      }
-      .btn-danger {
-        color: #dc3545;
-        border-color: #f8d7da;
-        background: #fff;
-      }
-      .btn-danger:hover {
-        background: #dc3545;
-        color: white;
+      .tool-btn:hover {
+        background: #f0f0f0;
+        border-color: #bbb;
+        color: #000;
       }
 
-      /* --- QUIZ CONTAINER --- */
-      #quiz-container {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 0 16px;
-      }
-
-      /* --- QUESTION CARD --- */
-      .q-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: var(--card-shadow);
-        padding: 30px;
-        margin-bottom: 24px;
-        border: 1px solid transparent;
-        transition: transform 0.2s;
-      }
-
-      .q-meta {
+      .header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 12px;
+        align-items: flex-start;
       }
 
-      .q-num {
+      .header-left {
+        flex: 1;
+      }
+
+      .header-left h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin: 0 0 10px 0;
+        color: #000;
+        line-height: 1.2;
+      }
+
+      /* FIX BREADCRUMBS WRAPPING */
+      .breadcrumbs {
+        color: var(--text-light);
+        font-size: 14px;
+        line-height: 1.6;
+        display: flex;
+        flex-wrap: wrap; /* Cho phép xuống hàng */
+        gap: 5px;
+      }
+
+      .breadcrumbs span {
+        white-space: nowrap;
+      } /* Giữ từng cụm từ không bị ngắt giữa chừng */
+      .breadcrumbs span.active {
+        color: var(--text-main);
         font-weight: 700;
-        color: var(--text-secondary);
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        text-decoration: underline;
+      }
+      .breadcrumbs span.past {
+        color: var(--odoo-purple);
       }
 
-      .q-type {
-        font-size: 12px;
-        font-weight: 600;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background-color: var(--odoo-teal);
+      .timer {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--text-main);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        margin-left: 20px;
       }
-      .q-type.multi {
-        background-color: var(--odoo-purple);
+
+      /* --- SECTION & QUESTIONS --- */
+      .section-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: var(--text-main);
+        border-left: 5px solid var(--odoo-purple);
+        padding-left: 15px;
+      }
+
+      .question-block {
+        margin-bottom: 60px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid #f0f0f0;
+        page-break-inside: avoid; /* Tránh bị ngắt trang khi in */
       }
 
       .q-text {
-        font-size: 18px;
-        font-weight: 500;
-        color: var(--text-primary);
+        font-size: 20px;
+        font-weight: 600;
         margin-bottom: 20px;
-        line-height: 1.6;
+        line-height: 1.4;
       }
 
       .q-text img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 4px;
-        margin-top: 12px;
-        border: 1px solid var(--border-color);
+        display: block;          /* Xuống dòng */
+        max-width: 100%;         /* Giới hạn chiều rộng tối đa bằng khung chứa */
+        height: auto;            /* Giữ tỷ lệ ảnh */
+        margin-top: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      }
+
+      /* Ẩn số câu hỏi nhưng vẫn giữ cấu trúc */
+      .q-index-hidden {
+        display: none;
       }
 
       /* --- ANSWERS --- */
-      .answer-group {
+      .answers-list {
         display: flex;
         flex-direction: column;
         gap: 10px;
       }
 
-      .answer-option {
-        display: flex;
-        align-items: center; /* Center Vertically */
-        padding: 12px 16px;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-        background-color: #fff;
-        min-height: 48px;
-        position: relative;
-      }
-
-      .answer-option:hover {
-        background-color: #f8f9fa;
-        border-color: #b0b0b0;
-      }
-
-      .answer-option input {
-        margin-top: 0;
-        margin-right: 12px;
-        width: 18px;
-        height: 18px;
-        accent-color: var(--odoo-purple);
-        cursor: pointer;
-        flex-shrink: 0;
-      }
-
-      .answer-option label {
-        cursor: pointer;
-        width: 100%;
-        font-size: 15px;
-        color: var(--text-primary);
-        line-height: 1.4;
-        margin: 0;
-        display: block;
-      }
-
-      /* Selected State */
-      .answer-option.selected {
-        border-color: var(--odoo-purple);
-        background-color: #fcf4f9;
-        font-weight: 500;
-      }
-
-      /* Feedback States (Interactive Mode) */
-      .answer-option.correct {
-        border-color: var(--success-green) !important;
-        background-color: var(--success-bg) !important;
-        color: #155724;
-      }
-      .answer-option.correct input {
-        accent-color: var(--success-green);
-      }
-
-      .answer-option.incorrect {
-        border-color: var(--danger-red) !important;
-        background-color: var(--danger-bg) !important;
-        color: #721c24;
-        opacity: 0.8;
-      }
-      .answer-option.incorrect input {
-        accent-color: var(--danger-red);
-      }
-
-      /* --- FOOTER CARD --- */
-      .q-footer {
-        margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px solid #f0f0f0;
+      .answer-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-      }
-
-      .explanation-btn {
-        background: none;
-        border: none;
-        color: var(--odoo-teal);
-        font-weight: 500;
+        background-color: var(--answer-bg);
+        border: 1px solid var(--answer-border);
+        border-radius: 50px;
+        padding: 12px 25px;
         cursor: pointer;
-        text-decoration: underline;
-        font-size: 14px;
-        visibility: hidden; /* Hidden until submitted */
+        transition: all 0.2s ease;
       }
 
-      .btn-check {
+      .answer-item:hover {
+        background-color: var(--answer-hover);
+      }
+
+      .answer-item.selected {
+        background-color: var(--selected-bg);
+        border-color: var(--selected-border);
+        box-shadow: 0 0 0 1px var(--selected-border) inset;
+      }
+
+      /* Style cho đáp án đúng/sai (chỉ hiện khi in Key hoặc review) */
+      .answer-item.correct-key {
+        border-color: var(--success-color) !important;
+        background-color: #e6ffec !important;
+        font-weight: bold;
+      }
+
+      .answer-text {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-right: 15px;
+        flex-grow: 1;
+      }
+
+      .answer-input {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #999;
+        border-radius: 50%;
+        outline: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        position: relative;
+      }
+
+      .answer-input:checked {
+        border-color: var(--odoo-purple);
+        background-color: #fff;
+      }
+
+      .answer-input:checked::after {
+        content: '';
+        display: block;
+        width: 10px;
+        height: 10px;
+        background-color: var(--odoo-purple);
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      input[type='checkbox'].answer-input {
+        border-radius: 4px;
+      }
+      input[type='checkbox'].answer-input:checked::after {
+        border-radius: 1px;
+      }
+
+      /* --- FOOTER --- */
+      .footer {
+        margin-top: 20px;
+        padding-bottom: 60px;
+      }
+      .btn-continue {
         background-color: var(--odoo-purple);
         color: white;
-        padding: 8px 24px;
-        border-radius: 30px; /* Rounded pill button like Odoo */
-        border: none;
+        font-size: 16px;
         font-weight: 600;
+        padding: 14px 40px;
+        border: none;
+        border-radius: 4px;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: background-color 0.2s;
       }
-      .btn-check:hover {
-        background-color: var(--odoo-purple-dark);
+      .btn-continue:hover {
+        background-color: var(--odoo-purple-hover);
       }
-      .btn-check:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
+      .shortcut-hint {
+        margin-left: 15px;
+        color: #888;
+        font-size: 14px;
       }
 
-      /* --- MODAL --- */
+      /* --- RESULT SCREEN --- */
+      #result-screen {
+        text-align: center;
+        padding-top: 40px;
+        display: none;
+      }
+      .score-circle {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: var(--odoo-purple);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 30px auto;
+      }
+      .score-val {
+        font-size: 42px;
+        font-weight: 800;
+      }
+      .status-text {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 20px;
+      }
+      .pass {
+        color: var(--success-color);
+      }
+      .fail {
+        color: var(--danger-color);
+      }
+
+      /* --- HISTORY MODAL --- */
       dialog {
         border: none;
         border-radius: 8px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         padding: 0;
-        width: 600px;
+        width: 500px;
         max-width: 90vw;
       }
       dialog::backdrop {
         background: rgba(0, 0, 0, 0.4);
       }
-
       .modal-header {
-        padding: 16px 24px;
-        background: var(--bg-gray);
-        border-bottom: 1px solid var(--border-color);
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
         display: flex;
         justify-content: space-between;
         align-items: center;
-      }
-      .modal-header h3 {
-        margin: 0;
+        font-weight: 700;
         font-size: 18px;
         color: var(--odoo-purple);
+      }
+      .modal-body {
+        padding: 20px;
+        max-height: 400px;
+        overflow-y: auto;
       }
       .close-btn {
         background: none;
         border: none;
-        font-size: 24px;
+        font-size: 20px;
         cursor: pointer;
-        color: #999;
       }
 
-      .modal-body {
-        padding: 24px;
-        line-height: 1.6;
-        color: var(--text-primary);
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        border-bottom: 1px solid #f9f9f9;
+        font-size: 14px;
       }
-      .modal-body img {
-        max-width: 100%;
-        border-radius: 4px;
-        border: 1px solid #eee;
+      .h-pass {
+        color: var(--success-color);
+        font-weight: bold;
+      }
+      .h-fail {
+        color: var(--danger-color);
+        font-weight: bold;
       }
 
-      /* ============================= */
-      /* PRINT MODE STYLES (Fixed) */
-      /* ============================= */
+      /* --- PRINT AREA (Hidden by default) --- */
+      #print-area {
+        display: none;
+      }
+
       @media print {
-        /* Bắt buộc trình duyệt in màu nền */
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
+        /* 1. Reset trang in */
+        @page {
+          size: A4;
+          margin: 1.5cm 2cm;
         }
 
-        .odoo-header,
-        .control-bar,
-        .q-footer {
+        /* 2. Ẩn giao diện App */
+        .app-container,
+        .progress-container,
+        dialog,
+        .tools-bar,
+        .header-wrapper {
           display: none !important;
         }
+
+        /* 3. Hiển thị vùng in */
         body {
-          padding: 0;
           background: white;
-          font-size: 12pt;
+          font-size: 11pt;
+          color: #000;
+          display: block; /* Đảm bảo body hiện */
         }
 
-        .q-card {
-          box-shadow: none;
-          border: none;
+        #print-area {
+          display: block !important;
+          width: 100%;
+        }
+
+        /* 4. Style Header in */
+        .print-header {
+          text-align: center;
+          border-bottom: 2px solid #000;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+        }
+        .print-header h1 {
+          font-size: 20pt;
+          margin: 0;
+          text-transform: uppercase;
+          font-weight: 800;
+        }
+        .print-header p {
+          margin: 5px 0 0;
+          font-size: 10pt;
+          color: #333;
+        }
+
+        /* 5. Style Section */
+        .print-section-title {
+          font-size: 14pt;
+          font-weight: 800;
+          margin-top: 30px;
+          margin-bottom: 10px;
+          text-transform: uppercase;
           border-bottom: 1px solid #ccc;
-          padding: 0;
+          page-break-after: avoid;
+        }
+
+        /* 6. Style Câu hỏi (Flexbox để căn số thứ tự) */
+        .print-question-block {
           margin-bottom: 20px;
           page-break-inside: avoid;
         }
-
-        /* --- CHỈ ÁP DỤNG KHI IN ĐÁP ÁN (Show Key) --- */
-
-        /* Tô nền xám và đóng khung cho đáp án đúng */
-        body.show-key .answer-option:has(input[data-is-correct='true']) {
-          border: 2px solid #000 !important;
-          background-color: #f0f0f0 !important;
+        .print-question-header {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
           font-weight: bold;
+          font-size: 11pt;
+          margin-bottom: 6px;
+        }
+        .print-q-num {
+          white-space: nowrap;
+        } /* Số không bị rớt dòng */
+        .print-q-text {
+          flex: 1;
+          line-height: 1.3;
+        }
+        .print-q-text img {
+            max-width: 100% !important; /* Đảm bảo ảnh không tràn giấy khi in */
+            height: auto;
+            display: block;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+        }
+        .print-q-text p {
+          margin: 0;
+          display: inline;
+        } /* Fix lỗi xuống dòng do thẻ P */
+
+        /* 7. Style Đáp án */
+        .print-options-list {
+          margin-left: 25px;
+        } /* Thụt lề so với câu hỏi */
+        .print-option-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          padding: 3px 6px;
+          border-radius: 4px;
+          border: 1px solid transparent; /* Giữ vị trí border */
+        }
+        .print-label {
+          font-weight: 600;
+          width: 20px;
+        } /* A. B. C. */
+        .print-content {
+          flex: 1;
+          line-height: 1.3;
         }
 
-        /* Thêm dấu tích ✓ Correct Answer */
-        body.show-key .answer-option:has(input[data-is-correct='true'])::after {
-          content: '✔ Correct Answer';
+        /* 8. Style KEY (Đáp án đúng) */
+        .print-option-item.key-correct {
+          border: 1.5px solid #000 !important; /* Khung viền đen */
+          background-color: #f0f0f0 !important; /* Nền xám nhẹ */
+          font-weight: bold;
+        }
+        .print-option-item.key-correct .print-label::before {
+          content: '✓ ';
+          margin-left: -15px;
           position: absolute;
-          right: 15px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 12px;
-          font-weight: bold;
-          color: #000;
-        }
-
-        /* Ẩn trạng thái sai/đúng màu mè của giao diện web để in trắng đen cho sạch */
-        .answer-option.incorrect {
-          border-color: var(--border-color) !important;
-          background-color: transparent !important;
-          color: black !important;
-          opacity: 1 !important;
-        }
-
-        /* Input radio/checkbox đậm hơn khi in */
-        input[type='radio'],
-        input[type='checkbox'] {
-          border: 1px solid #000;
-          box-shadow: none;
         }
       }
     </style>
   </head>
 
-  <body onload="main()">
-    <header class="odoo-header">
-      <div class="logo-section">
-        <i class="fa-brands fa-odoo fa-lg"></i>
-        Odoo <span>Certification</span>
-      </div>
-      <div class="stats-section">
-        <div class="stat-item">
-          <span style="color: var(--text-secondary)">Score:</span>
-          <span class="stat-badge bg-purple" id="current-score">0%</span>
-        </div>
-        <div class="stat-item">
-          <i
-            class="fa-solid fa-check-circle"
-            style="color: var(--success-green)"
-          ></i>
-          <span class="stat-badge bg-green" id="correct-answers">0</span>
-        </div>
-        <div class="stat-item">
-          <i
-            class="fa-solid fa-times-circle"
-            style="color: var(--danger-red)"
-          ></i>
-          <span class="stat-badge bg-red" id="wrong-answers">0</span>
-        </div>
-      </div>
-    </header>
+  <body onload="initExam()">
+    <div id="print-area"></div>
 
-    <div class="control-bar">
-      <div class="quiz-info">
-        <h1 id="quiz-title">Practice Exam</h1>
-        <p id="quiz-description">Loading...</p>
+    <div class="app-container" id="app-ui">
+      <div class="header-wrapper">
+        <div class="top-toolbar">
+          <button class="tool-btn" onclick="showHistory()">
+            <i class="fa-solid fa-clock-rotate-left"></i> History
+          </button>
+          <button class="tool-btn" onclick="printExam('blank')">
+            <i class="fa-solid fa-print"></i> Print Questions
+          </button>
+          <button class="tool-btn" onclick="printExam('key')">
+            <i class="fa-solid fa-key"></i> Print Key
+          </button>
+          <button
+            class="tool-btn"
+            onclick="location.reload()"
+            style="color: #dc3545"
+          >
+            <i class="fa-solid fa-rotate-right"></i> Restart
+          </button>
+        </div>
+
+        <div class="header">
+          <div class="header-left">
+            <h1>Odoo Functional Certification</h1>
+            <div class="breadcrumbs" id="breadcrumbs-area"></div>
+          </div>
+          <div class="timer" id="timer">90:00</div>
+        </div>
       </div>
-      <div class="actions">
-        <button class="btn" onclick="printQuiz(false)">
-          <i class="fa-solid fa-print"></i> Print
-        </button>
-        <button class="btn" onclick="printQuiz(true)">
-          <i class="fa-solid fa-key"></i> Key
-        </button>
-        <button class="btn btn-danger" onclick="resetProgress()">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </button>
-        <button class="btn btn-primary" onclick="randomizeQuestions()">
-          <i class="fa-solid fa-shuffle"></i> Shuffle New Set
+
+      <div id="exam-view">
+        <div id="section-render-area"></div>
+
+        <div class="footer">
+          <button class="btn-continue" onclick="nextSection()" id="btn-action">
+            Continue
+          </button>
+          <span class="shortcut-hint">or press CTRL+Enter</span>
+        </div>
+      </div>
+
+      <div id="result-screen">
+        <h1 style="margin-bottom: 30px">Certification Results</h1>
+        <div class="score-circle" id="score-circle">
+          <div class="score-val" id="final-score">0%</div>
+          <div class="score-label">Score</div>
+        </div>
+        <div id="status-text" class="status-text">FAILED</div>
+
+        <div style="margin-top: 30px; font-size: 14px; color: #666">
+          Your result has been saved to History.
+        </div>
+        <button
+          class="btn-continue"
+          onclick="location.reload()"
+          style="margin-top: 20px"
+        >
+          Retry Exam
         </button>
       </div>
     </div>
 
-    <section id="quiz-container"></section>
-
-    <dialog id="modal">
+    <dialog id="history-modal">
       <div class="modal-header">
-        <h3><i class="fa-regular fa-lightbulb"></i> Explanation</h3>
-        <button class="close-btn" id="close-modal-btn">×</button>
+        <span>Exam History</span>
+        <button
+          class="close-btn"
+          onclick="document.getElementById('history-modal').close()"
+        >
+          ×
+        </button>
       </div>
-      <div class="modal-body">
-        <div id="modal-text"></div>
-      </div>
+      <div class="modal-body" id="history-list"></div>
     </dialog>
 
     <script>
@@ -11445,362 +11498,334 @@
         ]
       }
 
-      // --- CONFIG & STATE ---
-      let correct = new Set()
-      let incorrect = new Set()
-      let totalNumberOfQuestions = 0
+      // --- CONFIG ---
+      const TIME_LIMIT_MINUTES = 90
+      const PASS_PERCENT = 70
+      const HISTORY_KEY = 'odoo_exam_history_log'
 
-      const quizTitle =
-        (typeof quizData !== 'undefined' && quizData.quiz_title) ||
-        'Odoo Certification Practice'
-      const quizDescription =
-        (typeof quizData !== 'undefined' && quizData.quiz_description) ||
-        'Simulation Mode'
+      // --- STATE ---
+      let allQuestionsForExam = []
+      let sectionsOrder = []
+      let questionsBySection = {}
+      let currentSectionIdx = 0
+      let userAnswers = {}
+      let timerInterval
+      let timeRemaining = TIME_LIMIT_MINUTES * 60
 
-      const STORAGE_PROGRESS_KEY = 'odoo_quiz_progress_v6'
-      const STORAGE_SUBSET_KEY = 'odoo_quiz_questions_list_v6'
+      // --- INIT ---
+      function initExam() {
+        if (!quizData || !quizData.questions) return
 
-      const questionMap = new Map()
+        // 1. Chuẩn bị dữ liệu (Clone & Shuffle)
+        let rawQuestions = JSON.parse(JSON.stringify(quizData.questions))
 
-      // === MAIN ===
-      function main() {
-        let activeQuestions = []
-        const savedSubsetJson = localStorage.getItem(STORAGE_SUBSET_KEY)
-
-        if (savedSubsetJson) {
-          activeQuestions = JSON.parse(savedSubsetJson)
-        } else {
-          if (quizData && Array.isArray(quizData.questions)) {
-            let allQuestions = JSON.parse(JSON.stringify(quizData.questions))
-            // Add unique suffix to ID to prevent duplicates if data changes
-            allQuestions.forEach(
-              (q) => (q.id = parseInt(q.id.toString() + '1'))
-            )
-            // Shuffle
-            for (let i = allQuestions.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1))
-              ;[allQuestions[i], allQuestions[j]] = [
-                allQuestions[j],
-                allQuestions[i]
-              ]
-            }
-            // Take 120
-            activeQuestions = allQuestions.slice(0, 120)
-            localStorage.setItem(
-              STORAGE_SUBSET_KEY,
-              JSON.stringify(activeQuestions)
-            )
-          }
+        // Shuffle toàn bộ
+        for (let i = rawQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[rawQuestions[i], rawQuestions[j]] = [
+            rawQuestions[j],
+            rawQuestions[i]
+          ]
         }
 
-        // Setup Meta
-        document.getElementById('quiz-title').innerText = quizTitle
-        document.getElementById('quiz-description').innerText =
-          `Session with ${activeQuestions.length} questions.`
-        totalNumberOfQuestions = activeQuestions.length
+        // Cắt lấy 120 câu
+        allQuestionsForExam = rawQuestions.slice(0, 120)
 
-        // Prepare Map
-        activeQuestions.forEach((q) => {
-          questionMap.set(q.id.toString(), {
-            explanation: q.prompt?.explanation || '',
-            feedbacks: q.prompt?.feedbacks || []
-          })
+        // Group by Section
+        allQuestionsForExam.forEach((q) => {
+          const sec = q.section || 'General'
+          if (!questionsBySection[sec]) {
+            questionsBySection[sec] = []
+            sectionsOrder.push(sec)
+          }
+          questionsBySection[sec].push(q)
         })
 
-        // Render
-        const quizContainer = document.getElementById('quiz-container')
-        quizContainer.innerHTML = ''
+        // Sắp xếp Section (tùy chọn, ở đây ta giữ random theo data shuffle)
+        // sectionsOrder.sort();
 
-        activeQuestions.forEach((q, idx) => {
-          renderQuestionCard(formatQuestion(q), idx + 1, quizContainer)
+        // 2. Render UI
+        renderBreadcrumbs()
+        renderSection(0)
+        startTimer()
+
+        // 3. Shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.ctrlKey && e.key === 'Enter') nextSection()
         })
-
-        // Restore
-        restoreSession()
-        updateScore()
-
-        // Modal events
-        document.getElementById('close-modal-btn').onclick = () =>
-          document.querySelector('dialog').close()
-        document.querySelector('dialog').onclick = (e) => {
-          if (e.target === document.querySelector('dialog'))
-            document.querySelector('dialog').close()
-        }
       }
 
-      // === HELPER: Format Data ===
-      function formatQuestion(q) {
-        return {
-          id: q.id,
-          type: q.assessment_type === 'multi-select' ? 'checkbox' : 'radio',
-          typeLabel:
-            q.assessment_type === 'multi-select'
-              ? 'Multiple Choice'
-              : 'Single Choice',
-          questionHtml: q.prompt.question,
-          answers: (q.prompt.answers || []).map((text, idx) => ({
-            text,
-            value: String.fromCharCode(97 + idx),
-            isCorrect: q.correct_response.includes(
-              String.fromCharCode(97 + idx)
-            )
-          }))
-        }
-      }
+      // --- RENDER ---
+      function renderBreadcrumbs() {
+        const container = document.getElementById('breadcrumbs-area')
+        let html = ''
+        sectionsOrder.forEach((sec, idx) => {
+          let className = ''
+          if (idx < currentSectionIdx) className = 'past'
+          if (idx === currentSectionIdx) className = 'active'
 
-      // === RENDER UI ===
-      function renderQuestionCard(q, idx, container) {
-        const card = document.createElement('div')
-        card.className = 'q-card'
-        card.id = `card_${q.id}`
-
-        const typeClass = q.type === 'checkbox' ? 'q-type multi' : 'q-type'
-
-        const optionsHtml = q.answers
-          .map((ans, i) => {
-            const inputId = `${q.id}_${i}`
-            return `
-                <div class="answer-option" onclick="selectOption('${inputId}')">
-                    <input type="${q.type}" id="${inputId}" name="q_${q.id}" value="${ans.value}" data-is-correct="${ans.isCorrect}">
-                    <label for="${inputId}">${ans.text}</label>
-                </div>
-            `
-          })
-          .join('')
-
-        card.innerHTML = `
-            <form data-question-id="${q.id}" onsubmit="handleFormSubmit(event)">
-                <div class="q-meta">
-                    <span class="q-num">Question ${idx}</span>
-                    <span class="${typeClass}">${q.typeLabel}</span>
-                </div>
-                <div class="q-text">${q.questionHtml}</div>
-                
-                <div class="answer-group">
-                    ${optionsHtml}
-                </div>
-
-                <div class="q-footer">
-                    <button type="button" class="explanation-btn" data-qid="${q.id}" onclick="showExplanation('${q.id}')">
-                        <i class="fa-solid fa-circle-info"></i> View Solution
-                    </button>
-                    <button type="submit" class="btn-check">Check</button>
-                </div>
-            </form>
-        `
-        container.appendChild(card)
-      }
-
-      // === INTERACTION ===
-      window.selectOption = function (inputId) {
-        const input = document.getElementById(inputId)
-        if (!input.disabled) {
-          input.click()
-          const form = input.closest('form')
-          if (input.type === 'radio') {
-            form
-              .querySelectorAll('.answer-option')
-              .forEach((el) => el.classList.remove('selected'))
-          }
-          input
-            .closest('.answer-option')
-            .classList.toggle('selected', input.checked)
-        }
-      }
-
-      window.handleFormSubmit = function (e) {
-        e.preventDefault()
-        const form = e.target
-        const qId = form.dataset.questionId
-
-        const inputs = form.querySelectorAll('input')
-        const selectedValues = []
-        const correctValues = []
-        let hasSelection = false
-
-        inputs.forEach((inp) => {
-          if (inp.checked) {
-            selectedValues.push(inp.value)
-            hasSelection = true
-          }
-          if (inp.dataset.isCorrect === 'true') correctValues.push(inp.value)
-          inp.disabled = true
+          html += `<span class="${className}">${sec}</span>`
+          if (idx < sectionsOrder.length - 1) html += `<span>/</span>`
         })
+        container.innerHTML = html
+      }
 
-        if (!hasSelection) {
-          alert('Please select an answer.')
-          inputs.forEach((inp) => (inp.disabled = false))
+      function renderSection(idx) {
+        if (idx >= sectionsOrder.length) {
+          finishExam()
           return
         }
 
-        const isCorrect = setsAreEqual(
-          new Set(selectedValues),
-          new Set(correctValues)
-        )
-        saveProgress(qId, selectedValues)
+        currentSectionIdx = idx
+        const secName = sectionsOrder[idx]
+        const questions = questionsBySection[secName]
+        const container = document.getElementById('section-render-area')
 
-        if (isCorrect) {
-          correct.add(qId)
-          incorrect.delete(qId)
-        } else {
-          incorrect.add(qId)
-          correct.delete(qId)
-        }
-        updateScore()
+        // Render Title
+        renderBreadcrumbs()
+        let html = `<div class="section-title">${secName}</div>`
 
-        form.querySelectorAll('.answer-option').forEach((opt) => {
-          const inp = opt.querySelector('input')
-          opt.classList.remove('selected')
+        // Render Questions
+        questions.forEach((q, qIndex) => {
+          const answers = [...q.prompt.answers, "I don't know."]
+          const type =
+            q.assessment_type === 'multi-select' ? 'checkbox' : 'radio'
 
-          if (inp.dataset.isCorrect === 'true') {
-            opt.classList.add('correct')
-          } else if (inp.checked && inp.dataset.isCorrect === 'false') {
-            opt.classList.add('incorrect')
-          }
+          html += `
+                <div class="question-block" id="qblock_${q.id}">
+                    <div class="q-text">
+                        ${q.prompt.question}
+                    </div>
+            `
+
+          // Image handling (nếu data có ảnh)
+          // if (q.image) html += `<div class="q-image"><img src="${q.image}"></div>`;
+
+          html += `<div class="answers-list">`
+
+          answers.forEach((ansText, aIndex) => {
+            let val =
+              aIndex === answers.length - 1
+                ? 'dont_know'
+                : String.fromCharCode(97 + aIndex)
+            let cleanText = ansText.replace(/<\/?p>/g, '')
+
+            html += `
+                    <label class="answer-item" onclick="selectItem(this, '${type}')">
+                        <span class="answer-text">${cleanText}</span>
+                        <input type="${type}" 
+                               name="ans_${q.id}" 
+                               value="${val}" 
+                               class="answer-input"
+                               onchange="recordAnswer('${q.id}', this)">
+                    </label>
+                `
+          })
+
+          html += `</div></div>`
         })
 
-        form.querySelector('.explanation-btn').style.visibility = 'visible'
-        const btn = form.querySelector('.btn-check')
-        btn.textContent = isCorrect ? 'Correct!' : 'Incorrect'
-        btn.style.backgroundColor = isCorrect
-          ? 'var(--success-green)'
-          : 'var(--danger-red)'
-        btn.disabled = true
-      }
+        container.innerHTML = html
+        window.scrollTo(0, 0)
 
-      function showExplanation(qId) {
-        const data = questionMap.get(qId.toString())
-        const modal = document.querySelector('dialog')
-        const content = document.getElementById('modal-text')
-
-        let html = ''
-        if (data) {
-          if (data.explanation) html += `<div>${data.explanation}</div>`
-          if (data.feedbacks && data.feedbacks.length > 0) {
-            html += `<div style="margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
-                         <strong>Additional Details:</strong><br>${data.feedbacks.join('<br>')}</div>`
-          }
+        // Update Button
+        const btn = document.getElementById('btn-action')
+        if (idx === sectionsOrder.length - 1) {
+          btn.innerText = 'Finish Exam'
+          btn.style.backgroundColor = '#212529'
+        } else {
+          btn.innerText = 'Continue'
+          btn.style.backgroundColor = '#714B67'
         }
-        content.innerHTML = html || 'No detailed explanation available.'
-        modal.showModal()
       }
 
-      function setsAreEqual(a, b) {
-        if (a.size !== b.size) return false
-        for (const item of a) if (!b.has(item)) return false
-        return true
+      // --- LOGIC ---
+      function selectItem(label, type) {
+        const input = label.querySelector('input')
+        if (type === 'radio') {
+          const group = label.parentElement
+          group
+            .querySelectorAll('.answer-item')
+            .forEach((el) => el.classList.remove('selected'))
+          label.classList.add('selected')
+          input.checked = true
+          recordAnswer(input.name.split('_')[1], input)
+        } else {
+          setTimeout(() => {
+            if (input.checked) label.classList.add('selected')
+            else label.classList.remove('selected')
+          }, 0)
+        }
       }
 
-      function updateScore() {
-        document.getElementById('correct-answers').innerText = correct.size
-        document.getElementById('wrong-answers').innerText = incorrect.size
-        const pct = totalNumberOfQuestions
-          ? Math.round((correct.size / totalNumberOfQuestions) * 100)
-          : 0
-        document.getElementById('current-score').innerText = pct + '%'
+      function recordAnswer(qId, input) {
+        if (!userAnswers[qId]) userAnswers[qId] = []
+        const val = input.value
+        if (input.type === 'radio') {
+          userAnswers[qId] = [val]
+        } else {
+          if (input.checked) userAnswers[qId].push(val)
+          else userAnswers[qId] = userAnswers[qId].filter((v) => v !== val)
+        }
       }
 
-      // === STORAGE ===
-      function saveProgress(id, vals) {
-        const data = JSON.parse(
-          localStorage.getItem(STORAGE_PROGRESS_KEY) || '{}'
-        )
-        data[id] = vals
-        localStorage.setItem(STORAGE_PROGRESS_KEY, JSON.stringify(data))
+      function nextSection() {
+        renderSection(currentSectionIdx + 1)
       }
 
-      function restoreSession() {
-        const data = JSON.parse(localStorage.getItem(STORAGE_PROGRESS_KEY))
-        if (!data) return
+      function startTimer() {
+        timerInterval = setInterval(() => {
+          timeRemaining--
+          let m = Math.floor(timeRemaining / 60)
+          let s = timeRemaining % 60
+          document.getElementById('timer').innerText =
+            `${m}:${s < 10 ? '0' + s : s}`
+          if (timeRemaining <= 0) finishExam()
+        }, 1000)
+      }
 
-        Object.keys(data).forEach((qId) => {
-          const form = document.querySelector(`form[data-question-id="${qId}"]`)
-          if (form) {
-            const vals = data[qId]
-            form.querySelectorAll('input').forEach((inp) => {
-              if (vals.includes(inp.value)) inp.checked = true
+      // --- SCORING & HISTORY ---
+      function finishExam() {
+        clearInterval(timerInterval)
+        document.getElementById('exam-view').style.display = 'none'
+        document.getElementById('result-screen').style.display = 'block'
+        document.querySelector('.header-wrapper').style.display = 'none' // Hide header on result
+
+        let totalScore = 0
+        const maxScore = allQuestionsForExam.length
+
+        allQuestionsForExam.forEach((q) => {
+          const uVals = userAnswers[q.id] || []
+          if (uVals.length === 0 || uVals.includes('dont_know')) return
+
+          const cVals = q.correct_response
+          const uSet = new Set(uVals)
+          const cSet = new Set(cVals)
+
+          let wrong = false
+          uVals.forEach((v) => {
+            if (!cSet.has(v)) wrong = true
+          })
+          cVals.forEach((v) => {
+            if (!uSet.has(v)) wrong = true
+          })
+
+          if (!wrong) totalScore += 1
+          else totalScore -= 0.5
+        })
+
+        if (totalScore < 0) totalScore = 0
+        const finalPercent = Math.round((totalScore / maxScore) * 100)
+
+        // Display
+        document.getElementById('final-score').innerText = finalPercent + '%'
+        const statusEl = document.getElementById('status-text')
+        const circle = document.getElementById('score-circle')
+
+        let statusStr = 'FAILED'
+        if (finalPercent >= PASS_PERCENT) {
+          statusStr = 'PASSED'
+          statusEl.innerText = 'PASSED'
+          statusEl.className = 'status-text pass'
+          circle.style.backgroundColor = '#28a745'
+        } else {
+          statusEl.innerText = 'FAILED'
+          statusEl.className = 'status-text fail'
+          circle.style.backgroundColor = '#dc3545'
+        }
+
+        // Save History
+        saveHistory(finalPercent, statusStr)
+      }
+
+      function saveHistory(score, status) {
+        let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
+        const entry = {
+          date: new Date().toLocaleString(),
+          score: score,
+          status: status
+        }
+        history.unshift(entry) // Add to top
+        if (history.length > 20) history.pop() // Keep last 20
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+      }
+
+      function showHistory() {
+        const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
+        const list = document.getElementById('history-list')
+        list.innerHTML = ''
+
+        if (history.length === 0) {
+          list.innerHTML =
+            '<p style="text-align:center;color:#666;">No exams taken yet.</p>'
+        } else {
+          history.forEach((h) => {
+            const cls = h.status === 'PASSED' ? 'h-pass' : 'h-fail'
+            list.innerHTML += `
+                    <div class="history-item">
+                        <span>${h.date}</span>
+                        <span class="${cls}">${h.status} (${h.score}%)</span>
+                    </div>`
+          })
+        }
+        document.getElementById('history-modal').showModal()
+      }
+
+      // --- PRINTING LOGIC ---
+      function printExam(mode) {
+        const printArea = document.getElementById('print-area')
+        const now = new Date().toLocaleDateString()
+
+        let html = `
+            <div class="print-header">
+                <h1>Odoo Certification Practice</h1>
+                <p>Date: ${now} &nbsp;|&nbsp; Type: ${mode === 'key' ? '<strong>ANSWER KEY</strong>' : 'Question Paper'}</p>
+            </div>
+        `
+
+        let globalIndex = 1
+
+        sectionsOrder.forEach((secName) => {
+          const qs = questionsBySection[secName]
+          html += `<div class="print-section-title">${secName}</div>`
+
+          qs.forEach((q) => {
+            // Làm sạch nội dung câu hỏi (Xóa thẻ <p> để không bị xuống hàng)
+            let cleanQ = q.prompt.question.replace(/<\/?p>/g, '')
+
+            html += `
+                <div class="print-question-block">
+                    <div class="print-question-header">
+                        <span class="print-q-num">${globalIndex}.</span>
+                        <span class="print-q-text">${cleanQ}</span>
+                    </div>
+                    <div class="print-options-list">`
+
+            q.prompt.answers.forEach((ans, aIdx) => {
+              let val = String.fromCharCode(97 + aIdx)
+              let isCorrect = q.correct_response.includes(val)
+              let cleanAns = ans.replace(/<\/?p>/g, '')
+              let charLabel = String.fromCharCode(65 + aIdx) + '.'
+
+              let rowClass = 'print-option-item'
+              if (mode === 'key' && isCorrect) rowClass += ' key-correct'
+
+              html += `
+                        <div class="${rowClass}">
+                            <span class="print-label">${charLabel}</span>
+                            <span class="print-content">${cleanAns}</span>
+                        </div>`
             })
-            form.dispatchEvent(new Event('submit'))
-          }
-        })
-      }
 
-      function resetProgress() {
-        if (confirm('Clear current answers? Questions will stay the same.')) {
-          localStorage.removeItem(STORAGE_PROGRESS_KEY)
-          location.reload()
-        }
-      }
-
-      function randomizeQuestions() {
-        if (
-          confirm(
-            'Generate a new random set of questions? History will be lost.'
-          )
-        ) {
-          localStorage.removeItem(STORAGE_PROGRESS_KEY)
-          localStorage.removeItem(STORAGE_SUBSET_KEY)
-          location.reload()
-        }
-      }
-
-      // === PRINT ===
-      function printQuiz(isKeyMode) {
-        // 1. Lưu lại trạng thái bài làm hiện tại của người dùng
-        const allInputs = document.querySelectorAll('input')
-        const userState = []
-
-        allInputs.forEach((input) => {
-          userState.push({
-            id: input.id,
-            checked: input.checked,
-            disabled: input.disabled // Lưu cả trạng thái khóa
+            html += `</div></div>`
+            globalIndex++
           })
         })
 
-        // 2. Thiết lập trạng thái để in
-        if (isKeyMode) {
-          // CHẾ ĐỘ IN ĐÁP ÁN (KEY)
-          document.body.classList.add('show-key')
-
-          allInputs.forEach((input) => {
-            // Mở khóa tạm thời để in đẹp hơn (tùy chọn)
-            input.disabled = false
-
-            // Chỉ tích vào ô nào là đáp án đúng
-            if (input.dataset.isCorrect === 'true') {
-              input.checked = true
-            } else {
-              input.checked = false
-            }
-          })
-        } else {
-          // CHẾ ĐỘ IN ĐỀ BÀI (BLANK)
-          allInputs.forEach((input) => {
-            input.checked = false // Xóa hết tích
-            input.disabled = false // Mở khóa
-          })
-        }
-
-        // 3. Gọi lệnh in trình duyệt
-        window.print()
-
-        // 4. Khôi phục lại trạng thái cũ sau khi in xong
-        // Dùng setTimeout để đợi hộp thoại in tắt hoặc render xong
+        printArea.innerHTML = html
         setTimeout(() => {
-          if (isKeyMode) {
-            document.body.classList.remove('show-key')
-          }
-
-          // Khôi phục từng ô input về trạng thái ban đầu
-          userState.forEach((state) => {
-            const input = document.getElementById(state.id)
-            if (input) {
-              input.checked = state.checked
-              input.disabled = state.disabled
-            }
-          })
-        }, 100)
+          window.print()
+        }, 200)
       }
     </script>
   </body>
