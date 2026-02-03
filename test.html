@@ -251,14 +251,15 @@
 
       .answer-option {
         display: flex;
-        align-items: center; /* SỬA: Đổi từ flex-start thành center để căn giữa dọc */
+        align-items: center; /* Center Vertically */
         padding: 12px 16px;
         border: 1px solid var(--border-color);
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s;
         background-color: #fff;
-        min-height: 48px; /* Thêm chiều cao tối thiểu cho đẹp */
+        min-height: 48px;
+        position: relative;
       }
 
       .answer-option:hover {
@@ -267,13 +268,13 @@
       }
 
       .answer-option input {
-        margin-top: 0; /* SỬA: Xóa margin-top (trước đây là 4px) */
+        margin-top: 0;
         margin-right: 12px;
         width: 18px;
         height: 18px;
         accent-color: var(--odoo-purple);
         cursor: pointer;
-        flex-shrink: 0; /* Đảm bảo nút không bị co lại nếu text dài */
+        flex-shrink: 0;
       }
 
       .answer-option label {
@@ -281,9 +282,9 @@
         width: 100%;
         font-size: 15px;
         color: var(--text-primary);
-        line-height: 1.4; /* Giảm line-height một chút cho gọn */
-        margin-bottom: 0; /* Đảm bảo không có margin thừa */
-        display: block; /* Giúp label chiếm không gian tốt hơn */
+        line-height: 1.4;
+        margin: 0;
+        display: block;
       }
 
       /* Selected State */
@@ -293,7 +294,7 @@
         font-weight: 500;
       }
 
-      /* Feedback States */
+      /* Feedback States (Interactive Mode) */
       .answer-option.correct {
         border-color: var(--success-green) !important;
         background-color: var(--success-bg) !important;
@@ -397,8 +398,16 @@
         border: 1px solid #eee;
       }
 
-      /* PRINT MODE */
+      /* ============================= */
+      /* PRINT MODE STYLES (Fixed) */
+      /* ============================= */
       @media print {
+        /* Bắt buộc trình duyệt in màu nền */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
         .odoo-header,
         .control-bar,
         .q-footer {
@@ -407,23 +416,52 @@
         body {
           padding: 0;
           background: white;
+          font-size: 12pt;
         }
+
         .q-card {
           box-shadow: none;
           border: none;
-          border-bottom: 2px solid #ccc;
+          border-bottom: 1px solid #ccc;
           padding: 0;
-          margin-bottom: 30px;
+          margin-bottom: 20px;
           page-break-inside: avoid;
         }
-        .answer-option.correct {
-          border: 2px solid black !important;
+
+        /* --- CHỈ ÁP DỤNG KHI IN ĐÁP ÁN (Show Key) --- */
+
+        /* Tô nền xám và đóng khung cho đáp án đúng */
+        body.show-key .answer-option:has(input[data-is-correct='true']) {
+          border: 2px solid #000 !important;
+          background-color: #f0f0f0 !important;
           font-weight: bold;
-          background: #eee !important;
         }
-        .answer-option.correct::after {
-          content: ' (Correct)';
+
+        /* Thêm dấu tích ✓ Correct Answer */
+        body.show-key .answer-option:has(input[data-is-correct='true'])::after {
+          content: '✔ Correct Answer';
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 12px;
           font-weight: bold;
+          color: #000;
+        }
+
+        /* Ẩn trạng thái sai/đúng màu mè của giao diện web để in trắng đen cho sạch */
+        .answer-option.incorrect {
+          border-color: var(--border-color) !important;
+          background-color: transparent !important;
+          color: black !important;
+          opacity: 1 !important;
+        }
+
+        /* Input radio/checkbox đậm hơn khi in */
+        input[type='radio'],
+        input[type='checkbox'] {
+          border: 1px solid #000;
+          box-shadow: none;
         }
       }
     </style>
@@ -11419,8 +11457,8 @@
         (typeof quizData !== 'undefined' && quizData.quiz_description) ||
         'Simulation Mode'
 
-      const STORAGE_PROGRESS_KEY = 'odoo_quiz_progress_v5'
-      const STORAGE_SUBSET_KEY = 'odoo_quiz_questions_list_v5'
+      const STORAGE_PROGRESS_KEY = 'odoo_quiz_progress_v6'
+      const STORAGE_SUBSET_KEY = 'odoo_quiz_questions_list_v6'
 
       const questionMap = new Map()
 
@@ -11434,7 +11472,7 @@
         } else {
           if (quizData && Array.isArray(quizData.questions)) {
             let allQuestions = JSON.parse(JSON.stringify(quizData.questions))
-            // Add unique suffix to ID
+            // Add unique suffix to ID to prevent duplicates if data changes
             allQuestions.forEach(
               (q) => (q.id = parseInt(q.id.toString() + '1'))
             )
@@ -11471,7 +11509,7 @@
 
         // Render
         const quizContainer = document.getElementById('quiz-container')
-        quizContainer.innerHTML = '' // Clear loading
+        quizContainer.innerHTML = ''
 
         activeQuestions.forEach((q, idx) => {
           renderQuestionCard(formatQuestion(q), idx + 1, quizContainer)
@@ -11510,16 +11548,14 @@
         }
       }
 
-      // === RENDER UI (NEW CARD STYLE) ===
+      // === RENDER UI ===
       function renderQuestionCard(q, idx, container) {
         const card = document.createElement('div')
         card.className = 'q-card'
         card.id = `card_${q.id}`
 
-        // Type Badge Class
         const typeClass = q.type === 'checkbox' ? 'q-type multi' : 'q-type'
 
-        // Options HTML
         const optionsHtml = q.answers
           .map((ans, i) => {
             const inputId = `${q.id}_${i}`
@@ -11556,14 +11592,11 @@
       }
 
       // === INTERACTION ===
-      // Click row to select radio/checkbox
       window.selectOption = function (inputId) {
         const input = document.getElementById(inputId)
         if (!input.disabled) {
           input.click()
-          // Update UI selected state
           const form = input.closest('form')
-          // Remove selected class from others if radio
           if (input.type === 'radio') {
             form
               .querySelectorAll('.answer-option')
@@ -11575,13 +11608,11 @@
         }
       }
 
-      // Submit Logic
       window.handleFormSubmit = function (e) {
         e.preventDefault()
         const form = e.target
         const qId = form.dataset.questionId
 
-        // Disable inputs
         const inputs = form.querySelectorAll('input')
         const selectedValues = []
         const correctValues = []
@@ -11593,7 +11624,7 @@
             hasSelection = true
           }
           if (inp.dataset.isCorrect === 'true') correctValues.push(inp.value)
-          inp.disabled = true // Freeze
+          inp.disabled = true
         })
 
         if (!hasSelection) {
@@ -11602,16 +11633,12 @@
           return
         }
 
-        // Logic check
         const isCorrect = setsAreEqual(
           new Set(selectedValues),
           new Set(correctValues)
         )
-
-        // Save
         saveProgress(qId, selectedValues)
 
-        // Update Stats
         if (isCorrect) {
           correct.add(qId)
           incorrect.delete(qId)
@@ -11621,10 +11648,9 @@
         }
         updateScore()
 
-        // UI Feedback
         form.querySelectorAll('.answer-option').forEach((opt) => {
           const inp = opt.querySelector('input')
-          opt.classList.remove('selected') // Remove selected style, use result style
+          opt.classList.remove('selected')
 
           if (inp.dataset.isCorrect === 'true') {
             opt.classList.add('correct')
@@ -11633,7 +11659,6 @@
           }
         })
 
-        // Show Explanation Button & Disable Submit
         form.querySelector('.explanation-btn').style.visibility = 'visible'
         const btn = form.querySelector('.btn-check')
         btn.textContent = isCorrect ? 'Correct!' : 'Incorrect'
@@ -11692,11 +11717,9 @@
           const form = document.querySelector(`form[data-question-id="${qId}"]`)
           if (form) {
             const vals = data[qId]
-            // Pre-check inputs
             form.querySelectorAll('input').forEach((inp) => {
               if (vals.includes(inp.value)) inp.checked = true
             })
-            // Simulate submit to lock UI
             form.dispatchEvent(new Event('submit'))
           }
         })
@@ -11721,10 +11744,63 @@
         }
       }
 
-      function printQuiz(key) {
-        if (key) document.body.classList.add('show-key')
+      // === PRINT ===
+      function printQuiz(isKeyMode) {
+        // 1. Lưu lại trạng thái bài làm hiện tại của người dùng
+        const allInputs = document.querySelectorAll('input')
+        const userState = []
+
+        allInputs.forEach((input) => {
+          userState.push({
+            id: input.id,
+            checked: input.checked,
+            disabled: input.disabled // Lưu cả trạng thái khóa
+          })
+        })
+
+        // 2. Thiết lập trạng thái để in
+        if (isKeyMode) {
+          // CHẾ ĐỘ IN ĐÁP ÁN (KEY)
+          document.body.classList.add('show-key')
+
+          allInputs.forEach((input) => {
+            // Mở khóa tạm thời để in đẹp hơn (tùy chọn)
+            input.disabled = false
+
+            // Chỉ tích vào ô nào là đáp án đúng
+            if (input.dataset.isCorrect === 'true') {
+              input.checked = true
+            } else {
+              input.checked = false
+            }
+          })
+        } else {
+          // CHẾ ĐỘ IN ĐỀ BÀI (BLANK)
+          allInputs.forEach((input) => {
+            input.checked = false // Xóa hết tích
+            input.disabled = false // Mở khóa
+          })
+        }
+
+        // 3. Gọi lệnh in trình duyệt
         window.print()
-        document.body.classList.remove('show-key')
+
+        // 4. Khôi phục lại trạng thái cũ sau khi in xong
+        // Dùng setTimeout để đợi hộp thoại in tắt hoặc render xong
+        setTimeout(() => {
+          if (isKeyMode) {
+            document.body.classList.remove('show-key')
+          }
+
+          // Khôi phục từng ô input về trạng thái ban đầu
+          userState.forEach((state) => {
+            const input = document.getElementById(state.id)
+            if (input) {
+              input.checked = state.checked
+              input.disabled = state.disabled
+            }
+          })
+        }, 100)
       }
     </script>
   </body>
