@@ -34,7 +34,7 @@
         --success-bg: #d4edda;
         --danger-color: #dc3545;
         --danger-bg: #f8d7da;
-        --max-width: 800px; /* Thu hẹp chiều rộng để dễ đọc hơn */
+        --max-width: 960px;
         --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
         --shadow-md:
           0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -223,10 +223,10 @@
       /* --- FIXED IMAGE CSS (WEB) --- */
       .single-question-container img {
         display: block;
-        max-width: 100%; /* Không bao giờ tràn khung */
-        max-height: 400px; /* Giới hạn chiều cao để không chiếm hết màn hình */
-        object-fit: contain; /* Giữ tỷ lệ ảnh */
-        margin: 20px auto; /* Căn giữa ảnh */
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        margin: 20px auto;
         border: 1px solid #eee;
         border-radius: 8px;
       }
@@ -244,7 +244,7 @@
         align-items: center;
         background-color: var(--answer-bg);
         border: 1px solid var(--answer-border);
-        border-radius: 50px; /* Pill style */
+        border-radius: 50px;
         padding: 12px 20px;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -426,7 +426,9 @@
         #top-actions,
         dialog,
         .submit-btn,
-        .explanation-btn {
+        .explanation-btn,
+        .action-row {
+          /* Ẩn hàng nút bấm để tránh chiếm chỗ */
           display: none !important;
         }
 
@@ -459,30 +461,19 @@
           border: none;
           border-bottom: 1px solid #ccc;
           border-radius: 0;
-          padding: 10px 0;
-          margin-bottom: 15px;
+          padding: 15px 0;
+          margin-bottom: 0;
           page-break-inside: avoid;
+
+          /* GRID LAYOUT FIX: Reduce gap */
+          display: grid;
+          grid-template-columns: 25px 1fr;
+          gap: 5px; /* Giảm gap từ 10px xuống 5px */
         }
 
         /* Ẩn header câu hỏi cũ (Question X) */
         .single-question-container > div:first-child {
           display: none;
-        }
-
-        /* GRID LAYOUT CHO CÂU HỎI IN (Đánh số 1. 2. 3. thẳng hàng) */
-        .single-question-container {
-          display: grid;
-          grid-template-columns: 25px 1fr; /* Cột số và cột nội dung */
-          gap: 10px;
-        }
-
-        .q-text img {
-          display: block;
-          max-width: 100%; /* Không vượt quá khung cha */
-          height: auto; /* Giữ tỷ lệ */
-          margin: 15px 0;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
         }
 
         /* Số thứ tự câu hỏi (Sử dụng CSS counter) */
@@ -496,17 +487,24 @@
           font-size: 12pt;
         }
 
-        /* Nội dung câu hỏi */
+        /* Nội dung câu hỏi: Reset margin để tránh khoảng cách xa */
         .single-question-container > div:nth-child(2) {
           font-size: 11pt;
-          margin-bottom: 10px !important;
+          margin-bottom: 5px !important; /* Giảm margin bottom */
           color: #000;
           font-weight: bold;
+          padding-bottom: 0;
+        }
+
+        /* Reset margin của thẻ P trong câu hỏi */
+        .single-question-container > div:nth-child(2) p {
+          margin-top: 0;
+          margin-bottom: 5px;
         }
 
         /* FIX ẢNH KHI IN */
         .single-question-container img {
-          max-width: 60% !important; /* Thu nhỏ ảnh khi in */
+          max-width: 60% !important;
           height: auto;
           display: block;
           margin: 10px 0;
@@ -515,19 +513,20 @@
 
         /* Options Print Style */
         .options-container {
-          grid-column: 2; /* Nằm ở cột nội dung */
-          gap: 4px;
-          margin-top: 5px;
+          grid-column: 2;
+          gap: 2px;
+          margin-top: 0; /* Đảm bảo không có margin top thừa */
         }
 
         .question-lable {
           background: none !important;
-          border: 1px solid transparent;
+          border: 1px solid transparent !important;
+          box-shadow: none !important; /* Xóa shadow nếu có */
           padding: 2px 0;
           border-radius: 0;
           min-height: auto;
           align-items: flex-start;
-          box-shadow: none !important;
+          color: #000 !important;
         }
 
         /* Thay input bằng ký tự A, B, C */
@@ -540,18 +539,25 @@
 
         /* Giả lập A. B. C. */
         .options-container .question-lable::before {
-          /* Kỹ thuật CSS này hơi phức tạp vì cần đếm A,B,C. 
-                Cách đơn giản hơn là dùng JS render class A, B, C hoặc dùng list-style.
-                Nhưng ở đây ta dùng ::before của JS đã render bên dưới.
-             */
-          /* Fallback nếu không có JS xử lý in */
           content: '○ ';
           font-size: 12pt;
           font-weight: bold;
           margin-right: 8px;
         }
 
-        /* BORDER CHO ĐÁP ÁN ĐÚNG (Khi in Key) */
+        /* --- SỬA LỖI IN ĐÁP ÁN ĐÃ CHỌN --- */
+        /* Buộc mọi trạng thái đã checked, hover, correct, incorrect về trong suốt */
+        .question-lable:has(input:checked),
+        .correct-answer,
+        .incorrect-answer {
+          background-color: transparent !important;
+          border-color: transparent !important;
+          box-shadow: none !important;
+          color: #000 !important;
+        }
+
+        /* Chỉ hiện BORDER và MÀU NỀN khi body có class 'show-correct-answers' (Nút Print Key) */
+        /* Đoạn này ghi đè lại đoạn reset bên trên nếu đúng điều kiện */
         body.show-correct-answers
           .question-lable:has(input[data-is-correct='true']) {
           border: 2px solid #000 !important;
@@ -2350,17 +2356,42 @@
       let incorrect = new Set()
       let totalQuestions = 0
       let activeQuestions = []
-      const STORAGE_KEY = 'odoo_practice_v2_progress'
-      const STORAGE_QUESTIONS_KEY = 'odoo_practice_v2_questions'
       const questionMap = new Map()
+
+      // TẠO KEY ĐỘNG DỰA TRÊN DỮ LIỆU ĐỀ THI
+      // Lấy ID câu đầu, ID câu cuối và tổng số câu để tạo thành dấu vân tay duy nhất cho bộ đề
+      const qFirst = quizData.questions?.[0]?.id || 'start'
+      const qCount = quizData.questions?.length || 0
+      // Key này sẽ tự đổi nếu bạn đổi bộ đề
+      const QUIZ_UNIQUE_ID = `odoo_quiz_v2_${qFirst}_${qCount}`
+
+      const STORAGE_KEY = `${QUIZ_UNIQUE_ID}_progress`
+      const STORAGE_QUESTIONS_KEY = `${QUIZ_UNIQUE_ID}_order`
 
       // --- MAIN ---
       function main() {
+        // Kiểm tra xem trong kho lưu trữ đã có thứ tự câu hỏi của bộ đề NÀY chưa
         const savedQuestions = localStorage.getItem(STORAGE_QUESTIONS_KEY)
 
         if (savedQuestions) {
-          activeQuestions = JSON.parse(savedQuestions)
+          try {
+            activeQuestions = JSON.parse(savedQuestions)
+            // Kiểm tra an toàn: Nếu số lượng câu trong storage khác số lượng thực tế -> Reset luôn
+            if (activeQuestions.length !== quizData.questions.length) {
+              throw new Error('Data mismatch')
+            }
+          } catch (e) {
+            // Nếu dữ liệu cũ bị lỗi hoặc không khớp, dùng dữ liệu gốc từ biến quizData
+            console.log('Detected change in quiz data, reloading...')
+            activeQuestions = quizData.questions ? [...quizData.questions] : []
+            localStorage.setItem(
+              STORAGE_QUESTIONS_KEY,
+              JSON.stringify(activeQuestions)
+            )
+            localStorage.removeItem(STORAGE_KEY) // Xóa luôn tiến độ làm bài cũ
+          }
         } else {
+          // Chưa từng lưu bộ đề này -> Dùng dữ liệu gốc
           activeQuestions = quizData.questions ? [...quizData.questions] : []
           localStorage.setItem(
             STORAGE_QUESTIONS_KEY,
@@ -2370,11 +2401,13 @@
 
         totalQuestions = activeQuestions.length
 
+        // Render Title
         document.getElementById('quiz-title').innerText =
-          quizData.quiz_title || 'Quiz'
+          quizData.quiz_title || 'Intro, Sales & Survey'
         document.getElementById('quiz-description').innerText =
           `${totalQuestions} questions loaded.`
 
+        // Map data for lookup
         activeQuestions.forEach((q) => {
           questionMap.set(q.id.toString(), {
             explanation: q.prompt?.explanation || '',
@@ -2391,6 +2424,7 @@
         restoreSession()
         updateScore()
 
+        // Modal handlers
         document.getElementById('close-modal-btn').onclick = () =>
           document.querySelector('dialog').close()
         document.querySelector('dialog').onclick = (e) => {
