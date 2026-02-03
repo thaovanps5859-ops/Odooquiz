@@ -15,9 +15,9 @@
 
     <style>
       :root {
-        --primary-color: #714b67; /* Odoo Purple vibe */
-        --accent-color: #017e84; /* Odoo Teal vibe */
-        --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        --primary-color: #714b67; /* Odoo Purple */
+        --primary-dark: #573b50;
+        --accent-color: #017e84; /* Odoo Teal */
         --card-bg: #ffffff;
         --text-main: #2d3748;
         --text-sub: #718096;
@@ -31,18 +31,18 @@
         font-family: 'Poppins', sans-serif;
         margin: 0;
         padding: 0;
-        background: #e0eafc; /* fallback */
         background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
         min-height: 100vh;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: center; /* Center vertically if content is short */
         color: var(--text-main);
+        padding-bottom: 40px;
       }
 
       .container {
         width: 90%;
-        max-width: 900px;
+        max-width: 1000px;
         margin: 40px auto;
         text-align: center;
         animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -52,7 +52,7 @@
       h1 {
         font-size: 2.5em;
         font-weight: 700;
-        margin-bottom: 40px;
+        margin-bottom: 50px;
         color: var(--primary-color);
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -73,13 +73,13 @@
       /* Grid Layout */
       .quiz-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 25px;
         list-style: none;
         padding: 0;
       }
 
-      /* Card Styling */
+      /* STANDARD CARD STYLING */
       .quiz-card {
         background: var(--card-bg);
         border-radius: 16px;
@@ -103,7 +103,6 @@
         justify-content: space-between;
       }
 
-      /* Hover Effects */
       .quiz-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 20px 40px rgba(113, 75, 103, 0.15);
@@ -121,6 +120,7 @@
         display: flex;
         align-items: center;
         margin-bottom: 15px;
+        text-align: left;
       }
 
       .icon-box {
@@ -135,6 +135,7 @@
         font-size: 1.2em;
         margin-right: 15px;
         transition: all 0.3s ease;
+        flex-shrink: 0;
       }
 
       .quiz-number {
@@ -159,6 +160,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        justify-content: flex-start;
       }
 
       .tag {
@@ -168,6 +170,95 @@
         padding: 4px 10px;
         border-radius: 20px;
         border: 1px solid #e2e8f0;
+      }
+
+      /* --- FEATURED CARD (THE 120 QUESTIONS) --- */
+      .quiz-card.featured {
+        grid-column: 1 / -1; /* Span full width */
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        border: none;
+        overflow: visible;
+      }
+
+      .quiz-card.featured a {
+        flex-direction: row; /* Horizontal layout */
+        align-items: center;
+        justify-content: center;
+        text-align: left;
+        padding: 35px;
+      }
+
+      .quiz-card.featured .icon-box {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        width: 80px;
+        height: 80px;
+        font-size: 2em;
+        margin-right: 25px;
+      }
+
+      .quiz-card.featured .quiz-number {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1em;
+      }
+
+      .quiz-card.featured .quiz-title {
+        color: white;
+        font-size: 1.8em;
+        font-weight: 700;
+      }
+
+      .quiz-card.featured .quiz-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1em;
+        margin-top: 5px;
+        font-weight: 300;
+      }
+
+      .featured-badge {
+        position: absolute;
+        top: -12px;
+        right: 20px;
+        background-color: var(--accent-color);
+        color: white;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: 600;
+        text-transform: uppercase;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .quiz-card.featured:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: 0 25px 50px rgba(113, 75, 103, 0.4);
+      }
+
+      .quiz-card.featured:hover .icon-box {
+        background-color: white;
+        color: var(--primary-color);
+        transform: rotate(10deg);
+      }
+
+      .start-btn {
+        background: white;
+        color: var(--primary-color);
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 600;
+        margin-left: auto; /* Push to right */
+        transition: all 0.3s;
+        white-space: nowrap;
+      }
+
+      .quiz-card.featured:hover .start-btn {
+        background: var(--accent-color);
+        color: white;
       }
 
       /* Animation */
@@ -183,22 +274,32 @@
       }
 
       /* Responsive */
-      @media (max-width: 600px) {
-        .container {
-          width: 95%;
+      @media (max-width: 768px) {
+        .quiz-card.featured a {
+          flex-direction: column;
+          text-align: center;
+          gap: 15px;
         }
-        h1 {
-          font-size: 1.8em;
+        .quiz-card.featured .icon-box {
+          margin-right: 0;
+          margin-bottom: 10px;
         }
-        .quiz-grid {
-          grid-template-columns: 1fr;
+        .start-btn {
+          margin-left: 0;
+          margin-top: 15px;
+        }
+        .card-header {
+          justify-content: center; /* for small cards on mobile */
+        }
+        .quiz-tags {
+          justify-content: center;
         }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1><i class="fa-brands fa-odoo"></i> Practice Exams</h1>
+      <h1><i class="fa-brands fa-odoo"></i> Certification Practice</h1>
 
       <ul class="quiz-grid">
         <li class="quiz-card">
@@ -211,9 +312,8 @@
               </div>
             </div>
             <div class="quiz-tags">
-              <span class="tag">Introduction</span>
+              <span class="tag">Basic</span>
               <span class="tag">Sales</span>
-              <span class="tag">Survey</span>
             </div>
           </a>
         </li>
@@ -229,7 +329,6 @@
             </div>
             <div class="quiz-tags">
               <span class="tag">CRM</span>
-              <span class="tag">AI</span>
               <span class="tag">eCommerce</span>
             </div>
           </a>
@@ -247,7 +346,6 @@
             <div class="quiz-tags">
               <span class="tag">Project</span>
               <span class="tag">Timesheets</span>
-              <span class="tag">Knowledge</span>
             </div>
           </a>
         </li>
@@ -262,7 +360,7 @@
               </div>
             </div>
             <div class="quiz-tags">
-              <span class="tag">Accounting</span>
+              <span class="tag">Invoicing</span>
               <span class="tag">Spreadsheet</span>
             </div>
           </a>
@@ -279,8 +377,7 @@
             </div>
             <div class="quiz-tags">
               <span class="tag">Employees</span>
-              <span class="tag">POS</span>
-              <span class="tag">Purchase</span>
+              <span class="tag">Point of Sale</span>
             </div>
           </a>
         </li>
@@ -297,7 +394,25 @@
             <div class="quiz-tags">
               <span class="tag">Inventory</span>
               <span class="tag">MRP</span>
-              <span class="tag">Studio</span>
+            </div>
+          </a>
+        </li>
+
+        <li class="quiz-card featured">
+          <div class="featured-badge">Practice Test</div>
+          <a href="test.html">
+            <div class="icon-box">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+              <span class="quiz-number">Comprehensive Test</span>
+              <div class="quiz-title">Odoo Certification</div>
+              <div class="quiz-subtitle">
+                120 Random Questions from all topics
+              </div>
+            </div>
+            <div class="start-btn">
+              Start Test <i class="fa-solid fa-arrow-right"></i>
             </div>
           </a>
         </li>
